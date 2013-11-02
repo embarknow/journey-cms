@@ -1,8 +1,8 @@
 <?php
-	
+
 	require_once(LIB . '/class.event.php');
 	require_once(LIB . '/class.documentheaders.php');
-	
+
 	Class ViewException extends Exception {}
 
 	Class ViewFilterIterator extends FilterIterator{
@@ -23,7 +23,7 @@
 			if($this->getInnerIterator()->isDir() == false) return false;
 			preg_match('/\/?([^\\\\\/]+)$/', $this->getInnerIterator()->getPathname(), $match); //Find the view handle
 
-			return (file_exists(sprintf('%s/%s.config.xml', $this->getInnerIterator()->getPathname(), $match[1])));
+			return (is_file(sprintf('%s/%s.config.xml', $this->getInnerIterator()->getPathname(), $match[1])));
 		}
 	}
 
@@ -39,6 +39,7 @@
 
 		private $_about;
 		private $_path;
+		private $_pathname;
 		private $_parent;
 		private $_parameters;
 		private $_template;
@@ -46,7 +47,7 @@
 		private $_guid;
 
 		public function __construct(){
-			
+
 			$this->_about = new StdClass;
 			$this->_parameters = new StdClass;
 
@@ -64,26 +65,26 @@
 		}
 
 		public function __isset($name){
-			if(in_array($name, array('path', 'template', 'handle', 'guid'))){
+			if(in_array($name, array('path', 'template', 'handle', 'guid', 'pathname'))){
 				return isset($this->{"_{$name}"});
 			}
 			return isset($this->_about->$name);
 		}
 
 		public function __get($name){
-			if(in_array($name, array('path', 'template', 'handle', 'guid'))){
+			if(in_array($name, array('path', 'template', 'handle', 'guid', 'pathname'))){
 				return $this->{"_{$name}"};
 			}
-			
+
 			if (!isset($this->_about->$name)) {
 				return false;
 			}
-			
+
 			return $this->_about->$name;
 		}
 
 		public function __set($name, $value){
-			if(in_array($name, array('path', 'template', 'handle', 'guid'))){
+			if(in_array($name, array('path', 'template', 'handle', 'guid', 'pathname'))){
 				$this->{"_{$name}"} = $value;
 			}
 			else $this->_about->$name = $value;
@@ -100,7 +101,7 @@
 
 			$pathname = sprintf('%s/%s/%s.config.xml', VIEWS, $view->path, $view->handle);
 
-			if(!file_exists($pathname)){
+			if(!is_file($pathname)){
 				throw new ViewException(__('View, %s, could not be found.', array($pathname)), self::ERROR_VIEW_NOT_FOUND);
 			}
 
@@ -145,6 +146,7 @@
 
 			$template = sprintf('%s/%s/%s.xsl', VIEWS, $view->path, $view->handle);
 			if(file_exists($template) && is_readable($template)){
+				$view->pathname = $template;
 				$view->template = file_get_contents($template);
 			}
 
@@ -359,14 +361,14 @@
 			return true;
 		}
 
-		public function __toString(){
+		public function __toString() {
 			$doc = new DOMDocument('1.0', 'UTF-8');
 			$doc->formatOutput = true;
 
 			$root = $doc->createElement('view');
 			$doc->appendChild($root);
 
-			if(!isset($this->guid) || is_null($this->guid)){
+			if (!isset($this->guid) || is_null($this->guid)) {
 				$this->guid = uniqid();
 			}
 
@@ -374,59 +376,71 @@
 
 			$root->appendChild($doc->createElement('title', General::sanitize($this->title)));
 			$root->appendChild($doc->createElement('content-type', $this->{'content-type'}));
-			
-			if(is_array($this->{'url-parameters'}) && count($this->{'url-parameters'}) > 0){
+
+			if (is_array($this->{'url-parameters'}) && count($this->{'url-parameters'}) > 0) {
 				$url_parameters = $doc->createElement('url-parameters');
-				foreach($this->{'url-parameters'} as $p){
+
+				foreach ($this->{'url-parameters'} as $p) {
 					$url_parameters->appendChild($doc->createElement('item', General::sanitize($p)));
 				}
+
 				$root->appendChild($url_parameters);
 			}
 
-			if(is_array($this->events) && count($this->events) > 0){
+			if (is_array($this->events) && count($this->events) > 0) {
 				$events = $doc->createElement('events');
-				foreach($this->events as $p){
+
+				foreach ($this->events as $p) {
 					$events->appendChild($doc->createElement('item', General::sanitize($p)));
 				}
+
 				$root->appendChild($events);
 			}
 
-			if(is_array($this->{'data-sources'}) && count($this->{'data-sources'}) > 0){
+			if (is_array($this->{'data-sources'}) && count($this->{'data-sources'}) > 0) {
 				$data_sources = $doc->createElement('data-sources');
-				foreach($this->{'data-sources'} as $p){
+
+				foreach ($this->{'data-sources'} as $p) {
 					$data_sources->appendChild($doc->createElement('item', General::sanitize($p)));
 				}
+
 				$root->appendChild($data_sources);
 			}
 
-			if(is_array($this->types) && count($this->types) > 0){
+			if (is_array($this->types) && count($this->types) > 0) {
 				$types = $doc->createElement('types');
-				foreach($this->types as $t){
+
+				foreach ($this->types as $t) {
 					$types->appendChild($doc->createElement('item', General::sanitize($t)));
 				}
+
 				$root->appendChild($types);
 			}
 
 			return $doc->saveXML();
 		}
 
-		public function parent(){
-			if($this->_path == $this->handle) return NULL;
-			elseif(!($this->_parent instanceof self)){
+		public function parent() {
+			if ($this->_path == $this->handle) {
+				return null;
+			}
+
+			else if (!($this->_parent instanceof self)) {
 				$this->_parent = self::loadFromPath(preg_replace("~/{$this->handle}~", NULL, $this->_path));
 			}
+
 			return $this->_parent;
 		}
 
-		public function children(){
+		public function children() {
 			return new ViewIterator($this->path, false);
 		}
 
-		public static function delete($path, $cascade=false){
+		public static function delete($path, $cascade = false) {
 			$view = self::loadFromPath($path);
 
-			if($cascade == false){
-				foreach($view->children() as $child){
+			if ($cascade == false) {
+				foreach ($view->children() as $child) {
 					$bits = preg_split('~\/~', $child->path, -1, PREG_SPLIT_NO_EMPTY);
 					unset($bits[count($bits) - 2]);
 					View::move($child, trim(implode('/', $bits), '/'));
@@ -434,28 +448,30 @@
 			}
 
 			General::rmdirr(VIEWS . '/' . trim($path, '/'));
+		}
 
-		}	
-
-		private function __cbSortEventsByPriority($a, $b){
+		private function __cbSortEventsByPriority($a, $b) {
 			if ($a->priority() == $b->priority()) {
 		        return 0;
 		    }
-		    return(($a->priority() > $b->priority()) ? -1 : 1);
+
+		    return (($a->priority() > $b->priority()) ? -1 : 1);
 		}
 
-		public function render(Register $Parameters, XMLDocument &$Document=NULL, DocumentHeaders &$Headers=NULL){
+		public function render(Register $Parameters, XMLDocument $Document = null, DocumentHeaders $Headers = null) {
+			Profiler::begin('Preparing view');
 
 			$ParameterOutput = new Register;
 
-			if(!is_null($Headers)){
+			if (!is_null($Headers)) {
 				$Headers->append('Content-Type', $this->{'content-type'});
 			}
-			else{
+
+			else {
 				header('Content-Type: ' . $this->{'content-type'});
 			}
 
-			if(is_null($Document)){
+			if (is_null($Document)) {
 				$Document = new XMLDocument;
 				$Document->appendChild($Document->createElement('data'));
 			}
@@ -465,15 +481,18 @@
 
 			$events_wrapper = $Document->createElement('events');
 			$root->appendChild($events_wrapper);
-			
+
 			if (is_array($this->about()->{'events'}) && !empty($this->about()->{'events'})) {
 				$events = $this->about()->{'events'};
 			}
-			
+
 			if (is_array($this->about()->{'data-sources'}) && !empty($this->about()->{'data-sources'})) {
 				$datasources = $this->about()->{'data-sources'};
 			}
-			
+
+			Profiler::end();
+			Profiler::begin('Executing events');
+
 			####
 			# Delegate: FrontendEventsAppend
 			# Description: Append additional Events.
@@ -483,29 +502,51 @@
 					'events'	=> &$events
 				)
 			);
-			
+
 			if (!empty($events)) {
 				$postdata = General::getPostData();
 				$events_ordered = array();
-				
-				foreach($events as $handle){
-					$events_ordered[] = Event::loadFromHandle($handle);
+				$events_loaded = array();
+
+				foreach ($events as $handle) {
+					if (in_array($handle, $events_loaded)) continue;
+
+					if ($handle instanceof Event) {
+						$events_ordered[] = $handle;
+					}
+
+					else {
+						$events_ordered[] = Event::loadFromHandle($handle);
+						$events_loaded[] = $handle;
+					}
 				}
-				
+
 				uasort($events_ordered, array($this, '__cbSortEventsByPriority'));
-				
-				foreach($events_ordered as $e){
-					if (!$e->canTrigger($postdata)) continue;
-					
-					$fragment = $e->trigger($ParameterOutput, $postdata);
-					
-					if($fragment instanceof DOMDocument && !is_null($fragment->documentElement)){
+
+				foreach ($events_ordered as $event) {
+					if (!$event->canTrigger($postdata)) continue;
+
+					$reflection = new ReflectionObject($event);
+
+					Profiler::begin('Executed event %event');
+					Profiler::store('event', $event->handle, 'system/event');
+					Profiler::store('class', get_class($event), 'system/class');
+					Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
+
+					$fragment = $event->trigger($ParameterOutput, $postdata);
+
+					if ($fragment instanceof DOMDocument && !is_null($fragment->documentElement)) {
 						$node = $Document->importNode($fragment->documentElement, true);
 						$events_wrapper->appendChild($node);
 					}
+
+					Profiler::end();
 				}
 			}
-			
+
+			Profiler::end();
+			Profiler::begin('Executing datasources');
+
 			####
 			# Delegate: FrontendDataSourceAppend
 			# Description: Append additional DataSources.
@@ -521,39 +562,68 @@
 			$dependency_list = array();
 			$datasources_ordered = array();
 			$all_dependencies = array();
-			
-			foreach($datasources as $handle){
-				$datasource_pool[$handle] = Datasource::loadFromHandle($handle);
-				$dependency_list[$handle] = $datasource_pool[$handle]->parameters()->dependencies;
+
+			foreach ($datasources as $handle) {
+				if ($handle instanceof DataSource) {
+					$datasource = $handle;
+					$handle = $datasource->handle;
+
+					$datasource_pool[$handle] = $datasource;
+					$dependency_list[$handle] = $datasource->parameters()->dependencies;
+				}
+
+				else {
+					$datasource_pool[$handle] = Datasource::loadFromHandle($handle);
+					$dependency_list[$handle] = $datasource_pool[$handle]->parameters()->dependencies;
+					$datasources_loaded[] = $handle;
+				}
 			}
 
 			$datasources_ordered = General::dependenciesSort($dependency_list);
-			
+
 			if (!empty($datasources_ordered)) {
-				foreach($datasources_ordered as $handle){
-					$ds = $datasource_pool[$handle];
-					
+				foreach ($datasources_ordered as $handle) {
+					$datasource = $datasource_pool[$handle];
+					$reflection = new ReflectionObject($datasource);
+
 					try {
-						$fragment = $ds->render($ParameterOutput);
+						Profiler::begin('Executed datasource %datasource');
+						Profiler::store('datasource', $handle, 'system/datasource');
+						Profiler::store('class', get_class($datasource), 'system/class');
+						Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
+
+						$fragment = $datasource->render($ParameterOutput);
+
+						Profiler::end();
 					}
-					
+
 					catch (FrontendPageNotFoundException $e) {
+						Profiler::store('exception', $e->getMessage(), 'system/exeption');
+						Profiler::end();
+
 						FrontendPageNotFoundExceptionHandler::render($e);
 					}
 
-					if($fragment instanceof DOMDocument && !is_null($fragment->documentElement)){
-						$node = $Document->importNode($fragment->documentElement, true);
+					if ($fragment instanceof DomDocumentFragment) {
+						$node = $Document->importNode($fragment, true);
 						$root->appendChild($node);
 					}
 
+					else if ($fragment instanceof DOMDocument && !is_null($fragment->documentElement)) {
+						$node = $Document->importNode($fragment->documentElement, true);
+						$root->appendChild($node);
+					}
 				}
 			}
 
-			if($ParameterOutput->length() > 0){
-				foreach($ParameterOutput as $p){
+			if ($ParameterOutput->length() > 0) {
+				foreach ($ParameterOutput as $p) {
 					$Parameters->{$p->key} = $p->value;
 				}
 			}
+
+			Profiler::end();
+			Profiler::begin('Rendering parameters');
 
 			####
 			# Delegate: FrontendParamsPostResolve
@@ -564,21 +634,27 @@
 			$element = $Document->createElement('parameters');
 			$root->appendChild($element);
 
-			foreach($Parameters as $key => $parameter){
-				if(is_array($parameter->value) && count($parameter->value) > 1){
+			foreach ($Parameters as $key => $parameter) {
+				if (is_array($parameter->value) && count($parameter->value) > 1) {
 					$p = $Document->createElement($key);
 					$p->setAttribute('value', (string)$parameter);
-					foreach($parameter->value as $v){
+
+					foreach ($parameter->value as $v) {
 						$p->appendChild($Document->createElement('item', (string)$v));
 					}
+
 					$element->appendChild($p);
 				}
-				else{
+
+				else {
 					$element->appendChild($Document->createElement($key, (string)$parameter));
 				}
 			}
-			
+
 			$template = $this->template;
+
+			Profiler::end();
+			Profiler::begin('Executing template');
 
 			####
 			# Delegate: FrontendTemplatePreRender
@@ -590,25 +666,23 @@
 					'template'	=> &$template
 				)
 			);
-			
+
 			$this->template = $template;
-			
+
 			// When the XSLT executes, it uses the CWD as set here
 			$cwd = getcwd();
 			chdir(WORKSPACE);
-			$output = XSLProc::transform($Document, $this->template, XSLProc::XML, $Parameters->toArray(), array());
+			$output = XSLProc::transform(
+				$Document, $this->template, XSLProc::DOC,
+				$Parameters->toArray(), array()
+			);
 			chdir($cwd);
 
-			if(XSLProc::hasErrors()){
+			if (XSLProc::hasErrors() && !isset($_GET['profiler'])) {
 				throw new XSLProcException('Transformation Failed');
 			}
-			
-			/*
-			header('Content-Type: text/plain; charset=utf-8');
-			$Document->formatOutput = true;
-			print $Document->saveXML();
-			die();
-			*/
+
+			Profiler::end();
 
 			return $output;
 		}

@@ -1,23 +1,24 @@
 <?php
 
-	require_once('class.errorhandler.php');
-                 
-	require_once('class.dbc.php');
-	require_once('class.configuration.php');
-	require_once('class.datetimeobj.php');
-	require_once('class.log.php');
-	require_once('class.cookie.php');
-	require_once('interface.singleton.php');
-	require_once('class.cache.php');
-                 
-	require_once('class.section.php');
-	require_once('class.view.php');
-	require_once('class.widget.php');
-	require_once('class.general.php');
-	require_once('class.user.php');
-	require_once('class.xslproc.php');
-                 
-	require_once('class.extension.php');
+	require_once 'class.errorhandler.php';
+
+	require_once 'class.dbc.php';
+	require_once 'class.configuration.php';
+	require_once 'class.datetimeobj.php';
+	require_once 'class.log.php';
+	require_once 'class.cookie.php';
+	require_once 'interface.singleton.php';
+	require_once 'class.cache.php';
+
+	require_once 'class.section.php';
+	require_once 'class.view.php';
+	require_once 'class.widget.php';
+	require_once 'class.general.php';
+	require_once 'class.user.php';
+	require_once 'class.xslproc.php';
+
+	require_once 'class.extension.php';
+	require_once 'class.cryptography.php';
 
 	Class SymphonyErrorPageHandler extends GenericExceptionHandler{
 		public static function render($e){
@@ -134,7 +135,6 @@
 		protected static $_instance;
 
 		protected function __construct(){
-
 			self::$Configuration = new Configuration;
 
 			DateTimeObj::setDefaultTimezone(self::Configuration()->core()->region->timezone);
@@ -148,28 +148,24 @@
 
 			$this->initialiseLog();
 
-			GenericExceptionHandler::initialise();
+			GenericExceptionHandler::initialise(self::$Log);
 			GenericErrorHandler::initialise(self::$Log);
 
+			$this->initialiseDatabase();
 			$this->initialiseCookie();
 
-			$this->initialiseDatabase();
-			
 			Extension::init();
-			
-			Cache::setDriver(self::Configuration()->core()->{'cache-driver'});
 
 			Lang::loadAll(true);
 
-			// Ensure the cookie is always initialised
-			$this->Cookie->init();
-
+			// HACK!
+			$this->Cookie->get('blah');
 		}
 
 		public function lang(){
 			return self::$_lang;
 		}
-		
+
 		public function initialiseCookie(){
 			try{
 				$cookie_path = parse_url(URL, PHP_URL_PATH);
@@ -182,15 +178,19 @@
 			define_safe('__SYM_COOKIE_PATH__', $cookie_path);
 			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->core()->symphony->{'cookie-prefix'});
 
-			$this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__);
+			$this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__, null, true);
 		}
 
-		public static function Configuration(){
+		public static function Configuration() {
 			return self::$Configuration;
 		}
 
-		public static function Database(){
+		public static function Database() {
 			return self::$Database;
+		}
+
+		public static function Log() {
+			return self::$Log;
 		}
 
 		public static function Parent() {
@@ -206,7 +206,8 @@
 		public function initialiseDatabase(){
 			$details = (object)Symphony::Configuration()->db();
 
-			$db = new DBCMySQLProfiler;
+			//$db = new DBCMySQLProfiler;
+			$db = new DBCMySQL;
 
 			if($details->runtime_character_set_alter == 'yes'){
 				$db->character_encoding = $details->character_encoding;
@@ -245,8 +246,7 @@
 
 		}
 
-		public function isLoggedIn(){
-
+		public function isLoggedIn() {
 			if ($this->User) return true;
 
 			if (isset($_REQUEST['auth-token']) && $_REQUEST['auth-token'] && strlen($_REQUEST['auth-token']) == 8) {
@@ -256,7 +256,7 @@
 			$username = $this->Cookie->get('username');
 			$password = $this->Cookie->get('pass');
 
-			if(strlen(trim($username)) > 0 && strlen(trim($password)) > 0){
+			if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
 				$result = Symphony::Database()->query(
 					"
 						SELECT
@@ -289,61 +289,45 @@
 			}
 
 			$this->Cookie->expire();
+
 			return false;
 		}
 
-		public function logout(){
+		public function logout() {
 			$this->Cookie->expire();
 		}
 
 		// TODO: Most of this logic is duplicated with the isLoggedIn function.
 		public function login($username, $password, $isHash = false) {
-			if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
-				if (!$isHash) $password = md5($password);
+			if (strlen(trim($username)) <= 0 || strlen(trim($password)) <= 0) return false;
 
-				$result = Symphony::Database()->query(
-					"
-						SELECT
-							u.id
-						FROM
-							tbl_users AS u
-						WHERE
-							u.username = '%s'
-							AND u.password = '%s'
-						LIMIT 1
-					",
-					array($username, $password)
-				);
+			$user = User::loadUserFromUsername($username);
 
-				if ($result->valid()) {
-					$this->_user_id = $result->current()->id;
-
-					$this->User = User::load($this->_user_id);
-					$this->Cookie->set('username', $username);
-					$this->Cookie->set('pass', $password);
-
-					Symphony::Database()->update(
-						'tbl_users',
-						array('last_seen' => DateTimeObj::get('Y-m-d H:i:s')),
-						array($this->_user_id),
-						"`id` = '%d'"
-					);
-
-					$this->reloadLangFromUserPreference();
-
-					return true;
+			if ($user instanceof User && Cryptography::compare($password, $user->password, $isHash)) {
+				if (Cryptography::requiresMigration($user->password)) {
+					$user->password = Cryptography::hash($password);
 				}
+
+				$this->Cookie->set('username', $username);
+				$this->Cookie->set('pass', $user->password);
+
+				$this->User = $user;
+				$user->last_seen = DateTimeObj::get('Y-m-d H:i:s');
+				$this->reloadLangFromUserPreference();
+
+				User::save($user);
+				return true;
 			}
 
 			return false;
 		}
 
-		public function loginFromToken($token){
+		public function loginFromToken($token) {
 			$token = Symphony::Database()->escape($token);
 
 			if (strlen(trim($token)) == 0) return false;
 
-			if (strlen($token) == 6){
+			if (strlen($token) == 6) {
 				$result = Symphony::Database()->query("
 						SELECT
 							`u`.id, `u`.username, `u`.password
@@ -366,7 +350,7 @@
 				Symphony::Database()->delete('tbl_forgotpass', array($token), "`token` = '%s'");
 			}
 
-			else{
+			else {
 				$result = Symphony::Database()->query("
 						SELECT
 							id, username, password
@@ -382,7 +366,7 @@
 				);
 			}
 
-			if($result->valid()) {
+			if ($result->valid()) {
 				$row = $result->current();
 				$this->_user_id = $row->id;
 
@@ -391,7 +375,7 @@
 				$this->Cookie->set('pass', $row->password);
 
 				Symphony::Database()->update(
-					'tbl_authors',
+					'tbl_users',
 					array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')),
 					array($this->_user_id),
 					"`id` = '%d'"
@@ -406,9 +390,9 @@
 
 		}
 
-		public function reloadLangFromUserPreference(){
-
+		public function reloadLangFromUserPreference() {
 			$lang = $this->User->language;
+
 			if($lang && $lang != self::lang()){
 				self::$_lang = $lang;
 				if($lang != 'en') {

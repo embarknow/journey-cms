@@ -2,56 +2,64 @@
 
 	require_once(LIB . '/class.messagestack.php');
 
-	Class XSLProcException extends Exception{
+	class XSLProcException extends Exception {
 		private $error;
 
-		public function getType(){
+		public function getType() {
 			return $this->error->type;
 		}
 
-		public function __construct($message){
+		public function __construct($message) {
 			parent::__construct($message);
+
 			$this->error = NULL;
 			$bFoundFile = false;
 
-			if(XSLProc::getErrors() instanceof MessageStack){
-				foreach(XSLProc::getErrors() as $e){
-					if($e->type == XSLProc::ERROR_XML){
-						$this->error = $errors[0];
-						$this->file = XSLProc::lastXML();
-						$this->line = $this->error->line;
+			if (XSLProc::getErrors() instanceof MessageStack) {
+				foreach (XSLProc::getErrors() as $e) {
+					if ($e->type == XSLProc::ERROR_XML) {
+						$this->error = (object)array();
+						$this->error->file = XSLProc::lastXML();
+						$this->error->line = $e->line;
 						$bFoundFile = true;
+
 						break;
 					}
-					elseif(strlen(trim($e->file)) == 0) continue;
 
-					$this->error = $errors[0];
+					else if (strlen(trim($e->file)) == 0) {
+						continue;
+					}
 
-					$this->file = $this->error->file;
-					$this->line = $this->error->line;
+					$this->error = (object)array();
+					$this->error->file = $e->file;
+					$this->error->line = $e->line;
 					$bFoundFile = true;
+
 					break;
 				}
 
-				if(is_null($this->error)){
+				if (is_null($this->error)) {
 					foreach(XSLProc::getErrors() as $e){
-						if(preg_match_all('/(\/?[^\/\s]+\/.+.xsl) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)){
+						if (preg_match_all('/(\/?[^\/\s]+\/.+.xsl) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)) {
 							$this->file = $matches[0][1];
 							$this->line = $matches[0][2];
 							$bFoundFile = true;
+
 							break;
 						}
 
-						elseif(preg_match_all('/([^:]+): (.+) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)){
+						else if (preg_match_all('/([^:]+): (.+) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)) {
 							//throw new Exception("Fix XSLPROC Frontend doesn't have access to Page");
 
 							$this->line = $matches[0][3];
-							$this->file = VIEWS . '/' . Frontend::instance()->loadedView()->templatePathname();
+							$this->file = Frontend::instance()->loadedView()->pathname;
 							$bFoundFile = true;
 						}
 					}
 				}
 			}
+
+//			var_dump(XSLProc::getErrors()); exit;
 
 /*
 			// FIXME: This happens when there is an error in the page XSL. Since it is loaded in to a string then passed to the processor it does not return a file
@@ -93,7 +101,7 @@
 
 			$lines = $xml->createElement('nearby-lines');
 
-			$markdown .= "\t" . $e->getMessage() . "\n";
+			$markdown = "\t" . $e->getMessage() . "\n";
 			$markdown .= "\t" . $e->getFile() . " line " . $e->getLine() . "\n\n";
 
 			foreach($nearby_lines as $line_number => $string){
@@ -127,6 +135,31 @@
 
 			$root->appendChild($processing_errors);
 
+			if(Frontend::Parameters() instanceof Register) {
+				$params = Frontend::Parameters();
+
+				$parameters = $xml->createElement('parameters');
+
+				foreach($params as $key => $parameter){
+					$p = $xml->createElement('param');
+					$p->setAttribute('key', $key);
+					$p->setAttribute('value', (string)$parameter);
+
+					if(is_array($parameter->value) && count($parameter->value) > 1){
+						foreach($parameter->value as $v){
+							$p->appendChild(
+								$xml->createElement('item', (string)$v)
+							);
+						}
+					}
+
+					$parameters->appendChild($p);
+				}
+
+				$root->appendChild($parameters);
+			}
+
+
 			return parent::__transform($xml, 'exception.xslt.xsl');
 		}
 	}
@@ -157,11 +190,11 @@
 		}
 
 		static private function processLibXMLerrors($type=self::ERROR_XML){
-			if(!(self::$errors instanceof MessageStack)){
+			if (!(self::$errors instanceof MessageStack)) {
 				self::$errors = new MessageStack;
 			}
 
-			foreach(libxml_get_errors() as $error){
+			foreach (libxml_get_errors() as $error) {
 				$error->type = $type;
 				self::$errors->append(NULL, $error);
 			}
@@ -213,6 +246,7 @@
 			$result = null;
 
 			libxml_use_internal_errors(true);
+			libxml_clear_errors();
 
 			if($xml instanceof DOMDocument){
 				$XMLDoc = $xml;
@@ -234,7 +268,7 @@
 
 			if(!self::hasErrors() && ($XSLDoc instanceof DOMDocument) && ($XMLDoc instanceof DOMDocument)){
 				$XSLProc = new XSLTProcessor;
-				if(!empty($register_functions)) $XSLProc->registerPHPFunctions($register_functions);
+				$XSLProc->registerPHPFunctions();
 				$XSLProc->importStyleSheet($XSLDoc);
 
 				if(is_array($parameters) && !empty($parameters)) $XSLProc->setParameter('', $parameters);
@@ -245,6 +279,13 @@
 					$result = $XSLProc->{'transformTo'.($output==self::XML ? 'XML' : 'Doc')}($XMLDoc);
 					self::processLibXMLerrors(self::ERROR_XML);
 				}
+			}
+
+			if (is_null($result) && self::hasErrors() && !isset($_GET['profiler'])) {
+				//throw new exception('XSLT ERROR');
+				throw new XSLProcException('Transformation Failed');
+				//var_dump(self::$errors);
+				//exit;
 			}
 
 			return $result;

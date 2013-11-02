@@ -9,7 +9,7 @@
 		public $_navigation;
 		public $_context;
 		protected $_alerts;
-		
+
 		public function __construct(){
 			parent::__construct('1.0', 'utf-8', 'html');
 			$this->alerts = new AlertStack;
@@ -25,16 +25,16 @@
 		public function Context(){
 			return $this->_context;
 		}
-		
+
 		public function minify(array $files, $output_pathname, $unlink_existing=true){
-			
+
 			if(file_exists($output_pathname) && $unlink_existing === true) unlink($output_pathname);
-			
+
 			foreach($files as $pathname){
 				if(!file_exists($pathname) || !is_readable($pathname)) throw new Exception("File '{$pathname}' could not be found, or is not readable.");
-				
+
 				$contents = file_get_contents($pathname);
-				
+
 				if(file_put_contents($output_pathname, $contents . "\n", FILE_APPEND) === false){
 					throw new Exception("Could not write to '{$output_pathname}.");
 				}
@@ -48,13 +48,13 @@
 			$this->insertNodeIntoHead($meta);
 			$meta->setAttribute('http-equiv', 'Content-Type');
 			$meta->setAttribute('content', 'text/html; charset=UTF-8');
-			
+
 			$styles = array(
 				ADMIN_URL . '/assets/css/symphony.css',
 				ADMIN_URL . '/assets/css/symphony.duplicator.css',
 				ADMIN_URL . '/assets/css/symphony.layout.css'
 			);
-			
+
 			$scripts = array(
 				ADMIN_URL . '/assets/js/jquery.js',
 				ADMIN_URL . '/assets/js/jquery-ui.js',
@@ -66,10 +66,10 @@
 				ADMIN_URL . '/assets/js/symphony.selectable.js',
 				ADMIN_URL . '/assets/js/symphony.js'
 			);
-			
+
 			// Builds a super JS and CSS document
 			if(Symphony::Configuration()->core()->symphony->{'condense-scripts-and-stylesheets'} == 'yes'){
-				
+
 				if(file_exists(CACHE . '/admin-styles.css')){
 					$styles = array(URL . '/manifest/cache/admin-styles.css');
 				}
@@ -81,7 +81,7 @@
 					catch(Exception $e){
 					}
 				}
-				
+
 				if(file_exists(CACHE . '/admin-scripts.js')){
 					$scripts = array(URL . '/manifest/cache/admin-scripts.js');
 				}
@@ -94,15 +94,15 @@
 					}
 				}
 			}
-			
+
 			foreach($styles as $pathname){
 				$this->insertNodeIntoHead($this->createStylesheetElement($pathname));
 			}
-			
+
 			foreach($scripts as $pathname){
 				$this->insertNodeIntoHead($this->createScriptElement($pathname));
 			}
-			
+
 			###
 			# Delegate: InitaliseAdminPageHead
 			# Description: Allows developers to insert items into the page HEAD. Use $context['parent']->Page
@@ -176,14 +176,14 @@
 		public function alerts(){
 			return $this->alerts;
 		}
-		
+
 		public function appendAlert(){
 			###
 			# Delegate: AppendPageAlert
 			# Description: Allows for appending of alerts. Administration::instance()->Page->Alert is way to tell what
 			# is currently in the system
 			Extension::notify('AppendPageAlert', '/administration/');
-			
+
 			if ($this->alerts()->valid()) {
 				$this->alerts()->appendTo($this->Body);
 			}
@@ -365,24 +365,26 @@
 				);
 			}
 
-//			$extensions = ExtensionManager::instance()->listInstalledHandles();
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
 
-			foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $e){
-				
-				if(!method_exists($e, 'fetchNavigation')) continue;
-				
+			foreach ($extensions as $e) {
+				if (method_exists($e, 'fetchNavigation') === false) continue;
+
 				$e_navigation = $e->fetchNavigation();
 
-				if(isset($e_navigation) && is_array($e_navigation) && !empty($e_navigation)){
+				if (isset($e_navigation) && is_array($e_navigation) && !empty($e_navigation)) {
+					foreach ($e_navigation as $item) {
+						$type = (
+							isset($item['children'])
+								? Extension::NAVIGATION_GROUP
+								: Extension::NAVIGATION_CHILD
+						);
 
-					foreach($e_navigation as $item){
-
-						$type = (isset($item['children']) ? Extension::NAVIGATION_GROUP : Extension::NAVIGATION_CHILD);
-
-						switch($type){
-
+						switch ($type) {
 							case Extension::NAVIGATION_GROUP:
-
 								$index = General::array_find_available_index($nav, $item['location']);
 
 								$nav[$index] = array(
@@ -392,73 +394,91 @@
 									'limit' => (!is_null($item['limit']) ? $item['limit'] : NULL)
 								);
 
-								foreach($item['children'] as $child){
-
-									if(!isset($child['relative']) || $child['relative'] == true){
-										$link = '/extension/' . Extension::getHandleFromPath(Extension::getPathFromClass(get_class($e))) . '/' . ltrim($child['link'], '/');
+								foreach ($item['children'] as $child) {
+									if (isset($child['relative']) === false || $child['relative'] == true) {
+										$link = '/extension/' . $e->handle . '/' . ltrim($child['link'], '/');
 									}
-									else{
+
+									else {
 										$link = '/' . ltrim($child['link'], '/');
 									}
 
 									$nav[$index]['children'][] = array(
-
-										'link' => $link,
-										'name' => $child['name'],
-										'visible' => ($child['visible'] == 'no' ? 'no' : 'yes'),
-										'limit' => (!is_null($child['limit']) ? $child['limit'] : NULL)
+										'link' =>		$link,
+										'name' =>		$child['name'],
+										'visible' =>	(
+															$child['visible'] == 'no'
+																? 'no'
+																: 'yes'
+														),
+										'limit' =>		(
+															isset($child['limit'])
+																? $child['limit']
+																: null
+														)
 									);
 								}
 
 								break;
 
 							case Extension::NAVIGATION_CHILD:
-
-								if(!isset($item['relative']) || $item['relative'] == true){
-									$link = '/extension/' . Extension::getHandleFromPath(Extension::getPathFromClass(get_class($e))) . '/' . ltrim($item['link'], '/');
+								if (isset($item['relative']) === false || $item['relative'] == true) {
+									$link = '/extension/' . $e->handle . '/' . ltrim($item['link'], '/');
 								}
-								else{
+
+								else {
 									$link = '/' . ltrim($item['link'], '/');
 								}
 
-								if(!is_numeric($item['location'])){
-									// is a navigation group
+								// is a navigation group
+								if (is_numeric($item['location']) === false) {
 									$group_name = $item['location'];
 									$group_index = $this->__findLocationIndexFromName($nav, $item['location']);
-								} else {
-									// is a legacy numeric index
+								}
+
+								// is a legacy numeric index
+								else {
 									$group_index = $item['location'];
 								}
 
 								$child = array(
-									'link' => $link,
-									'name' => $item['name'],
-									'visible' => ($item['visible'] == 'no' ? 'no' : 'yes'),
-									'limit' => (!is_null($item['limit']) ? $item['limit'] : NULL)
+									'link' =>		$link,
+									'name' =>		$item['name'],
+									'visible' =>	(
+														$item['visible'] == 'no'
+															? 'no'
+															: 'yes'
+													),
+									'limit' =>		(
+														isset($item['limit'])
+															? $item['limit']
+															: null
+													)
 								);
 
+								// add new navigation group
 								if ($group_index === false) {
-									// add new navigation group
 									$nav[] = array(
-										'name' => $group_name,
-										'index' => $group_index,
-										'children' => array($child),
-										'limit' => (!is_null($item['limit']) ? $item['limit'] : NULL)
+										'name' =>		$group_name,
+										'index' =>		$group_index,
+										'children' =>	array($child),
+										'limit' =>		(
+															isset($item['limit'])
+																? $item['limit']
+																: null
+														)
 									);
-								} else {
-									// add new location by index
+								}
+
+								// add new location by index
+								else {
 									$nav[$group_index]['children'][] = $child;
 								}
 
-
 								break;
-
 						}
-
 					}
-
 				}
-
 			}
 
 			####
@@ -532,10 +552,10 @@
 						'class' => (Administration::instance()->getCurrentPageURL() == rtrim($link, '/') ? 'active' : null)
 					))
 				);
-				
+
 				$list->appendChild($item);
 			}
-			
+
 			$div->appendChild($list);
 			$this->Form->appendChild($div);
 		}

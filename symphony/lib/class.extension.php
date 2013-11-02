@@ -1,381 +1,439 @@
 <?php
 
-	Interface iExtension{
-
-/*		
-		public function about();
-
-		public function enable();
-		public function disable();
-
-		public function install();
-		public function update($previous_version=NULL);
-		public function uninstall();
-
-		public function getSubscribedDelegates();
-		public function fetchNavigation();
-*/
+	interface ExtensionInterface {
 
 	}
 
-
-	Class ExtensionException extends Exception{
+	interface ExtensionWithIncludesInterface {
+		public function includeFiles();
 	}
 
-	Abstract Class Extension{
-		
+	interface ExtensionWithSectionsInterface {
+		public function includeSections();
+	}
+
+	class ExtensionException extends Exception {
+
+	}
+
+	abstract class Extension {
 		static private $loaded_extensions;
 		static private $extensions_class_to_path;
 		static private $extension_configuration;
 		static private $extensions;
 		static private $extension_statuses;
-		
-		const NAVIGATION_CHILD = 'child';
-		const NAVIGATION_GROUP = 'group';
-		
+		static private $database;
+
 		const STATUS_ENABLED = 'enabled';
 		const STATUS_DISABLED = 'disabled';
 		const STATUS_NOT_INSTALLED = 'not-installed';
 		const STATUS_REQUIRES_UPDATE = 'requires-update';
 
-		public static function enable($handle){
-			
+		public static function Configuration() {
+			return self::$extension_configuration;
+		}
+
+		public static function enable($handle) {
 			$extension = self::load($handle);
 			$status = self::status($handle);
-			
+
 			$node = end(self::$extension_configuration->xpath("//extension[@handle='{$handle}'][1]"));
-			
-			if($status == self::STATUS_NOT_INSTALLED){
-				if(is_callable(array($extension, 'install'))){
+
+			if ($status == self::STATUS_NOT_INSTALLED) {
+				if (is_callable([$extension, 'install'])) {
 					$extension->install();
 				}
-				
+
 				// Create the XML configuration object
-				if(empty($node)){
+				if (empty($node)) {
 					$node = self::$extension_configuration->addChild('extension');
 					$node->addAttribute('handle', $handle);
 					$node->addAttribute('version', $extension->about()->version);
 				}
 			}
-			
-			elseif($status == self::STATUS_REQUIRES_UPDATE){
-				if(is_callable(array($extension, 'update'))){
+
+			else if ($status == self::STATUS_REQUIRES_UPDATE) {
+				if (is_callable([$extension, 'update'])) {
 					$extension->update($this->extension_configuration->xpath((string)"//extension[@handle='{$handle}']/@version"));
 				}
-				
-				$node['version'] = $extension->about()->version;
 
+				$node['version'] = $extension->about()->version;
 			}
-			
-			if(is_callable(array($extension, 'enable'))){
+
+			if (is_callable([$extension, 'enable'])) {
 				$extension->enable();
 			}
-			
+
 			$node['status'] = self::STATUS_ENABLED;
-			
+
 			self::rebuildConfiguration();
 		}
-		
-		public static function disable($handle){
+
+		public static function disable($handle) {
 			$extension = self::load($handle);
 			$node = end(self::$extension_configuration->xpath("//extension[@handle='{$handle}'][1]"));
-			if(is_callable(array($extension, 'disable'))){
+
+			if (is_callable([$extension, 'disable'])) {
 				$extension->disable();
 			}
+
 			$node['status'] = self::STATUS_DISABLED;
+
 			self::rebuildConfiguration();
 		}
-		
-		public static function uninstall($handle){
+
+		public static function uninstall($handle) {
 			$extension = self::load($handle);
 			$node = end(self::$extension_configuration->xpath("//extension[@handle='{$handle}'][1]"));
-			if(is_callable(array($extension, 'uninstall'))){
+
+			if (is_callable([$extension, 'uninstall'])) {
 				$extension->uninstall();
 			}
+
 			$node['status'] = self::STATUS_NOT_INSTALLED;
+
 			self::rebuildConfiguration();
 		}
-		
-		public static function findSubscribed($delegate, $page){
+
+		public static function findSubscribed($delegate, $page) {
 			// Prepare the xpath
 			$xpath = sprintf(
-				"delegates/item[@delegate='%s'][@page='*' or %s]", 
-				$delegate, 
-				implode(' or ', array_map(create_function('$value', 'return "@page=\'{$value}\'";'), (array)$page))
+				"delegates/item[@delegate='%s'][@page='*' or %s]",
+				$delegate,
+				implode(' or ', array_map(function($value) { return "@page='{$value}'"; }, (array)$page))
 			);
 
 			$nodes = self::$extension_configuration->xpath("//extension[@status='enabled'][{$xpath}]");
-			
+
 			return $nodes;
 		}
-		
-		public static function delegateSubscriptionCount($delegate, $page){
+
+		public static function delegateSubscriptionCount($delegate, $page) {
 			$nodes = self::findSubscribed($delegate, $page);
+
 			return count($nodes);
 		}
-		
-		public static function notify($delegate, $page, $context=array()){
-			
-			$count = 0;
+
+		public static function notify($delegate, $page, $context = []) {
 			$nodes = self::findSubscribed($delegate, $page);
-			
-			if(!empty($nodes)){
-				
+			$count = 0;
+
+			if (empty($nodes) === false) {
+				Profiler::begin('Executing delegate %delegate');
+				Profiler::store('delegate', $delegate, 'system/delegate action/executed');
+
 				// Prepare the xpath
 				$xpath = sprintf(
-					"delegates/item[@delegate='%s'][@page='*' or %s]", 
-					$delegate, 
-					implode(' or ', array_map(create_function('$value', 'return "@page=\'{$value}\'";'), (array)$page))
+					"delegates/item[@delegate='%s'][@page='*' or %s]",
+					$delegate,
+					implode(' or ', array_map(function($value) { return "@page='{$value}'"; }, (array)$page))
 				);
-				
-				foreach($nodes as $e){
+
+				foreach ($nodes as $e) {
 					$extension = self::load((string)$e->attributes()->handle);
 					$delegates = $e->xpath($xpath);
-				
-					foreach($delegates as $d){
+
+					foreach ($delegates as $d) {
 						$count++;
-						if(is_callable(array($extension, (string)$d->attributes()->callback))){
+
+						if (is_callable([$extension, (string)$d->attributes()->callback])) {
+							Profiler::begin('Executing delegate in %extension');
+							Profiler::store('extension', $extension->handle, 'system/extension');
+							Profiler::store('class', get_class($extension), 'system/class');
+							Profiler::store('method', (string)$d->attributes()->callback, 'system/method');
+							Profiler::store('location', $extension->file, 'system/resource');
+
 							$extension->{(string)$d->attributes()->callback}($context);
+
+							Profiler::end();
 						}
 					}
 				}
+
+				Profiler::end();
 			}
-			
+
 			return $count;
 		}
-		
-		public static function init($config=NULL){
-			
-			self::$extensions = array();
-			
-			if(is_null($config)){
+
+		public static function init($config = null) {
+			if (isset(self::$extension_configuration) && isset($config) === false) {
+				return null;
+			}
+
+			self::$extensions = [];
+
+			// Load the configuration file:
+			if (isset($config) === false) {
 				$config = MANIFEST . '/extensions.xml';
 			}
-			
-			if(!file_exists($config)){
+
+			if (file_exists($config) === false) {
 				self::$extension_configuration = new SimpleXMLElement('<extensions></extensions>');
 			}
-			else{
+
+			else {
 				$previous = libxml_use_internal_errors(true);
 				self::$extension_configuration = simplexml_load_file($config);
 				libxml_use_internal_errors($previous);
-			
-				if(!(self::$extension_configuration instanceof SimpleXMLElement)){
+
+				if ((self::$extension_configuration instanceof SimpleXMLElement) === false) {
 					throw new ExtensionException('Failed to load Extension configuration file ' . $config);
 				}
 			}
 		}
-		
-		public static function getPathFromClass($class){
+
+		public static function getPathFromClass($class) {
 			return (
 				isset(self::$extensions_class_to_path[$class])
 					? self::$extensions_class_to_path[$class]
 					: null
 			);
 		}
-		
-		public static function getHandleFromPath($pathname){
-			return str_replace(EXTENSIONS . '/', NULL, $pathname);
+
+		public static function getHandleFromPath($pathname) {
+			return str_replace(EXTENSIONS . '/', null, $pathname);
 		}
-		
-		public static function saveConfiguration($pathname=NULL){
-			if(is_null($pathname)){
+
+		public static function saveConfiguration($pathname = null) {
+			if (is_null($pathname)) {
 				$pathname = MANIFEST . '/extensions.xml';
 			}
-			
+
 			// Import the SimpleXMLElement object into a DOMDocument object. This ensures formatting is preserved
 			$doc = dom_import_simplexml(self::$extension_configuration);
 			$doc->ownerDocument->preserveWhiteSpace = false;
 			$doc->ownerDocument->formatOutput = true;
-			
+
 			General::writeFile($pathname, $doc->ownerDocument->saveXML(), Symphony::Configuration()->core()->symphony->{'file-write-mode'});
 		}
-		
-		public static function rebuildConfiguration($config_pathname=NULL){
 
+		public static function rebuildConfiguration($config_pathname = null) {
 			$doc = new DOMDocument('1.0', 'utf-8');
 			$doc->formatOutput = true;
 			$doc->appendChild($doc->createElement('extensions'));
 			$root = $doc->documentElement;
-			
-			foreach(new ExtensionIterator as $extension){
-				
-				// TODO: Check if the extension is already present in the config, and retain the version & status if it is
-				// This ensures that the status of "requires-update" remains intact.
-				
-				$pathname = self::getPathFromClass(get_class($extension));
-				$handle = self::getHandleFromPath($pathname);
-				
+
+			foreach (new ExtensionIterator() as $extension) {
 				$element = $doc->createElement('extension');
-				$element->setAttribute('handle', $handle);
-				
-				$node = end(self::$extension_configuration->xpath("//extension[@handle='{$handle}'][1]"));
-				if(!empty($node)){
+				$element->setAttribute('handle', $extension->handle);
+
+				$node = end(self::$extension_configuration->xpath("//extension[@handle='{$extension->handle}'][1]"));
+
+				if (!empty($node)) {
 					$element->setAttribute('version', $node->attributes()->version);
 					$element->setAttribute('status', $node->attributes()->status);
 				}
-				else{
+
+				else {
 					$element->setAttribute('version', $extension->about()->version);
-					$element->setAttribute('status', self::status($handle));
+					$element->setAttribute('status', self::status($extension->handle));
 				}
-				
+
 				$root->appendChild($element);
-				
-				if(method_exists($extension, 'getSubscribedDelegates')){
-					
+
+				if (method_exists($extension, 'getSubscribedDelegates')) {
 					$delegates = $doc->createElement('delegates');
-					foreach((array)$extension->getSubscribedDelegates() as $delegate){
+
+					foreach ((array)$extension->getSubscribedDelegates() as $delegate) {
 						$item = $doc->createElement('item');
 						$item->setAttribute('page', $delegate['page']);
 						$item->setAttribute('delegate', $delegate['delegate']);
 						$item->setAttribute('callback', $delegate['callback']);
 						$delegates->appendChild($item);
 					}
+
 					$element->appendChild($delegates);
-				}	
+				}
 			}
-			
+
 		 	self::$extension_configuration = simplexml_import_dom($doc);
 			self::saveConfiguration($config_pathname);
 		}
-		
-		public static function load($handle){
-			
-			$pathname = EXTENSIONS . "/{$handle}";
-			
-			if(!is_array(self::$loaded_extensions)){
-				self::$loaded_extensions = array();
-			}
-			
-			if(!isset(self::$loaded_extensions[$pathname])){
-				if(!file_exists(realpath($pathname) . '/extension.driver.php')){
-					throw new ExtensionException('No extension driver found at ' . $pathname);
-				}
-				
-				$class = require_once(realpath($pathname) . '/extension.driver.php');
-				self::$loaded_extensions[$pathname] = $class;
-				
-				if(is_null(self::$loaded_extensions[$pathname]) || !class_exists(self::$loaded_extensions[$pathname])){
-					throw new ExtensionException('Extension driver found at "'.$pathname.'" did not return a valid classname for instantiation.');
-				}
-				
-				self::$extensions[$handle] = new self::$loaded_extensions[$pathname];
-				self::$extensions_class_to_path[$class] = $pathname;
+
+		public static function load($handle) {
+			$extensions = new ExtensionIterator();
+
+			if (isset($extensions[$handle]) === false) {
+				throw new ExtensionException('No extension found for ' . $handle);
 			}
 
-			return self::$extensions[$handle];
-			
+			return $extensions[$handle];
 		}
-		
-		public static function status($handle){
-			if (!(isset(self::$extension_statuses[$handle]))) {
-				$status = self::STATUS_NOT_INSTALLED;
-				
-				$extension = self::load($handle);
-				
+
+		public static function status($handle) {
+			$extensions = new ExtensionIterator();
+			$status = self::STATUS_NOT_INSTALLED;
+
+			if (isset($extensions[$handle])) {
+				$extension = $extensions[$handle];
 				$node = end(self::$extension_configuration->xpath("//extension[@handle='{$handle}'][1]"));
-	
-				if(!empty($node)){
-	
-					if($node->attributes()->status == self::STATUS_ENABLED && $node->attributes()->version != $extension->about()->version){
+
+				if (empty($node) === false) {
+					if (
+						$node->attributes()->status == self::STATUS_ENABLED
+						&& $node->attributes()->version != $extension->about()->version
+					) {
 						$node['status'] = self::STATUS_REQUIRES_UPDATE;
 					}
-					
-					$status = $node->attributes()->status;
+
+					$status = (string)$node->attributes()->status;
 				}
-				
-				self::$extension_statuses[$handle] = (string)$status;
 			}
-			
-			return self::$extension_statuses[$handle];
+
+			return $status;
 		}
 	}
-	
-	Class ExtensionIterator implements Iterator{
-		
-		const FLAG_STATUS = 'status';
-		const FLAG_TYPE = 'type';
-		
-		private $position;
-		private $extensions;
-		static private $extensions_by_flag;
 
-		public function __construct($flag=NULL, $value=NULL){
-			$this->position = 0;
-			$key = null;
-			
-			if ($flag != null and $value != null) {
-				$key = "{$flag}.{$value}";
-			}
-			
-			if (!(isset(self::$extensions_by_flag[$key]))) {
-				if (!(is_array(self::$extensions_by_flag))) {
-					self::$extensions_by_flag = array();
+	class ExtensionIterator extends ArrayIterator {
+		protected static $cache;
+		protected static $data;
+
+		public static function buildCache() {
+			$cache = self::$cache = new Cache(Cache::SOURCE_CORE, 'extensions');
+			$directories = $cache->{'directories'};
+			$last = $extensions = [];
+
+			if (is_array($directories) === false) {
+				Profiler::begin('Discovering extensions');
+
+				foreach (new DirectoryIterator(EXTENSIONS) as $dir) {
+					if (is_file($dir->getPathName() . '/extension.driver.php') === false) continue;
+
+					Profiler::begin('Discovered extension %extension');
+
+					$directories[] = (object)[
+						'path' =>	$dir->getPathName(),
+						'handle' =>	$dir->getFileName()
+					];
+
+					Profiler::store('extension', $dir->getFileName(), 'system/extension');
+					Profiler::store('location', $dir->getPathName() . '/extension.driver.php', 'system/resource action/discovered');
+					Profiler::end();
 				}
-				
-				foreach(new DirectoryIterator(EXTENSIONS) as $d){
-					if(!$d->isDir() || $d->isDot() || !file_exists($d->getPathname() . '/extension.driver.php')) continue;
-					
-					$extension = Extension::load($d->getFileName());
-					
-					if(!is_null($flag) && !is_null($value)){
-						switch($flag){
-							case self::FLAG_STATUS:
-								if(!in_array(Extension::status($d->getFileName()), (array)$value)) continue 2;
-								break;
-								
-							case self::FLAG_TYPE:
-								if(!isset($extension->about()->type) || (bool)array_intersect((array)$value, (array)$extension->about()->type) === false) continue 2;
-								break;
+
+				$cache->{'directories'} = $directories;
+
+				Profiler::end();
+			}
+
+			Profiler::begin('Loading extensions');
+
+			foreach ($directories as $dir) {
+				Profiler::begin('Loaded extension %extension');
+
+				try {
+					$class = include_once $dir->path . '/extension.driver.php';
+				}
+
+				catch (Exception $error) {
+					Symphony::Log()->pushExceptionToLog($error);
+
+					Profiler::store('exception', $error->getMessage(), 'system/exeption');
+					Profiler::end();
+
+					continue;
+				}
+
+				if (Extension::Configuration()->xpath("//extension[@handle = '{$dir->handle}'][1]/@status")) {
+					$status = current(Extension::Configuration()->xpath("//extension[@handle = '{$dir->handle}'][1]/@status"));
+					$last = $status;
+				}
+
+				else {
+					$status = $last;
+				}
+
+				$extensions[$dir->handle] = $extension = new $class();
+				$extension->file = $dir->path . '/extension.driver.php';
+				$extension->path = $dir->path;
+				$extension->handle = $dir->handle;
+
+				// The extension is enabled, does it have files to include?
+				if (
+					$status == Extension::STATUS_ENABLED
+					&& (
+						$extension instanceof ExtensionWithIncludesInterface
+						|| $extension instanceof iExtensionIncludes
+					)
+				) {
+					$extension->includeFiles();
+				}
+
+				Profiler::store('extension', $extension->handle, 'system/extension');
+				Profiler::store('class', $class, 'system/class');
+				Profiler::store('location', $extension->file, 'system/extension action/loaded');
+				Profiler::store('enabled', $status == Extension::STATUS_ENABLED);
+				Profiler::end();
+			}
+
+			Profiler::end();
+
+			self::$data = $extensions;
+		}
+
+		public static function clearCachedFiles() {
+			$cache = new Cache(Cache::SOURCE_CORE, 'extensions');
+			$cache->purge();
+		}
+
+		public function __construct() {
+			if (isset(self::$data) === false) {
+				self::buildCache();
+			}
+
+			parent::__construct(self::$data);
+		}
+	}
+
+	class ExtensionQuery extends FilterIterator {
+		const STATUS = 'status';
+		const TYPE = 'type';
+
+		protected $filters;
+
+		public function __construct() {
+			$this->filters = [];
+
+			parent::__construct(new ExtensionIterator());
+		}
+
+		public function setFilters(array $filters) {
+			$this->filters = $filters;
+		}
+
+		public function accept() {
+			$extension = $this->getInnerIterator()->current();
+
+			foreach ($this->filters as $name => $value) {
+				switch ($name) {
+					case self::STATUS:
+						$status = Extension::status($extension->handle);
+
+						// Filter failed:
+						if ($status !== $value) {
+							return false;
 						}
-					}
-					
-					self::$extensions_by_flag[$key][] = $extension;
+
+						break;
+
+					case self::TYPE:
+						$types = $extension->about()->type;
+
+						// Must be an array:
+						if (is_array($types) === false) {
+							$types = [$types];
+						}
+
+						// Filter failed:
+						if (in_array($value, $types) === false) {
+							return false;
+						}
+
+						break;
 				}
 			}
-			
-			$this->extensions = self::$extensions_by_flag[$key];
-		}
 
-		public function length(){
-			return count($this->extensions);
-		}
-
-		public function rewind(){
-			$this->position = 0;
-		}
-
-		public function current(){
-			return $this->extensions[$this->position];
-		}
-
-		public function key(){
-			return $this->position;
-		}
-
-		public function next(){
-			++$this->position;
-		}
-
-		public function valid(){
-			return isset($this->extensions[$this->position]);
+			return true;
 		}
 	}
-	
-	/*
-	Extension::init();
-
-	
-	foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-		var_dump($extension);
-	}
-	
-
-	Extension::notify('CustomSaveActions', '/system/settings/extensions/', array('banana' => 'chicken'));
-
-	die();
-	*/
-	// Extension::rebuildConfiguration();
-	// Extension::saveConfiguration();
-	// die();
-

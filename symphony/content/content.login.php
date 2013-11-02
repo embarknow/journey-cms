@@ -41,7 +41,7 @@
 
 		function view(){
 			Widget::init($this);
-			
+
 			$emergency = false;
 			if(isset($this->_context[0]) && in_array(strlen($this->_context[0]), array(6, 8))){
 				$emergency = $this->__loginFromToken($this->_context[0]);
@@ -50,7 +50,7 @@
 			if(!$emergency && Administration::instance()->isLoggedIn()) redirect(ADMIN_URL . '/');
 
 			$fieldset = $this->createElement('fieldset');
-			
+
 			if($this->_context[0] == 'retrieve-password'):
 
 				if(isset($this->_email_sent) && $this->_email_sent){
@@ -95,7 +95,7 @@
 				$label->appendChild(Widget::Input('password-confirmation', NULL, 'password'));
 				$fieldset->appendChild($label);
 				$this->Form->appendChild($fieldset);
-				
+
 				if($this->_mismatchedPassword){
 					$div = $this->createElement('div', NULL, array('class' => 'invalid'));
 					$div->appendChild($this->createElement('p', __('The supplied password was rejected. Make sure it is not empty and that password matches password confirmation.')));
@@ -118,28 +118,28 @@
 				$label->appendChild(Widget::Input('password', NULL, 'password'));
 				$fieldset->appendChild($label);
 				$this->Form->appendChild($fieldset);
-				
+
 				$p = $this->createElement('p', NULL);
 				$p->appendChild(
 						Widget::Anchor(__('Forgot your password?'), ADMIN_URL . '/login/retrieve-password/')
 					);
 				$fieldset->appendChild($p);
-				
+
 				if($this->invalid_credentials){
 					$div = $this->createElement('div', NULL, array('class' => 'invalid'));
-					
+
 					if($this->missing_username == true){
 						$p = $this->createElement('p', __('Username is required and cannot be left blank. '));
 					}
-					
+
 					elseif($this->missing_password == true){
 						$p = $this->createElement('p', __('Password is required and cannot be left blank. '));
 					}
-					
+
 					else{
 						$p = $this->createElement('p', __('The username and password combination you provided is incorrect. '));
 					}
-					
+
 					$p->appendChild(
 						Widget::Anchor(__('Retrieve password?'), ADMIN_URL . '/login/retrieve-password/')
 					);
@@ -177,37 +177,21 @@
 				##Login Attempted
 				if($action == 'login'):
 
-					if(!isset($_POST['username']) || strlen(trim($_POST['username'])) == 0){
+					if (!isset($_POST['username']) || strlen(trim($_POST['username'])) == 0){
 						$this->invalid_credentials = true;
 						$this->missing_username = true;
 					}
-					
-					if(!isset($_POST['password']) || strlen(trim($_POST['password'])) == 0){
+
+					if (!isset($_POST['password']) || strlen(trim($_POST['password'])) == 0){
 						$this->invalid_credentials = true;
 						$this->missing_password = true;
 					}
 
-					elseif(!Administration::instance()->login($_POST['username'], $_POST['password'])) {
-
-						## FIXME: Fix this delegate
-						###
-						# Delegate: LoginFailure
-						# Description: Failed login attempt. Username is provided.
-						//Extension::notify('LoginFailure', getCurrentPage(), array('username' => $_POST['username']));
-
-						//$this->Body->appendChild(new XMLElement('p', 'Login invalid. <a href="'.ADMIN_URL . '/?forgot">Forgot your password?</a>'));
-						//$this->_alert = 'Login invalid. <a href="'.ADMIN_URL . '/?forgot">Forgot your password?</a>';
+					else if (!Administration::instance()->login($_POST['username'], $_POST['password'])) {
 						$this->invalid_credentials = true;
 					}
 
-					else{
-
-						## FIXME: Fix this delegate
-						###
-						# Delegate: LoginSuccess
-						# Description: Successful login attempt. Username is provided.
-						//Extension::notify('LoginSuccess', getCurrentPage(), array('username' => $_POST['username']));
-
+					else {
 						if(isset($_POST['redirect'])) redirect(URL . str_replace(parse_url(URL, PHP_URL_PATH), NULL, $_POST['redirect']));
 
 						redirect(ADMIN_URL . '/');
@@ -258,35 +242,20 @@
 									__('It will expire in 2 hours. If you did not ask for a new password, please disregard this email.') . PHP_EOL . PHP_EOL .
 									__('Best Regards,') . PHP_EOL .
 									__('The Symphony Team'));
-
-
-						## FIXME: Fix this delegate
-						###
-						# Delegate: PasswordResetSuccess
-						# Description: A successful password reset has taken place. User ID is provided
-						//Extension::notify('PasswordResetSuccess', getCurrentPage(), array('user_id' => $user['id']));
-
 					}
 
-					else{
-
-						## FIXME: Fix this delegate
-						###
-						# Delegate: PasswordResetFailure
-						# Description: A failed password reset has taken place. User ID is provided
-						//Extension::notify('PasswordResetFailure', getCurrentPage(), array('user_id' => $user['id']));
-
+					else {
 						$this->_email_sent = false;
 					}
 
 				##Change of password requested
-				elseif($action == 'change' && Administration::instance()->isLoggedIn()):
+				elseif ($action == 'change' && Administration::instance()->isLoggedIn()):
 
-					if(empty($_POST['password']) || empty($_POST['password-confirmation']) || $_POST['password'] != $_POST['password-confirmation']){
+					if (empty($_POST['password']) || empty($_POST['password-confirmation']) || $_POST['password'] != $_POST['password-confirmation']){
 						$this->_mismatchedPassword = true;
 					}
 
-					else{
+					else {
 						$user_id = Administration::instance()->User->id;
 
 						$user = User::load($user_id);
@@ -296,12 +265,6 @@
 						if(!User::save($user) || !Administration::instance()->login($user->username, $_POST['password'])){
 							redirect(URL . "symphony/system/users/edit/{$user_id}/error/");
 						}
-
-						## FIXME: Fix this delegate
-						###
-						# Delegate: PasswordChanged
-						# Description: After editing an User. ID of the User is provided.
-						//Extension::notify('PasswordChanged', getCurrentPage(), array('user_id' => $user_id));
 
 						redirect(ADMIN_URL . '/');
 					}
@@ -344,19 +307,8 @@
 					Symphony::Database()->update('tbl_users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
 					Symphony::Database()->delete('tbl_forgotpass', array($user->id), " `user_id` = '%d'");
 
-
-					## FIXME: Fix this delegate
-					###
-					# Delegate: PasswordResetRequest
-					# Description: User has requested a password reset. User ID is provided.
-					//Extension::notify('PasswordResetRequest', getCurrentPage(), array('user_id' => $user['id']));
-
 					$this->_alert = 'Password reset. Check your email';
-
 				}
 			}
-
 		}
-
 	}
-

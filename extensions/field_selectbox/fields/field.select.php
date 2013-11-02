@@ -54,9 +54,9 @@
 			return true;
 		}
 
-		/*-------------------------------------------------------------------------
-			Utilities:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Utilities:
+	-------------------------------------------------------------------------*/
 
 		public function getToggleStates() {
 			$values = preg_split('/,\s*/i', $this->{'static-options'}, -1, PREG_SPLIT_NO_EMPTY);
@@ -89,9 +89,9 @@
 			if($result->valid()) $values = array_merge($values, $result->resultColumn('value'));
 		}
 
-		/*-------------------------------------------------------------------------
-			Settings:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Settings:
+	-------------------------------------------------------------------------*/
 
 		public function findDefaultSettings(array &$fields){
 			if(!isset($fields['allow-multiple-selection'])) $fields['allow-multiple-selection'] = 'no';
@@ -124,7 +124,7 @@
 						$fields[] = array(
 							$section->handle . '::' .$field->{'element-name'},
 							($this->{'dynamic-options'} == $section->handle . '::' .$field->{'element-name'}),
-							$field->label
+							$field->{'publish-label'}
 						);
 					}
 				}
@@ -169,9 +169,9 @@
 			return parent::validateSettings($messages, $checkForDuplicates);
 		}
 
-		/*-------------------------------------------------------------------------
-			Publish:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Publish:
+	-------------------------------------------------------------------------*/
 
 		public function prepareTableValue($data, DOMElement $link=NULL){
 
@@ -208,15 +208,15 @@
 			}
 
 			foreach($states as $handle => $v){
-				$options[] = array($v, in_array($v, $selected), $v);
+				$options[] = array($handle, in_array($v, $selected), $v);
 			}
 
 			$fieldname = 'fields['.$this->{'element-name'}.']';
 			if($this->{'allow-multiple-selection'} == 'yes') $fieldname .= '[]';
 
 			$label = Widget::Label(
-				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0 
-					? $this->{'publish-label'} 
+				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0
+					? $this->{'publish-label'}
 					: $this->name)
 			);
 			$label->appendChild(Widget::Select($fieldname, $options,
@@ -236,76 +236,102 @@
 			return $data;
 		}
 
-		/*-------------------------------------------------------------------------
-			Input:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Input:
+	-------------------------------------------------------------------------*/
 
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false) {
 			return parent::loadDataFromDatabase($entry, true);
 		}
 
-		public function processData($data, Entry $entry=NULL){
+		public function processData($data, Entry $entry = null) {
+			$result = null;
 
-			//if(isset($entry->data()->{$this->{'element-name'}})){
-			//	$result = $entry->data()->{$this->{'element-name'}};
-			//}
+			if ($data !== null) {
+				$result = array();
 
-			//else {
-				$result = (object)array(
-					'value' => null,
-					'handle' => null
-				);
-			//}
+				if (!is_array($data)) $data = array($data);
 
-			if(!is_null($data)){
-				$result->value = $data;
-				$result->handle = Lang::createHandle($data);
+				foreach ($data as $value) {
+					if ($value instanceof StdClass) {
+						$value = $value->value;
+					}
+
+					if ($value !== null) {
+						$result[] = (object)array(
+							'handle' =>	Lang::createHandle($value),
+							'value' =>	$value
+						);
+					}
+				}
 			}
 
 			return $result;
 		}
 
 		public function validateData(MessageStack $errors, Entry $entry = null, $data = null) {
+			$value = null;
 
-			if(!is_array($data)){
+			if (is_array($data) === false) {
 				$data = array($data);
 			}
 
-			$value = NULL;
-			foreach($data as $d){
-				$value .= $d->value;
+			foreach ($data as $item) {
+				$value .= $item->value;
 			}
 
-			return parent::validateData($errors, $entry, $this->processData($value, $entry));
+			if ($this->required == 'yes' && strlen(trim($value)) == 0) {
+				$errors->append(
+					null, (object)array(
+					 	'message' =>	__("'%s' is a required field.", array($this->{'publish-label'})),
+						'code' =>		self::ERROR_MISSING
+					)
+				);
+
+				return self::STATUS_ERROR;
+			}
+
+			return self::STATUS_OK;
 		}
 
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
+			$table = sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'});
 
-			// Since we are dealing with multiple
-			// values, must purge the existing data first
-			Symphony::Database()->delete(
-				sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
-				array($entry->id),
-				"`entry_id` = %s"
-			);
+			// Purge existing values:
+			Symphony::Database()->delete($table, array($entry->id), "`entry_id` = %s");
 
-			if(!is_array($data->value)){
-				$data->value = array($data->value);
+			if ($data === null) return;
+
+			foreach ($data as $item) {
+				try {
+					Symphony::Database()->insert($table, array(
+						'id' =>			null,
+						'entry_id' =>	$entry->id,
+						'handle' =>		$item->handle,
+						'value' =>		$item->value
+					));
+				}
+
+				catch (DatabaseException $e) {
+					return self::STATUS_ERROR;
+				}
+
+				catch (Exception $e) {
+					return self::STATUS_ERROR;
+				}
 			}
 
-			foreach($data->value as $d){
-				$d = $this->processData($d, $entry);
-				parent::saveData($errors, $entry, $d);
-			}
 			return Field::STATUS_OK;
 		}
 
-		/*-------------------------------------------------------------------------
-			Output:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Output:
+	-------------------------------------------------------------------------*/
 
-		public function appendFormattedElement(&$wrapper, $data, $encode = false) {
-			if (!is_array($data) or empty($data)) return;
+		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry=NULL) {
+			if (!is_array($data)) $data = array($data);
+
+			if (empty($data) or is_null($data[0]->value)) return;
 
 			$list = $wrapper->ownerDocument->createElement($this->{'element-name'});
 
@@ -318,47 +344,51 @@
 
 			$wrapper->appendChild($list);
 		}
-		
-		public function getParameterOutputValue(array $data, Entry $entry=NULL){
+
+		public function getParameterOutputValue($data, Entry $entry=NULL){
+			if(!is_array($data)) $data = array($data);
+
 			$result = array();
-			foreach($data as $d){
-				$result[] = $this->prepareTableValue($d);
+			if(!empty($data)) foreach($data as $d) {
+				if(is_null($d->value)) continue;
+
+				$result[] = $d->value;
 			}
-			
+
 			return $result;
 		}
 
-		/*-------------------------------------------------------------------------
-			Filtering:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Filtering:
+	-------------------------------------------------------------------------*/
 
 		public function displayDatasourceFilterPanel(SymphonyDOMElement $wrapper, $data=NULL, MessageStack $errors=NULL){
 			parent::displayDatasourceFilterPanel($wrapper, $data, $errors);
-			
+
 			$document = $wrapper->ownerDocument;
 			$existing_options = $this->getToggleStates();
-			
+
 			$div = $document->createElement('div');
 			$label = $document->xpath('.//label[last()]', $wrapper)->item(0);
 			$label->wrapWith($div);
-			
+
 			if (is_array($existing_options) && !empty($existing_options)) {
 				$optionlist = $document->createElement('ul');
 				$optionlist->setAttribute('class', 'tags');
-				
+
 				foreach ($existing_options as $option) {
 					$optionlist->appendChild(
 						$document->createElement('li', $option)
 					);
 				}
-				
+
 				$div->appendChild($optionlist);
 			}
 		}
 
-		/*-------------------------------------------------------------------------
-			Grouping:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Grouping:
+	-------------------------------------------------------------------------*/
 
 		public function groupRecords($records){
 
@@ -384,9 +414,9 @@
 			return $groups;
 		}
 
-		/*-------------------------------------------------------------------------
-			Possibly Deprecated:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Possibly Deprecated:
+	-------------------------------------------------------------------------*/
 
 		function fetchAssociatedEntrySearchValue($data){
 			if(!is_array($data)) return $data;
@@ -438,7 +468,7 @@
 			$fieldname = 'fields['.$this->{'element-name'}.']';
 			if($this->{'allow-multiple-selection'} == 'yes') $fieldname .= '[]';
 
-			$label = Widget::Label($this->label);
+			$label = Widget::Label($this->{'publish-label'});
 			$label->appendChild(Widget::Select($fieldname, $options,
 				($this->{'allow-multiple-selection'} == 'yes') ? array('multiple' => 'multiple') : array()
 			));

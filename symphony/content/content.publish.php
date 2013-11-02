@@ -1,6 +1,7 @@
 <?php
 
-	require_once(LIB . '/class.administrationpage.php');
+	require_once LIB . '/class.administrationpage.php';
+	require_once LIB . '/class.entry.php';
 
 	Class contentPublish extends AdministrationPage{
 
@@ -63,7 +64,7 @@
 
 				redirect(Administration::instance()->getCurrentPageURL());
 			}
-			
+
 			$this->appendSubheading(
 				$section->name,
 				Widget::Anchor(
@@ -118,7 +119,7 @@
 				$renderOnlyEntryIDColumn = true;
 				$aTableHead[] = array('ID', 'col');
 			}
-			
+
 			/*
 			**	Pagination, get the total number of entries and work out
 			**	how many pages exist using the Symphony config
@@ -160,9 +161,9 @@
 
 				$joins .= sprintf($join, $sort_field->section, $sort_field->{'element-name'});
 				$order = sprintf($order, $section->{'publish-order-direction'});
-				
+
 				// TODO: Implement filtering
-				
+
 				$query = sprintf("
 					SELECT e.*
 					FROM `tbl_entries` AS e
@@ -264,7 +265,7 @@
 			foreach($section->fields as $field){
 				if($field->canToggleData() != true) continue;
 
-				$options[$index] = array('label' => __('Set %s', array($field->label)), 'options' => array());
+				$options[$index] = array('label' => __('Set %s', array($field->{'publish-label'})), 'options' => array());
 
 				foreach ($field->getToggleStates() as $value => $state) {
 					$options[$index]['options'][] = array('toggle::' . $field->{'element-name'} . '::' . $value, false, $state);
@@ -430,7 +431,7 @@
 			$section = Section::loadFromHandle($callback['context']['section_handle']);
 
 			// Check that a layout and fields exist
-			if(isset($section->fields)) {
+			if(empty($section->fields)) {
 				$this->alerts()->append(
 					__(
 						'It looks like you\'re trying to create an entry. Perhaps you want fields first? <a href="%s">Click here to create some.</a>',
@@ -472,7 +473,7 @@
 			$this->entry->findDefaultFieldData();
 			$this->Form->appendChild(Widget::Input(
 				'MAX_FILE_SIZE',
-				Symphony::Configuration()->core()->symphony->{'maximum-upload-size'}, 
+				Symphony::Configuration()->core()->symphony->{'maximum-upload-size'},
 				'hidden'
 			));
 
@@ -535,17 +536,17 @@
 
 				foreach ($data->fieldsets as $data) {
 					$fieldset = $this->createElement('fieldset');
-					
+
 					if(isset($data->collapsed) && $data->collapsed == 'yes'){
 						$fieldset->setAttribute('class', 'collapsed');
 					}
-					
+
 					if(isset($data->name) && strlen(trim($data->name)) > 0){
 						$fieldset->appendChild(
 							$this->createElement('h3', $data->name)
 						);
 					}
-					
+
 					foreach ($data->fields as $handle) {
 						$field = $section_fields[$handle];
 

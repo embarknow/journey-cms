@@ -5,7 +5,6 @@
 *config.php
 .htaccess
 install-log.txt
-workspace/
 *.esproj
-*~
-/symphony/templates/view.xsl
+≈
+curl_cookie.txt

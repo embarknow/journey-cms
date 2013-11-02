@@ -1,20 +1,19 @@
 /*-----------------------------------------------------------------------------
 	Duplicator plugin
 -----------------------------------------------------------------------------*/
-	
+
 	.duplicator-widget {
 		background: #eeeeee;
 		border: 1px solid #bbbbbb;
-		-moz-border-radius: 5px;
-		-webkit-border-radius: 5px;
+		border-radius: 5px;
 		margin: 10px 0 0 0;
 		position: relative;
 	}
-	
+
 /*-----------------------------------------------------------------------------
 	Duplicator: Controls
 -----------------------------------------------------------------------------*/
-	
+
 	.duplicator-widget > .controls {
 		background: #666666;
 		background: -moz-linear-gradient(#cccccc, #bbbbbb);
@@ -25,8 +24,7 @@
 		);
 		border-bottom: 1px solid #aaaaaa;
 		border-top: 1px solid #dadada;
-		-moz-border-radius: 4px;
-		-webkit-border-radius: 4px;
+		border-radius: 4px;
 		height: 35px;
 		line-height: 33px;
 		list-style: none;
@@ -36,10 +34,8 @@
 	}
 	.duplicator-widget.templates-visible > .controls,
 	.duplicator-widget.content-visible > .controls {
-		-moz-border-radius-bottomleft: 0;
-		-moz-border-radius-bottomright: 0;
-		-webkit-border-bottom-left-radius: 0;
-		-webkit-border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 		border-bottom-color: #999999;
 		margin-bottom: 0;
 	}
@@ -71,26 +67,18 @@
 	.duplicator-widget > .controls .remove {
 		right: 20px;
 	}
-	
+
 /*-----------------------------------------------------------------------------
 	Duplicator: Templates
 -----------------------------------------------------------------------------*/
-	
+
 	.duplicator-widget > .templates {
 		display: none;
 		background: #888888;
-		background: -moz-linear-gradient(#666666, #777777 4%, #666666);
-		background: -webkit-gradient(
-			linear, left top, left bottom,
-			from(#666666),
-			to(#666666),
-			color-stop(0.04, #777777)
-		);
+		background: linear-gradient(#666666, #777777 4%, #666666);
 		border: 1px solid #555555;
-		-moz-border-radius-bottomleft: 5px;
-		-moz-border-radius-bottomright: 5px;
-		-webkit-border-bottom-left-radius: 5px;
-		-webkit-border-bottom-right-radius: 5px;
+		border-bottom-left-radius: 5px;
+		border-bottom-right-radius: 5px;
 		list-style: none;
 		margin: -1px;
 		overflow: hidden;
@@ -102,15 +90,12 @@
 		display: block;
 	}
 	.duplicator-widget.content-visible > .templates {
-		-moz-border-radius-bottomleft: 0;
-		-moz-border-radius-bottomright: 0;
-		-webkit-border-bottom-left-radius: 0;
-		-webkit-border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 	}
 	.duplicator-widget > .templates > li {
 		background: hsla(0, 0%, 0%, 0.15);
-		-moz-border-radius: 5px;
-		-webkit-border-radius: 5px;
+		border-radius: 5px;
 		cursor: pointer;
 		display: block;
 		float: left;
@@ -137,11 +122,11 @@
 		margin: 0 0 0 1ex;
 		opacity: 0.5;
 	}
-	
+
 /*-----------------------------------------------------------------------------
 	Duplicator: Lower
 -----------------------------------------------------------------------------*/
-	
+
 	.duplicator-widget > .content {
 		border-spacing: 0;
 		display: none;
@@ -158,7 +143,7 @@
 		display: table-cell;
 		vertical-align: top;
 	}
-	
+
 	.duplicator-widget > .content > .tabs {
 		list-style: none;
 		padding: 5px 0 5px 10px;
@@ -171,10 +156,8 @@
 		background: hsla(0, 0%, 0%, 0.03);
 		border: 1px solid #cccccc;
 		border-right: none;
-		-moz-border-radius-bottomleft: 4px;
-		-moz-border-radius-topleft: 4px;
-		-webkit-border-bottom-left-radius: 4px;
-		-webkit-border-top-left-radius: 4px;
+		border-bottom-left-radius: 4px;
+		border-top-left-radius: 4px;
 		color: #444444;
 		display: block;
 		line-height: 30px;
@@ -205,8 +188,7 @@
 	}
 	.duplicator-widget > .content > .tabs > * .remove {
 		background: hsla(0, 0%, 0%, 0.3);
-		-moz-border-radius: 5px;
-		-webkit-border-radius: 5px;
+		border-radius: 5px;
 		color: #FBFBFB;
 		cursor: pointer;
 		display: block;
@@ -228,14 +210,12 @@
 	.duplicator-widget > .content > .tabs > :hover .remove {
 		visibility: visible;
 	}
-	
+
 	.duplicator-widget > .content > .instances {
 		background: #FBFBFB;
 		border-left: 1px solid #bbbbbb;
-		-moz-box-shadow: -1px 0 5px hsla(0, 0%, 0%, 0.1);
-		-webkit-box-shadow: -1px 0 5px hsla(0, 0%, 0%, 0.1);
-		-moz-border-radius-bottomright: 4px;
-		-webkit-border-bottom-right-radius: 4px;
+		border-bottom-right-radius: 4px;
+		box-shadow: -1px 0 5px hsla(0, 0%, 0%, 0.1);
 		list-style: none;
 	}
 	.duplicator-widget > .content > .instances > * {
@@ -250,5 +230,5 @@
 	.duplicator-widget > .content > .instances > .active ~ .active {
 		border-top: 1px solid #dddddd;
 	}
-	
+
 /*-------------------------------------------------------------------------------*/

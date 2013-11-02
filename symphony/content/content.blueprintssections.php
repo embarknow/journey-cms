@@ -4,24 +4,48 @@
 	require_once(LIB . '/class.messagestack.php');
  	require_once(LIB . '/class.section.php');
  	require_once(LIB . '/class.duplicator.php');
+ 	require_once(LIB . '/class.entry.php');
 
-	Class contentBlueprintsSections extends AdministrationPage{
-
+	class ContentBlueprintsSections extends AdministrationPage {
 		private $section;
 
-		public function __viewIndex(){
+		public function prepare() {
+			SectionIterator::clearCachedFiles();
 
-			$this->setTitle(__('%1$s &ndash; %2$s', array(__('Symphony'), __('Sections'))));
+			parent::prepare();
+		}
 
-			$this->appendSubheading(__('Sections'), Widget::Anchor(
-				__('Create New'), Administration::instance()->getCurrentPageURL().'/new/', array(
+		public function __viewIndex() {
+		    $sections = new SectionIterator;
+			$callback = Administration::instance()->getPageCallback();
+			$url = Administration::instance()->getCurrentPageURL();
+			$sections_need_sync = false;
+
+			// Syncronise all:
+			if (isset($callback['flag']) && $callback['flag'] == 'sync') {
+				foreach ($sections as $section) {
+					try {
+						Section::synchronise($section);
+					}
+
+					catch (Exception $e) {
+						$this->alerts()->append(
+							__('An unknown error has occurred. <a class="more">Show trace information.</a>'),
+							AlertStack::ERROR, $e
+						);
+					}
+				}
+			}
+
+			$links = $this->createElement('span');
+			$links->appendChild(Widget::Anchor(
+				__('Create New'), $url . '/new/', array(
 					'title' => __('Create a new section'),
 					'class' => 'create button'
 				)
 			));
 
-		    $sections = new SectionIterator;
-
+			// Create table:
 			$aTableHead = array(
 				array(__('Name'), 'col'),
 				array(__('Entries'), 'col'),
@@ -32,7 +56,10 @@
 			$aTableBody = array();
 			$colspan = count($aTableHead);
 
-			if($sections->length() <= 0){
+			// this is causing an error so have commented out for now
+
+			//if ($sections->length() <= 0) {
+			if (1 == 2) {
 				$aTableBody = array(Widget::TableRow(
 					array(
 						Widget::TableData(__('None found.'), array(
@@ -40,61 +67,73 @@
 								'colspan' => $colspan
 							)
 						)
-					), array(
+					),
+					array(
 						'class' => 'odd'
 					)
 				));
 			}
 
-			else {
-				foreach ($sections as $s) {
-					$entry_count = 0;
-					$result = Symphony::Database()->query(
-						"
-							SELECT
-								count(*) AS `count`
-							FROM
-								`tbl_entries` AS e
-							WHERE
-								e.section = '%s'
-						",
-						array($s->handle)
-					);
+			else foreach ($sections as $s) {
+				$entry_count = 0;
+				$result = Symphony::Database()->query(
+					"
+						SELECT
+							count(*) AS `count`
+						FROM
+							`tbl_entries` AS e
+						WHERE
+							e.section = '%s'
+					",
+					array($s->handle)
+				);
 
-					if ($result->valid()) {
-						$entry_count = (integer)$result->current()->count;
-					}
-
-					// Setup each cell
-					$td1 = Widget::TableData(
-						Widget::Anchor($s->name, Administration::instance()->getCurrentPageURL() . "/edit/{$s->handle}/", array(
-						'class' => 'content'
-						))
-					);
-					$td2 = Widget::TableData(Widget::Anchor((string)$entry_count, ADMIN_URL . "/publish/{$s->handle}/"));
-					$td3 = Widget::TableData($s->{'navigation-group'});
-					$td3->appendChild(Widget::Input("items[{$s->handle}]", 'on', 'checkbox'));
-
-					if (Section::syncroniseStatistics($s)->synced) {
-						$td4 = Widget::TableData(
-							__('Synced'), array(
-							'class' => 'content inactive'
-							)
-						);
-					}
-
-					else {
-						$td4 = Widget::TableData(
-							__('Not synced'), array(
-							'class' => 'content'
-							)
-						);
-					}
-
-					// Add a row to the body array, assigning each cell to the row
-					$aTableBody[] = Widget::TableRow(array($td1, $td2, $td3, $td4));
+				if ($result->valid()) {
+					$entry_count = (integer)$result->current()->count;
 				}
+
+				// Setup each cell
+				$td1 = Widget::TableData(
+					Widget::Anchor($s->name, Administration::instance()->getCurrentPageURL() . "/edit/{$s->handle}/", array(
+					'class' => 'content'
+					))
+				);
+				$td2 = Widget::TableData(Widget::Anchor((string)$entry_count, ADMIN_URL . "/publish/{$s->handle}/"));
+				$td3 = Widget::TableData($s->{'navigation-group'});
+				$td3->appendChild(Widget::Input("items[{$s->handle}]", 'on', 'checkbox'));
+
+				if (Section::syncroniseStatistics($s)->synced) {
+					$td4 = Widget::TableData(
+						__('Synced'), array(
+							'class' => 'content inactive'
+						)
+					);
+				}
+
+				else {
+					$sections_need_sync = true;
+					$td4 = Widget::TableData(
+						__('Not synced'), array(
+							'class' => 'content'
+						)
+					);
+				}
+
+				// Add a row to the body array, assigning each cell to the row
+				$aTableBody[] = Widget::TableRow(array($td1, $td2, $td3, $td4));
 			}
+
+			if ($sections_need_sync) {
+				$links->appendChild(Widget::Anchor(
+					__('Syncronize'), $url . '/:sync/', array(
+						'title' => __('Syncronize all sections'),
+						'class' => 'button'
+					)
+				));
+			}
+
+			$this->setTitle(__('%1$s &ndash; %2$s', array(__('Symphony'), __('Sections'))));
+			$this->appendSubheading(__('Sections'), $links);
 
 			$table = Widget::Table(
 				Widget::TableHead($aTableHead), NULL, Widget::TableBody($aTableBody)
@@ -170,7 +209,7 @@
 			try {
 				$callback = Administration::instance()->getPageCallback();
 				$current_page = $callback['pageroot'] . $callback['context'][0] . '/';
-				
+
 				###
 				# Delegate: SectionPreSave
 				Extension::notify(
@@ -179,7 +218,7 @@
 						'section' => &$this->section, 'errors' => &$this->errors
 					)
 				);
-				
+
 				Section::save($this->section, $this->errors);
 
 				###
@@ -194,7 +233,7 @@
 				// Rename section:
 				if ($old_handle !== false) {
 					Section::rename($this->section, $old_handle);
-					
+
 					###
 					# Delegate: SectionPostRename
 					Extension::notify(
@@ -203,11 +242,11 @@
 							'section' => &$this->section, 'old-handle' => $old_handle, 'errors' => &$this->errors
 						)
 					);
-					
+
 				}
-				
+
 				Section::synchronise($this->section);
-				
+
 				return true;
 			}
 
@@ -251,7 +290,7 @@
 					case 'delete-entries':
 						$entries = Symphony::Database()->query(
 							sprintf(
-								"SELECT `id` FROM `tbl_entries` WHERE `section` IN ('%s')", 
+								"SELECT `id` FROM `tbl_entries` WHERE `section` IN ('%s')",
 								implode("', '", $checked)
 							)
 						);
@@ -312,14 +351,14 @@
 
 		public function __actionDelete(array $sections, $redirect) {
 			$success = true;
-			
+
 			$callback = Administration::instance()->getPageCallback();
 			$current_page = $callback['pageroot'] . (isset($callback['context'][0]) && $callback['context'][0] != 'index' ? $callback['context'][0] . '/' : NULL);
-			
+
 			foreach($sections as $handle){
 				try{
 					Section::delete(Section::loadFromHandle($handle));
-					
+
 					###
 					# Delegate: SectionPostDelete
 					Extension::notify(
@@ -328,7 +367,7 @@
 							'handle' => $handle,
 						)
 					);
-					
+
 				}
 				catch(SectionException $e){
 					$success = false;
@@ -346,7 +385,10 @@
 				}
 			}
 
-			if($success) redirect($redirect);
+			if ($success) {
+				SectionIterator::clearCachedFiles();
+				redirect($redirect);
+			}
 		}
 
 		private static function __loadExistingSection($handle){
@@ -468,14 +510,14 @@
 		}
 
 		protected function __sortFields($a, $b) {
-			return strnatcasecmp($a->label, $b->label);
+			return strnatcasecmp($a->{'publish-label'}, $b->{'publish-label'});
 		}
 
 		protected function appendSyncAlert() {
 			$sync = Section::syncroniseStatistics($this->section);
-			
+
 			if ($sync->synced === true) return;
-			
+
 			$table_fields = array();
 			$table_actions = array();
 			$table_totals = array();
@@ -486,7 +528,7 @@
 			// Find all fields:
 			foreach ($sync as $name => $action) if (is_array($action)) {
 				$table_actions[$name] = count($action);
-				
+
 				foreach ($action as $guid => $data) {
 					$table_fields[$guid] = $data;
 				}
@@ -505,31 +547,31 @@
 			foreach ($table_actions as $action => $count) {
 				$row->appendChild($this->createElement('th', __(ucwords($action))));
 			}
-			
+
 			$table->appendChild($row);
-			
+
 			$row = $this->createElement('tr');
 			$cell = $this->createElement('th');
-			
+
 			if ($sync->section->rename) {
 				$cell->appendChild($this->createTextNode(
 					$sync->section->new->name . ' '
 				));
-				
+
 				$span = $this->createElement('span');
 				$span->setAttribute('class', 'old');
 				$span->appendChild($this->createEntityReference('larr'));
 				$span->appendChild($this->createTextNode(
 					' ' . $sync->section->old->name
 				));
-				
+
 				$cell->appendChild($span);
 				$row->appendChild($cell);
-				
+
 				foreach ($table_actions as $action => $count) {
 					$cell = $this->createElement('td', __('No'));
 					$cell->setAttribute('class', 'no');
-					
+
 					if ($action == 'rename') {
 						$cell->setValue(__('Yes'));
 						$cell->setAttribute('class', 'yes');
@@ -538,15 +580,15 @@
 					$row->appendChild($cell);
 				}
 			}
-			
+
 			else {
 				$cell->setValue($sync->section->new->name);
 				$row->appendChild($cell);
-				
+
 				foreach ($table_actions as $action => $count) {
 					$cell = $this->createElement('td', __('No'));
 					$cell->setAttribute('class', 'no');
-					
+
 					if ($action == 'create' and $sync->section->create) {
 						$cell->setValue(__('Yes'));
 						$cell->setAttribute('class', 'yes');
@@ -560,39 +602,39 @@
 					$row->appendChild($cell);
 				}
 			}
-			
+
 			$table->appendChild($row);
-			
+
 			// Body:
 			foreach ($table_fields as $guid => $data) {
 				$row = $this->createElement('tr');
 				$cell = $this->createElement('th');
-				
+
 				if (isset($sync->rename[$guid])) {
 					$cell->appendChild($this->createTextNode(
-						$data->new->label . ' '
+						$data->new->{'publish-label'} . ' '
 					));
-					
+
 					$span = $this->createElement('span');
 					$span->setAttribute('class', 'old');
 					$span->appendChild($this->createEntityReference('larr'));
 					$span->appendChild($this->createTextNode(
-						' ' . $data->old->label
+						' ' . $data->old->{'publish-label'}
 					));
-					
+
 					$cell->appendChild($span);
 				}
-				
+
 				else {
-					$cell->setValue($data->label);
+					$cell->setValue($data->{'label'});
 				}
-				
+
 				$row->appendChild($cell);
-				
+
 				foreach ($table_actions as $action => $count) {
 					$cell = $this->createElement('td', __('No'));
 					$cell->setAttribute('class', 'no');
-					
+
 					if (array_key_exists($guid, $sync->{$action})) {
 						$cell->setValue(__('Yes'));
 						$cell->setAttribute('class', 'yes');
@@ -754,7 +796,7 @@
 		private function __form(Section $existing = null){
 			// Status message:
 			$callback = Administration::instance()->getPageCallback();
-			
+
 			if (isset($callback['flag']) && !is_null($callback['flag'])) {
 				switch($callback['flag']){
 					case 'saved':
@@ -856,15 +898,14 @@
 			$h3 = $this->createElement('h3', __('Fields'));
 			$h3->setAttribute('class', 'label');
 			$div->appendChild($h3);
-			
+
 			$duplicator = new Duplicator(__('Add Field'));
 			$duplicator->setAttribute('id', 'section-duplicator');
 			$fields = $this->section->fields;
 			$types = array();
 
-			foreach (new FieldIterator as $pathname){
-				$type = preg_replace(array('/^field\./', '/\.php$/'), NULL, basename($pathname));
-				$types[$type] = Field::load($pathname);
+			foreach (new FieldIterator() as $field){
+				$types[$field->type] = $field;
 			}
 
 			// To Do: Sort this list based on how many times a field has been used across the system
@@ -879,7 +920,7 @@
 				foreach ($defaults as $key => $value) {
 					$field->$key = $value;
 				}
-				
+
 				$item = $duplicator->createTemplate($field->name());
 				$field->displaySettingsPanel($item, new MessageStack);
 			}
@@ -894,7 +935,7 @@
 				else {
 					$messages = new MessageStack;
 				}
-				
+
 				$item = $duplicator->createInstance($field->name, $field->name());
 				$field->displaySettingsPanel($item, $messages);
 			}

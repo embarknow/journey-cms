@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------
 	Reset
 ---------------------------------------------------------------------------------*/
-	
+
 	* {
 		border: none;
 		box-sizing: border-box;
@@ -16,9 +16,9 @@
 	}
 	body {
 		background: hsl(210, 0%, 10%);
-		font: normal 8pt/1.6 "Lucida Sans", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+		font: normal 12px/18px sans-serif;
 	}
-	
+
 	a {
 		color: #5072bf;
 		cursor: pointer;
@@ -35,11 +35,11 @@
 	a:focus {
 		color: #d42;
 	}
-	
+
 /*---------------------------------------------------------------------------------
 	Header
 ---------------------------------------------------------------------------------*/
-	
+
 	#sidebar {
 		background: #ffffff;
 		-moz-box-shadow: 0 0 40px hsla(0, 0%, 0%, 0.3);
@@ -52,17 +52,17 @@
 		top: 0;
 		width: 220px;
 	}
-	
+
 	#sidebar h1 {
 		font-size: 11pt;
 		margin: 15px 20px 0 20px;
 	}
-	
+
 	#sidebar h3 {
 		font-weight: bold;
 		margin: 10px 0;
 	}
-	
+
 	#sidebar ul {
 		list-style: none;
 		margin: 10px 0;
@@ -73,7 +73,7 @@
 	#sidebar ul ul li:before {
 		content: '· ';
 	}
-	
+
 	#sidebar .menu {
 		border-bottom: 1px dotted hsla(0, 0%, 0%, 0.2);
 		display: block;
@@ -93,7 +93,7 @@
 		content: '';
 		margin: 0;
 	}
-	
+
 	#sidebar fieldset {
 		margin: 20px;
 	}
@@ -103,15 +103,18 @@
 	#sidebar fieldset > :last-child {
 		margin-bottom: 0;
 	}
-	
+
 /*---------------------------------------------------------------------------------
 	Content
 ---------------------------------------------------------------------------------*/
-	
+
 	#content {
 		background: hsl(210, 0%, 10%);
+		height: 100%;
+		margin: 0 220px 0 0;
 		min-height: 100%;
 		padding: 20px;
+		position: relative;
 	}
 	#content iframe {
 		background: #ffffff;
@@ -121,5 +124,5 @@
 		top: 0;
 		width: 100%;
 	}
-	
+
 /*-------------------------------------------------------------------------------*/

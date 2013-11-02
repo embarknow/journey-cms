@@ -4,24 +4,61 @@
 		die();
 	}
 
+	define('DOCROOT', rtrim(dirname(__DIR__), '\\/'));
+	define('DOMAIN', rtrim(rtrim($_SERVER['HTTP_HOST'], '\\/') . dirname($_SERVER['PHP_SELF']), '\\/'));
+	define('VERSION', '3.0.0beta');
+
 	set_include_path(get_include_path() . PATH_SEPARATOR . realpath('../symphony/lib/'));
 
-	require_once('include.utilities.php');
-	require_once('class.htmldocument.php');
-	require_once('class.widget.php');
-	require_once('class.datetimeobj.php');
-	require_once('class.messagestack.php');
-	require_once('class.general.php');
-	require_once('class.dbc.php');
-	require_once('class.lang.php');
+	require DOCROOT . '/symphony/bundle.php';
+	require DOCROOT . '/symphony/lib/class.frontend.php';
+	require DOCROOT . '/symphony/lib/class.htmldocument.php';
 
+	class Installer extends Symphony {
+		public static function instance() {
+			if (!(self::$_instance instanceof Installer)) {
+				self::$_instance = new self;
+			}
 
-	$clean_path = rtrim($_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/\\');
-	$clean_path = preg_replace(array('/\/{2,}/i', '/\/install$/i'), array('/', NULL), $clean_path);
+			return self::$_instance;
+		}
 
-	define('DOMAIN', $clean_path);
-	define('URL', 'http://' . $clean_path);
-	define('VERSION', '3.0.0beta');
+		protected function __construct(){
+			self::$Configuration = new Configuration;
+
+			DateTimeObj::setDefaultTimezone(self::Configuration()->core()->region->timezone);
+
+			self::$_lang = (self::Configuration()->core()->symphony->lang ? self::Configuration()->core()->symphony->lang : 'en');
+
+			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->core()->region->{'date-format'});
+			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->core()->region->{'time-format'});
+			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
+			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->core()->symphony->{'administration-path'}, '/')));
+
+			$this->initialiseLog();
+
+			GenericExceptionHandler::initialise(self::$Log);
+			GenericErrorHandler::initialise(self::$Log);
+
+			//$this->initialiseDatabase();
+			$this->initialiseCookie();
+
+			Extension::init();
+
+			Lang::loadAll(true);
+
+			// HACK!
+			$this->Cookie->get('blah');
+		}
+	}
+
+	Installer::instance();
+
+	//$clean_path = rtrim($_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/\\');
+	//$clean_path = preg_replace(array('/\/{2,}/i', '/\/install$/i'), array('/', NULL), $clean_path);
+
+	//define('DOMAIN', $clean_path);
+	//define('URL', 'http://' . $clean_path);
 
 	Lang::load(realpath('../symphony/lang') . '/lang.en.php', 'en', true);
 
@@ -195,7 +232,7 @@
 		if($errors->length() == 0){
 
 			/// Create a DB connection --------------------------------------------------------------------------
-				$db = new DBCMySQLProfiler;
+				$db = new DBCMySQL;
 
 				$db->character_encoding = 'utf8';
 				$db->character_set = 'utf8';
@@ -303,7 +340,7 @@
 						}
 
 						foreach($queries as $sql){
-							$db->query($sql);
+							$db->import($sql);
 						}
 
 						// Create the default user

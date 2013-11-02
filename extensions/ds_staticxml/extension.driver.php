@@ -1,8 +1,6 @@
 <?php
 
-	require_once 'lib/class.datasource.php';
-		
-	class Extension_DS_StaticXML implements iExtension {
+	class Extension_DS_StaticXML implements ExtensionInterface, ExtensionWithIncludesInterface {
 		public function about() {
 			return (object)array(
 				'name'			=> 'Static XML DataSource',
@@ -12,8 +10,8 @@
 					'Data Source', 'Core'
 				),
 				'author'		=> (object)array(
-					'name'			=> 'Symphony Team',
-					'website'		=> 'http://symphony-cms.com/',
+					'name'			=> 'R&B Creative',
+					'website'		=> 'http://www.randb.com.au/',
 					'email'			=> 'team@symphony-cms.com'
 				),
 				'provides'		=> array(
@@ -22,11 +20,15 @@
 				'description'	=> 'Create data sources from an XML string.'
 			);
 		}
-		
+
+		public function includeFiles() {
+			require_once __DIR__ . '/lib/class.datasource.php';
+		}
+
 	/*-------------------------------------------------------------------------
 		DataSources:
 	-------------------------------------------------------------------------*/
-		
+
 		public function getDataSourceTypes() {
 			return array(
 				(object)array(
@@ -36,5 +38,5 @@
 			);
 		}
 	}
-	
+
 	return 'Extension_DS_StaticXML';

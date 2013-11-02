@@ -21,28 +21,29 @@
 
 		public function __construct(){
 			$this->position = 0;
-			
+
 			if (!empty(self::$events)) return;
-			
+
 			self::clearCachedFiles();
-			
+
 			foreach (new EventFilterIterator(EVENTS) as $file) {
 				self::$events[] = $file->getPathname();
 			}
-			
-			$extensions = new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED);
-			
+
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
+
 			foreach ($extensions as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
-				
-				if (!is_dir($path . '/events')) continue;
-				
-				foreach (new EventFilterIterator($path . '/events') as $file) {
+				if (is_dir($extension->path . '/events') === false) continue;
+
+				foreach (new EventFilterIterator($extension->path . '/events') as $file) {
 					self::$events[] = $file->getPathname();
 				}
 			}
 		}
-		
+
 		public static function clearCachedFiles() {
 			self::$events = array();
 		}
@@ -82,10 +83,10 @@
 		const ERROR_FAILED_TO_WRITE = 5;
 
 		protected static $_loaded;
-		
+
 		abstract public function canTrigger(array $data);
 		abstract public function trigger(Register $ParameterOutput, array $data);
-		
+
 		protected $_about;
 		protected $_parameters;
 
@@ -93,7 +94,15 @@
 			return $this->_about;
 		}
 
-		public function &parameters(){
+		public function &parameters(StdClass $data = null) {
+			if (isset($this->_parameters) === false) {
+				$this->_parameters = new StdClass();
+			}
+
+			if (isset($data)) foreach ($data as $key => $value) {
+				$this->_parameters->{$key} = $value;
+			}
+
 			return $this->_parameters;
 		}
 
@@ -125,24 +134,21 @@
 
 		protected static function __find($name){
 
-		    if(is_file(EVENTS . "/{$name}.php")) return EVENTS;
-		    else{
-				
-				foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-					$path = Extension::getPathFromClass(get_class($extension));
-					$handle = Extension::getHandleFromPath($path);
-					
-					if(is_file(EXTENSIONS . "/{$handle}/events/{$name}.php")) return EXTENSIONS . "/{$handle}/events";
-				}
-				/*
-				$extensions = ExtensionManager::instance()->listInstalledHandles();
+		    if (is_file(EVENTS . "/{$name}.php")) {
+		    	return EVENTS;
+		    }
 
-				if(is_array($extensions) && !empty($extensions)){
-					foreach($extensions as $e){
-						if(is_file(EXTENSIONS . "/{$e}/events/{$name}.php")) return EXTENSIONS . "/{$e}/events";
+		    else {
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
+
+				foreach ($extensions as $extension) {
+					if (is_file(EXTENSIONS . "/{$extension->handle}/events/{$name}.php")) {
+						return EXTENSIONS . "/{$extension->handle}/events";
 					}
 				}
-				*/
 	    	}
 
 		    return false;
@@ -161,7 +167,7 @@
 		public function getTemplate(){
 			return NULL;
 		}
-		
+
 		public function prepareDestinationColumnValue() {
 			return Widget::TableData(__('None'), array('class' => 'inactive'));
 		}
@@ -185,7 +191,7 @@
 			if($existing instanceof Event && $editing != $this->handle) {
 				throw new EventException(__('An Event with the name <code>%s</code> already exists.', array($this->about()->name)));
 			}
-			
+
 			// Save type:
 			if ($errors->length() <= 0) {
 				$user = Administration::instance()->User;

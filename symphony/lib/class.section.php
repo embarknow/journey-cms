@@ -1,82 +1,201 @@
 <?php
 
-	require_once('class.field.php');
+	require_once 'class.field.php';
+	require_once 'class.layout.php';
 
 	Class SectionException extends Exception {}
 
-	Class SectionFilterIterator extends FilterIterator{
+	Class SectionFilterIterator extends FilterIterator {
 		public function __construct($path) {
-			parent::__construct(new DirectoryIterator($path));
+			parent::__construct(new DirectoryIterator(realpath($path)));
 		}
 
-		public function accept(){
+		public function accept() {
 			if($this->isDir() == false && preg_match('/^([^.]+)\.xml$/i', $this->getFilename())){
 				return true;
 			}
 			return false;
 		}
 	}
-	
-	Class SectionIterator implements Iterator{
-		private static $sections;
-		private $position;
 
-		public function __construct(){
-			$this->position = 0;
-			
-			if (!empty(self::$sections)) return;
-			
-			self::clearCachedFiles();
-			
-			foreach (new SectionFilterIterator(SECTIONS) as $file) {
-				self::$sections[] = $file->getPathname();
+	class SectionIterator extends ArrayIterator {
+		protected static $cache;
+		protected static $handles;
+		protected static $objects;
+		protected static $sections;
+
+		public static function buildCache() {
+			$cache = self::$cache = new Cache(Cache::SOURCE_CORE, 'sections');
+			$handles = $cache->{'handles'};
+			$sections = $cache->{'sections'};
+
+			if (isset(self::$objects) === false) {
+				self::$objects = array();
 			}
-			
-			$extensions = new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED);
-			
-			foreach ($extensions as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
-				
-				if (!is_dir($path . '/sections')) continue;
-				
-				foreach (new SectionFilterIterator($path . '/sections') as $file) {
-					self::$sections[] = $file->getPathname();
+
+			if (empty($handles) || empty($sections)) {
+				$handles = $sections = [];
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
+
+				Profiler::begin('Discovering sections');
+
+				foreach (new SectionFilterIterator(SECTIONS) as $file) {
+					Profiler::begin('Discovered section %section');
+
+					$path = $file->getPathName();
+					$handle = basename($path, '.xml');
+					$sections[$path] = true;
+					$handles[$handle] = $path;
+
+					Profiler::store('section', $handle, 'system/section');
+					Profiler::store('location', $path, 'system/resource action/discovered');
+					Profiler::notice('Section location cached for future use.');
+					Profiler::end();
 				}
+
+				foreach ($extensions as $extension) {
+					if (is_dir($extension->path . '/sections') === false) continue;
+
+					// Extension will tell us about it's own sections:
+					if ($extension instanceof ExtensionWithSectionsInterface) {
+						foreach ($extension->includeSections() as $path) {
+							Profiler::begin('Discovered section %section');
+
+							$path = realpath($path);
+							$handle = basename($path, '.xml');
+							$sections[$path] = true;
+							$handles[$handle] = $path;
+
+							Profiler::store('section', $handle, 'system/section');
+							Profiler::store('location', $path, 'system/resource action/discovered');
+							Profiler::notice('Section location cached for future use.');
+							Profiler::end();
+						}
+					}
+
+					// Old style, do the work for the extension:
+					else foreach (new SectionFilterIterator($extension->path . '/sections') as $file) {
+						Profiler::begin('Discovered section %section');
+
+						$path = $file->getPathName();
+						$handle = basename($path, '.xml');
+						$sections[$path] = true;
+						$handles[$handle] = $path;
+
+						Profiler::store('section', $handle, 'system/section');
+						Profiler::store('location', $path, 'system/resource action/discovered');
+						Profiler::notice('Section location cached for future use.');
+						Profiler::end();
+					}
+				}
+
+				$cache->{'handles'} = $handles;
+				$cache->{'sections'} = $sections;
+
+				Profiler::end();
 			}
+
+			self::$handles = $handles;
+			self::$objects = $objects;
+			self::$sections = $sections;
 		}
-		
+
 		public static function clearCachedFiles() {
+			$cache = new Cache(Cache::SOURCE_CORE, 'sections');
+			$cache->purge();
+
+			self::$handles = array();
 			self::$sections = array();
 		}
 
-		public function length(){
-			return count(self::$sections);
+		public function __construct() {
+			if (empty(self::$sections)) {
+				self::buildCache();
+			}
+
+			parent::__construct(self::$sections);
 		}
 
-		public function rewind(){
-			$this->position = 0;
+		public function current() {
+			$path = $index = parent::key();
+
+			if (isset(self::$handles[$index])) {
+				$path = self::$handles[$index];
+			}
+
+			if (isset(self::$objects[$path]) === false) {
+				Profiler::begin('Loaded section %section');
+
+				$section = Section::loadFromFile($path);
+				self::$objects[$path] = $section;
+
+				Profiler::store('section', basename($path, '.xml'), 'system/section');
+				Profiler::store('location', $path, 'system/resource action/loaded');
+				Profiler::end();
+			}
+
+			return self::$objects[$path];
 		}
 
-		public function current(){
-			return Section::load(self::$sections[$this->position]);
+		public function offsetExists($index) {
+			if (isset(self::$handles[$index])) {
+				$index = self::$handles[$index];
+			}
+
+			return parent::offsetExists($index);
 		}
 
-		public function key(){
-			return $this->position;
+		public function offsetGet($index) {
+			$path = $index;
+
+			if (isset(self::$handles[$index])) {
+				$path = self::$handles[$index];
+			}
+
+			if (isset(self::$objects[$path]) === false) {
+				Profiler::begin('Loaded section %section');
+
+				$section = Section::loadFromFile($path);
+				self::$objects[$path] = $section;
+
+				Profiler::store('section', basename($path, '.xml'), 'system/section');
+				Profiler::store('location', $path, 'system/resource action/loaded');
+				Profiler::end();
+			}
+
+			return self::$objects[$path];
 		}
 
-		public function next(){
-			++$this->position;
+		public function offsetSet($index, $value) {
+			if (isset(self::$handles[$index])) {
+				$index = self::$handles[$index];
+			}
+
+			self::$objects[$index] = $value;
+
+			return parent::offsetSet($index, true);
 		}
 
-		public function valid(){
-			return isset(self::$sections[$this->position]);
+		public function offsetUnset($index) {
+			if (isset(self::$handles[$index])) {
+				$index = self::$handles[$index];
+
+				unset(self::$handles[$index]);
+			}
+
+			if (isset(self::$objects[$index])) {
+				unset(self::$objects[$index]);
+			}
+
+			return parent::offsetUnset($index);
 		}
 	}
 
 
-	Class Section{
-
+	class Section {
 		const ERROR_SECTION_NOT_FOUND = 0;
 		const ERROR_FAILED_TO_LOAD = 1;
 		const ERROR_DOES_NOT_ACCEPT_PARAMETERS = 2;
@@ -88,7 +207,8 @@
 		protected static $sections = array();
 
 		protected $parameters;
-		protected $fields;
+		public $fields;
+		public $layout;
 
 		public static function createGUID() {
 			return uniqid();
@@ -97,8 +217,8 @@
 		public function __construct(){
 			$this->parameters = new StdClass;
 			$this->name = null;
-			$this->fields = array();
-			$this->layout = array();
+			$this->fields = [];
+			$this->layout = [];
 			$this->{'navigation-group'} = null;
 			$this->{'publish-order-handle'} = null;
 			$this->{'publish-order-direction'} = null;
@@ -110,13 +230,8 @@
 		}
 
 		public function __get($name){
-
-			if($name == 'guid' and !isset($this->guid)){
+			if ($name == 'guid' and !isset($this->guid)) {
 				$this->parameters->guid = Section::createGUID();
-			}
-
-			elseif($name == 'fields'){
-				return $this->fields;
 			}
 
 			return $this->parameters->$name;
@@ -124,62 +239,26 @@
 
 		public function __set($name, $value){
 			if ($name == 'name') {
-				$this->parameters->handle = Lang::createHandle($value, '-', false, true, array('/^[^:_a-z]+/i' => NULL, '/[^:_a-z0-9\.-]/i' => NULL));
+				$this->parameters->handle = Lang::createHandle($value, '-', false, true, array('/^[^:_a-z]+/i' => null, '/[^:_a-z0-9\.-]/i' => null));
 			}
-			
+
 			$this->parameters->$name = $value;
 		}
-
-		//public function initialise(){
-		//	if(!($this->_about instanceof StdClass)) $this->_about = new StdClass;
-		//}
-
-		/*public function __get($name){
-
-			if($name == 'classname'){
-				$classname = Lang::createHandle($this->_about->name, '-', false, true, array('@^[^a-z]+@i' => NULL, '/[^\w-\.]/i' => NULL));
-				$classname = str_replace(' ', NULL, ucwords(str_replace('-', ' ', $classname)));
-				return 'section' . $classname;
-			}
-			elseif($name == 'handle'){
-				if(!isset($this->_about->handle) || strlen(trim($this->_about->handle)) > 0){
-					$this->handle = Lang::createHandle($this->_about->name, '-', false, true, array('@^[\d-]+@i' => ''));
-				}
-				return $this->_about->handle;
-
-			}
-			elseif($name == 'guid'){
-				if(is_null($this->_about->guid)){
-					$this->_about->guid = uniqid();
-				}
-				return $this->_about->guid;
-			}
-			return $this->_about->$name;
-		}
-
-		public function __set($name, $value){
-			//if(in_array($name, array('path', 'template', 'handle', 'guid'))){
-			//	$this->{"_{$name}"} = $value;
-		//	}
-		//	else
-			if($name == 'guid') return; //guid cannot be set manually
-			$this->_about->$name = $value;
-		}*/
 
 		public function appendField(Field $field){
 			$field->section = $this->handle;
 			$this->fields[] = $field;
 		}
 
-		public function appendFieldByType($type, array $data=NULL){
-
+		public function appendFieldByType($type, array $data = null) {
 			$field = Field::loadFromType($type);
 
-			if(!is_null($data)){
+			if (!is_null($data)) {
 				$field->setPropertiesFromPostData($data);
 			}
 
 			$this->appendField($field);
+
 			return $field;
 		}
 
@@ -189,26 +268,46 @@
 
 		public function removeField($name){
 			foreach($this->fields as $index => $f){
-				if($f->label == $name || $f->{'element-name'} == $name){
+				if($f->{'publish-label'} == $name || $f->{'element-name'} == $name){
 					unset($this->fields[$index]);
 				}
 			}
 		}
 
-		/*
-		**	Given an field's element name, return an object of
-		**	that Field.
-
-		**	@param $handle string
-		**	@return Field
-		*/
+		/**
+		 *	Given an field's element name, return an object of
+		 *	that Field.
+		 *
+		 *	@param $handle string
+		 *	@return Field
+		 */
 		public function fetchFieldByHandle($handle) {
-			foreach($this->fields as $field){
+			foreach ($this->fields as $field) {
 				if ($field->{'element-name'} == $handle) {
 					return $field;
 				}
 			}
-			return NULL;
+
+			return null;
+		}
+
+		/**
+		 *	Given an field's element name, return an object of
+		 *	that Field.
+		 *
+		 *	@param $handle string
+		 *	@return Field
+		 */
+		public function fetchFieldsByType($type) {
+			$fields = array();
+
+			foreach ($this->fields as $field) {
+				if ($field->{'type'} == $type) {
+					$fields[] = $field;
+				}
+			}
+
+			return $fields;
 		}
 
 		public static function fetchUsedNavigationGroups(){
@@ -219,49 +318,83 @@
 			return General::array_remove_duplicates($groups);
 		}
 
-		public static function load($path){
-			if (isset(self::$sections[$path]) and self::$sections[$path] instanceof Section) {
-				return self::$sections[$path];
-			}
-			
-			$section = new self;
+		public static function load($path) {
+			$sections = new SectionIterator();
 
-			$section->handle = preg_replace('/\.xml$/', NULL, basename($path));
-			$section->path = dirname($path);
-			
-			if(!file_exists($path)){
-				throw new SectionException(__('Section `%s` could not be found.', array(basename($path))), self::ERROR_SECTION_NOT_FOUND);
+			// Try with given path:
+			if (isset($sections[$path])) {
+				$section = $sections[$path];
 			}
+
+			// Try with realpath:
+			else {
+				$real = realpath($path);
+
+				if ($real !== false && isset($sections[$real]) !== false) {
+					$section = $sections[$real];
+				}
+			}
+
+			// Not found:
+			if (isset($section) === false) {
+				throw new ExtensionException('No sections found for ' . $path);
+			}
+
+			return $section;
+		}
+
+		public static function loadFromHandle($name) {
+			$sections = new SectionIterator();
+
+			if (isset($sections[$name]) === false) {
+				throw new ExtensionException('No sections found for ' . $name);
+			}
+
+			return $sections[$name];
+		}
+
+		public static function loadFromFile($path) {
+			$section = new Section();
+			$section->handle = preg_replace('/\.xml$/', null, basename($path));
+			$section->path = dirname($path);
 
 			$doc = @simplexml_load_file($path);
+			$section->document = $doc;
 
-			if(!($doc instanceof SimpleXMLElement)){
-				throw new SectionException(__('Failed to load section configuration file: %s', array($path)), self::ERROR_FAILED_TO_LOAD);
+			if (($doc instanceof SimpleXMLElement) === false) {
+				throw new SectionException(
+					__('Failed to load section configuration file: %s', array($path)),
+					Section::ERROR_FAILED_TO_LOAD
+				);
 			}
 
-			foreach($doc as $name => $value){
-				if($name == 'fields' && isset($value->field)){
-					foreach($value->field as $field){
+			foreach ($doc as $name => $value) {
+				if ($name == 'fields' && isset($value->field)) {
+					foreach ($value->field as $field) {
+						Profiler::begin('Loading %class field %field');
 
-						try{
-							$section->appendField(
-								Field::loadFromXMLDefinition($field)
-							);
+						try {
+							$field = Field::loadFromXMLDefinition($field);
+							$section->appendField($field);
 						}
 
-						catch(Exception $e){
+						catch (Exception $e) {
 							// Couldnt find the field. Ignore it for now
 							// TODO: Might need to more than just ignore it
 						}
 
+						Profiler::store('field', $field->{'element-name'}, 'system/field');
+						Profiler::store('class', get_class($field), 'system/class');
+						Profiler::store('location', $field->file, 'system/resource action/loaded');
+						Profiler::end();
 					}
 				}
 
-				elseif($name == 'layout' && isset($value->column)){
+				else if ($name == 'layout' && isset($value->column)) {
 					$data = array();
 
 					foreach ($value->column as $column) {
-						if (!isset($column->size)) {
+						if (isset($column->size) === false) {
 							$size = Layout::LARGE;
 						}
 
@@ -270,20 +403,23 @@
 						}
 
 						$data_column = (object)array(
-							'size'		=> $size,
-							'fieldsets'	=> array()
+							'size' =>		$size,
+							'fieldsets' =>	array()
 						);
 
 						foreach ($column->fieldset as $fieldset) {
-							
 							if (isset($fieldset->name) or trim((string)$fieldset->name) == '') {
 								$name = (string)$fieldset->name;
 							}
 
 							$data_fieldset = (object)array(
-								'name'		=> $name,
-								'collapsed' => (isset($fieldset->collapsed) ? (string)$fieldset->collapsed : 'no'),
-								'fields'	=> array()
+								'name' =>		$name,
+								'collapsed' =>	(
+													isset($fieldset->collapsed)
+														? (string)$fieldset->collapsed
+														: 'no'
+												),
+								'fields' =>		array()
 							);
 
 							foreach ($fieldset->field as $field) {
@@ -297,52 +433,30 @@
 					}
 
 					$section->layout = $data;
+					$section->sanitizeLayout(true);
 				}
 
-				elseif(isset($value->item)){
+				else if (isset($value->item)) {
 					$stack = array();
-					foreach($value->item as $item){
+
+					foreach ($value->item as $item) {
 						array_push($stack, (string)$item);
 					}
+
 					$section->$name = $stack;
 				}
 
-				else{
+				else {
 					$section->$name = (string)$value;
 				}
 			}
 
-			$section->sanitizeLayout(true);
-
 			if (isset($doc->attributes()->guid)) {
 				$section->guid = (string)$doc->attributes()->guid;
 			}
-			
-			self::$sections[$path] = $section;
-			
+
 			return $section;
 		}
-
-		public static function loadFromHandle($name){
-			return self::load(self::__find($name) . "/{$name}.xml");
-		}
-
-		protected static function __find($name) {
-		    if (is_file(SECTIONS . "/{$name}.xml")) return SECTIONS;
-		    
-		    else {
-				foreach (new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension) {
-					$path = Extension::getPathFromClass(get_class($extension));
-					$handle = Extension::getHandleFromPath($path);
-					
-					if (!is_file(EXTENSIONS . "/{$handle}/sections/{$name}.xml")) continue;
-					
-					return EXTENSIONS . "/{$handle}/sections";
-				}
-	    	}
-
-		    return false;
-	    }
 
 		public static function save(Section $section, MessageStack $messages, $essentials = null, $simulate = false) {
 			$pathname = sprintf('%s/%s.xml', $section->path, $section->handle);
@@ -385,7 +499,7 @@
 			if ($simulate) return true;
 
 			$section->sanitizeLayout();
-			
+
 			return file_put_contents($pathname, (string)$section);
 		}
 
@@ -425,14 +539,13 @@
 						`tbl_sections_sync` AS s
 					WHERE
 						s.section = "%s"
-						AND md5(s.xml) != md5("%s")
 				',
 				array(
-					$section->guid,
-					$new_doc->saveXML()
+					$section->guid
 				)
 			);
 
+			// Found sync data:
 			if ($res->valid()) {
 				$old_doc = new DOMDocument('1.0', 'UTF-8');
 				$old_doc->formatOutput = true;
@@ -454,14 +567,15 @@
 					$field->loadSettingsFromSimpleXMLObject(
 						simplexml_import_dom($node)
 					);
-					
+
 					$old[$field->guid] = (object)array(
-						'label'		=> $field->name,
+						'label'		=> $field->{'publish-label'},
 						'field'		=> $field
 					);
 				}
 			}
 
+			// Creating the section:
 			else {
 				$result->synced = false;
 				$result->section->create = true;
@@ -473,16 +587,16 @@
 				$field->loadSettingsFromSimpleXMLObject(
 					simplexml_import_dom($node)
 				);
-				
+
 				$new[$field->guid] = (object)array(
-					'label'		=> $field->name,
+					'label'		=> $field->{'publish-label'},
 					'field'		=> $field
 				);
 			}
 
 			foreach ($new as $guid => $data) {
 				// Field is being created:
-				if (!array_key_exists($guid, $old)) {
+				if (array_key_exists($guid, $old) === false) {
 					$result->create[$guid] = $data;
 					continue;
 				}
@@ -491,7 +605,7 @@
 				if ($result->section->rename or $old[$guid]->field->{'element-name'} != $data->field->{'element-name'}) {
 					if ($old[$guid]->field->type == $data->field->type) {
 						$result->rename[$guid] = (object)array(
-							'label'		=> $data->label,
+							'label'		=> $data->{'label'},
 							'old'		=> $old[$guid]->field,
 							'new'		=> $data->field
 						);
@@ -509,7 +623,7 @@
 				if ($old[$guid]->field != $data->field) {
 					if ($old[$guid]->field->type == $data->field->type) {
 						$result->update[$guid] = (object)array(
-							'label'		=> $data->label,
+							'label'		=> $data->{'label'},
 							'old'		=> $old[$guid]->field,
 							'new'		=> $data->field
 						);
@@ -582,13 +696,13 @@
 
 		public static function rename(Section $section, $old_handle) {
 			/*
-			 	TODO:
+				TODO:
 				Upon renaming a section, data-sources/events attached to it must update.
 				Views will also need to update to ensure they still have references to the same
 				data-sources/sections
 			*/
 
-			return General::deleteFile(SECTIONS . '/' . $old_handle . '.xml');
+			return General::deleteFile($section->path . '/' . $old_handle . '.xml');
 		}
 
 		public static function delete(Section $section) {
@@ -626,7 +740,7 @@
 				'`section` = "%s"'
 			);
 
-			if(General::deleteFile(SECTIONS . '/' . $section->handle . '.xml')) {
+			if(General::deleteFile($section->path . '/' . $section->handle . '.xml')) {
 				//	Cleanup Datasources
 				foreach(new DataSourceIterator as $datasource) {
 					$ds = DataSource::load($datasource);
@@ -648,7 +762,6 @@
 		}
 
 		public function sanitizeLayout($loading = false) {
-			$debug = ($this->handle == 'tests' and !$loading);
 			$layout = $this->layout;
 			$fields_used = array();
 			$fields_available = array();
@@ -716,13 +829,6 @@
 				$layout[0]->fieldsets[0]->fields[] = $field;
 			}
 
-			if ($debug) {
-				//$this->layout = $layout;
-
-				//var_dump($layout);
-				//exit;
-			}
-
 			$this->layout = $layout;
 		}
 
@@ -754,7 +860,7 @@
 			$root->appendChild($doc->createElement('publish-order-handle', General::sanitize($this->{'publish-order-handle'})));
 			$root->appendChild($doc->createElement('publish-order-direction', General::sanitize($this->{'publish-order-direction'})));
 
-			if(is_array($this->fields) && !empty($this->fields)){
+			if (is_array($this->fields) && !empty($this->fields)) {
 				$fields = $doc->createElement('fields');
 
 				foreach ($this->fields as $index => $field) {
@@ -808,110 +914,13 @@
 		}
 
 		public function __toString(){
-			try{
+			try {
 				return $this->toDoc()->saveXML();
 			}
-			catch(Exception $e){
+
+			catch (Exception $e) {
 				var_dump($e);
 				die();
 			}
 		}
-
-		/*public function __toString(){
-			$template = file_get_contents(TEMPLATES . '/template.section.php');
-
-			$vars = array(
-				$this->classname,
-				var_export($this->name, true),
-				var_export($this->handle, true),
-				var_export($this->{'navigation-group'}, true),
-				var_export((bool)$this->hidden, true),
-				var_export($this->guid, true),
-			);
-
-			return vsprintf($template, $vars);
-		}*/
 	}
-
-
-	/*Class Section{
-
-		var $_data;
-		var $_Parent;
-		var $_fields;
-		var $_fieldManager;
-
-		public function __construct(&$parent){
-			$this->_Parent = $parent;
-			$this->_data = $this->_fields = array();
-
-			$this->_fieldManager = new FieldManager($this->_Parent);
-		}
-
-		public function fetchAssociatedSections(){
-			return Symphony::Database()->fetch("SELECT *
-													FROM `tbl_sections_association` AS `sa`, `tbl_sections` AS `s`
-													WHERE `sa`.`parent_section_id` = '".$this->get('id')."'
-													AND `s`.`id` = `sa`.`child_section_id`
-													ORDER BY `s`.`sortorder` ASC
-													");
-
-		}
-
-		public function set($field, $value){
-			$this->_data[$field] = $value;
-		}
-
-		public function get($field=NULL){
-			if($field == NULL) return $this->_data;
-			return $this->_data[$field];
-		}
-
-		public function addField(){
-			$this->_fields[] = new Field($this->_fieldManager);
-		}
-
-		public function fetchVisibleColumns(){
-			return $this->_fieldManager->fetch(NULL, $this->get('id'), 'ASC', 'sortorder', NULL, NULL, " AND t1.show_column = 'yes' ");
-		}
-
-		public function fetchFields($type=NULL, $location=NULL){
-			return $this->_fieldManager->fetch(NULL, $this->get('id'), 'ASC', 'sortorder', $type, $location);
-		}
-
-		public function fetchFilterableFields($location=NULL){
-			return $this->_fieldManager->fetch(NULL, $this->get('id'), 'ASC', 'sortorder', NULL, $location, NULL, Field::FLAG_FILTERABLE);
-		}
-
-		public function fetchToggleableFields($location=NULL){
-			return $this->_fieldManager->fetch(NULL, $this->get('id'), 'ASC', 'sortorder', NULL, $location, NULL, Field::FLAG_TOGGLEABLE);
-		}
-
-		public function fetchFieldsSchema(){
-			return Symphony::Database()->fetch("SELECT `id`, `element_name`, `type`, `location` FROM `tbl_fields` WHERE `parent_section` = '".$this->get('id')."' ORDER BY `sortorder` ASC");
-		}
-
-		public function commit(){
-			$fields = $this->_data;
-			$retVal = NULL;
-
-			if(isset($fields['id'])){
-				$id = $fields['id'];
-				unset($fields['id']);
-				$retVal = $this->_Parent->edit($id, $fields);
-
-				if($retVal) $retVal = $id;
-
-			}else{
-				$retVal = $this->_Parent->add($fields);
-			}
-
-			if(is_numeric($retVal) && $retVal !== false){
-				for($ii = 0; $ii < count($this->_fields); $ii++){
-					$this->_fields[$ii]->parent_section = $retVal;
-					$this->_fields[$ii]->commit();
-				}
-			}
-		}
-	}
-*/

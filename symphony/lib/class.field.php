@@ -17,48 +17,37 @@
 		}
 	}
 
-	Class FieldIterator implements Iterator{
+	class FieldIterator extends ArrayIterator {
+		protected static $cache;
 
-		private $position;
-		private $fields;
+		public function __construct() {
+			if (isset(self::$cache) === false) {
+				$fields = array();
 
-		public function __construct(){
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::TYPE =>		'Field',
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
 
-			$this->fields = array();
-			$this->position = 0;
+				foreach ($extensions as $extension) {
+					if (method_exists($extension, 'getFieldTypes') === false) continue;
 
-			foreach(new DirectoryIterator(EXTENSIONS) as $dir){
-				if(!$dir->isDir() || $dir->isDot() || !is_dir($dir->getPathname() . '/fields')) continue;
+					foreach ($extension->getFieldTypes() as $info) {
+						$field = new $info->class();
+						$reflection = new ReflectionObject($field);
 
-				foreach(new FieldFilterIterator($dir->getPathname() . '/fields') as $file){
-					$this->fields[] = $file->getPathname();
+						// Set 'type' property:
+						$field->type = preg_replace('%^field\.|\.php$%', null, basename($reflection->getFileName()));
+
+						$fields[$field->type] = $field;
+					}
 				}
+
+				self::$cache = $fields;
 			}
 
-		}
-
-		public function length(){
-			return count($this->fields);
-		}
-
-		public function rewind(){
-			$this->position = 0;
-		}
-
-		public function current(){
-			return $this->fields[$this->position]; //Datasource::loadFromPath($this->events[$this->position]);
-		}
-
-		public function key(){
-			return $this->position;
-		}
-
-		public function next(){
-			++$this->position;
-		}
-
-		public function valid(){
-			return isset($this->fields[$this->position]);
+			parent::__construct(self::$cache);
 		}
 	}
 
@@ -72,6 +61,7 @@
 
 		protected $_handle;
 		protected $_name;
+		public $file;
 
 		// Status codes
 		const STATUS_OK = 'ok';
@@ -83,6 +73,8 @@
 		const ERROR_DUPLICATE = 'duplicate';
 		const ERROR_CUSTOM = 'custom';
 		const ERROR_INVALID_QNAME = 'invalid qname';
+		const ERROR_WEAK = 'weak';
+		const ERROR_SHORT = 'short';
 
 		// Filtering Flags
 		const FLAG_TOGGLEABLE = 'toggeable';
@@ -93,6 +85,9 @@
 
 		public function __construct(){
 			if(is_null(self::$key)) self::$key = 0;
+
+			$reflection = new ReflectionObject($this);
+			$this->file = $reflection->getFileName();
 
 			$this->properties = new StdClass;
 
@@ -111,11 +106,15 @@
 			if ($name == 'guid' and !isset($this->guid)) {
 				$this->guid = Field::createGUID($this);
 			}
-			
+
+			if ($name == "publish-label") {
+				$this->{'publish-label'} = $this->properties->name;
+			}
+
 			if (!isset($this->properties->$name)) {
 				return null;
 			}
-			
+
 			return $this->properties->$name;
 		}
 
@@ -123,7 +122,7 @@
 			if ($name == 'name') {
 				$this->properties->{'element-name'} = Lang::createHandle($value, '-', false, true, array('/^[^:_a-z]+/i' => NULL, '/[^:_a-z0-9\.-]/i' => NULL));
 			}
-			
+
 			$this->properties->$name = $value;
 		}
 
@@ -189,9 +188,13 @@
 			);
 		}
 
-		/*-------------------------------------------------------------------------
-			Database Statements:
-		-------------------------------------------------------------------------*/
+		public function fetchDataKey() {
+			return 'entry_id';
+		}
+
+	/*-------------------------------------------------------------------------
+		Database Statements:
+	-------------------------------------------------------------------------*/
 
 		public function create(){
 			return Symphony::Database()->query(
@@ -253,22 +256,22 @@
 			return true;
 		}
 
-		/*-------------------------------------------------------------------------
-			Load:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Load:
+	-------------------------------------------------------------------------*/
 
-		public static function load($pathname){
-			if(!is_array(self::$loaded)){
+		public static function load($pathname) {
+			if (is_array(self::$loaded) === false) {
 				self::$loaded = array();
 			}
 
-			if(!is_file($pathname)){
+			if (is_file($pathname) === false) {
 		        throw new FieldException(
 					__('Could not find Field <code>%s</code>. If the Field was provided by an Extension, ensure that it is installed, and enabled.', array(basename($pathname)))
 				);
 			}
 
-			if(!isset(self::$loaded[$pathname])){
+			if (isset(self::$loaded[$pathname]) === false) {
 				self::$loaded[$pathname] = require($pathname);
 			}
 
@@ -278,12 +281,14 @@
 			return $obj;
 		}
 
-		public static function loadFromType($type){
-			return self::load(self::__find($type) . "/field.{$type}.php");
+		public static function loadFromType($type) {
+			$fields = new FieldIterator();
+
+			return clone $fields[$type];
 		}
 
 		public static function loadFromXMLDefinition(SimpleXMLElement $xml){
-			if(!isset($xml->type)){
+			if (isset($xml->type) === false) {
 				throw new FieldException('Section XML contains fields with no type specified.');
 			}
 
@@ -293,29 +298,9 @@
 			return $field;
 		}
 
-		protected static function __find($type){
-
-	//		$extensions = ExtensionManager::instance()->listInstalledHandles();
-
-	//		if(is_array($extensions) && !empty($extensions)){
-	//			foreach($extensions as $e){
-	//				if(is_file(EXTENSIONS . "/{$e}/fields/field.{$type}.php")) return EXTENSIONS . "/{$e}/fields";
-	//			}
-	//		}
-			
-			foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $e){
-				$path = Extension::getPathFromClass(get_class($e));
-				if(is_file("{$path}/fields/field.{$type}.php")){
-					return "{$path}/fields";
-				}
-			}
-	
-		    return false;
-	    }
-
-		/*-------------------------------------------------------------------------
-			Utilities:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Utilities:
+	-------------------------------------------------------------------------*/
 
 		public static function createGUID(Field $field) {
 			return uniqid();
@@ -350,9 +335,9 @@
 			return $doc;
 	    }
 
-		/*-------------------------------------------------------------------------
-			Settings:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Settings:
+	-------------------------------------------------------------------------*/
 
 		public function loadSettingsFromSimpleXMLObject(SimpleXMLElement $xml){
 			foreach($xml as $property_name => $property_value){
@@ -381,7 +366,7 @@
 				$messages->append('element-name', __('This is a required field.'));
 			}
 
-			else if(!preg_match('/^[A-z]([\w\d-_\.]+)?$/i', $this->{'element-name'})) {
+			else if (!preg_match('/^[A-z]([\w\d-_\.]+)?$/i', $this->{'element-name'})) {
 				$messages->append('element-name', __('Invalid element name. Must be valid QName.'));
 			}
 
@@ -425,7 +410,7 @@
 
 			$group = $document->createElement('div');
 			$group->setAttribute('class', 'group');
-			
+
 			$label = Widget::Label(__('Name'));
 			$label->setAttribute('class', 'field-name');
 			$label->appendChild(Widget::Input('name', $this->name));
@@ -435,8 +420,8 @@
 			}
 
 			$group->appendChild($label);
-			
-			
+
+
 			$label = Widget::Label(__('Publish Label'));
 			$label->appendChild($document->createElement('em', 'Optional'));
 			$label->appendChild(Widget::Input('publish-label', $this->{'publish-label'}));
@@ -446,7 +431,7 @@
 			}
 
 			$group->appendChild($label);
-						
+
 			$wrapper->appendChild($group);
 
 
@@ -530,7 +515,7 @@
 			if (is_null($label_value)){
 				$label_value = __('Validation Rule');
 			}
-			
+
 			$label = Widget::Label($label_value);
 			$document = $wrapper->ownerDocument;
 			$rules = ($type == 'upload' ? $upload : $validators);
@@ -548,32 +533,32 @@
 			$wrapper->appendChild($ul);
 		}
 
+	/*-------------------------------------------------------------------------
+		Publish:
+	-------------------------------------------------------------------------*/
 
-		/*-------------------------------------------------------------------------
-			Publish:
-		-------------------------------------------------------------------------*/
 		public function prepareTableValue(StdClass $data=NULL, DOMElement $link=NULL, Entry $entry=NULL) {
 			$max_length = Symphony::Configuration()->core()->symphony->{'cell-truncation-length'};
 			$max_length = ($max_length ? $max_length : 75);
 
 			$value = (!is_null($data) ? strip_tags($data->value) : NULL);
-			
+
 			if ($max_length < strlen($value)) {
 				$lines = explode("\n", wordwrap($value, $max_length - 1, "\n"));
 				$value = array_shift($lines);
 				$value = rtrim($value, "\n\t !?.,:;");
 				$value .= '…';
 			}
-			
+
 			if ($max_length > 75) {
 				$value = wordwrap($value, 75, '<br />');
 			}
-			
+
 			if (strlen($value) == 0) $value = __('None');
-			
+
 			if (!is_null($link)) {
 				$link->setValue($value);
-				
+
 				return $link;
 			}
 
@@ -581,10 +566,10 @@
 		}
 
 		abstract public function displayPublishPanel(SymphonyDOMElement $wrapper, MessageStack $error, Entry $entry = null, $data = null);
-		
-		/*-------------------------------------------------------------------------
-			Input:
-		-------------------------------------------------------------------------*/
+
+	/*-------------------------------------------------------------------------
+		Input:
+	-------------------------------------------------------------------------*/
 
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false){
 			try{
@@ -611,9 +596,47 @@
 			}
 		}
 
-		public function processData($data, Entry $entry=NULL){
+		public function loadDataFromDatabaseEntries($section, $entry_ids){
+			try{
+				$rows = Symphony::Database()->query(
+					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+					array(
+						$section,
+						$this->{'element-name'},
+						implode(',', $entry_ids)
+					)
+				);
 
-			if(isset($entry->data()->{$this->{'element-name'}})){
+				$result = array();
+				foreach($rows as $r){
+					$result[] = $r;
+				}
+
+				return $result;
+			}
+			catch(DatabaseException $e){
+				return array();
+				// Oh oh....no data. oh well, have a smoke and then return
+			}
+		}
+
+		/**
+		 * Can the field process this raw data?
+		 *
+		 * Used to determine if field data should be overwritten with the
+		 * result of processData when saving entries.
+		 *
+		 * @param	mixed	$data
+		 * @param	Entry	$entry
+		 *
+		 * @return	boolean
+		 */
+		public function canProcessData($data, Entry $entry = null) {
+			return $data !== null;
+		}
+
+		public function processData($data, Entry $entry = null) {
+			if (isset($entry->data()->{$this->{'element-name'}})) {
 				$result = $entry->data()->{$this->{'element-name'}};
 			}
 
@@ -632,7 +655,7 @@
 			if ($this->required == 'yes' && (!isset($data->value) || strlen(trim($data->value)) == 0)){
 				$errors->append(
 					null, (object)array(
-					 	'message' => __("'%s' is a required field.", array($this->label)),
+					 	'message' => __("'%s' is a required field.", array($this->{'publish-label'})),
 						'code' => self::ERROR_MISSING
 					)
 				);
@@ -644,10 +667,12 @@
 		// TODO: Support an array of data objects. This is important for
 		// fields like Select box or anything that allows mutliple values
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
+			if (is_array($data)) $data = (object)$data;
+			if (isset($data->id) === false) $data->id = null;
+
 			$data->entry_id = $entry->id;
-			if(!isset($data->id)) $data->id = NULL;
-			
-			try{
+
+			try {
 				Symphony::Database()->insert(
 					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
@@ -655,20 +680,37 @@
 				);
 				return self::STATUS_OK;
 			}
-			catch(DatabaseException $e){
 
+			catch (DatabaseException $e) {
+				//	The great irony here is the the getMessage returns something a hell of a lot
+				//	more useful than the getDatabaseErrorMessage. ie.
+				//	getMessage: MySQL Error (1048): Column 'value' cannot be null in query {$query}
+				//	getDatabaseErrorMessage: Column 'value' cannot be null
+				$errors->append(
+					null, (object)array(
+					 	'message' => $e->getMessage(),
+						'code' => $e->getDatabaseErrorCode()
+					)
+				);
 			}
 			catch(Exception $e){
-
+				$errors->append(
+					null, (object)array(
+					 	'message' => $e->getMessage(),
+						'code' => $e->getCode()
+					)
+				);
 			}
 			return self::STATUS_ERROR;
 		}
 
-		/*-------------------------------------------------------------------------
-			Output:
-		-------------------------------------------------------------------------*/
+	/*-------------------------------------------------------------------------
+		Output:
+	-------------------------------------------------------------------------*/
 
 		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry=NULL) {
+			if (is_null($data->value)) return;
+
 			$wrapper->appendChild(
 				$wrapper->ownerDocument->createElement(
 					$this->{'element-name'},
@@ -677,13 +719,15 @@
 			);
 		}
 
-		public function getParameterOutputValue(StdClass $data, Entry $entry=NULL){
+		public function getParameterOutputValue($data, Entry $entry=NULL){
+			if(is_null($data->value)) return;
+
 			return $this->prepareTableValue($data);
 		}
-		
-		/*-------------------------------------------------------------------------
-			Filtering:
-		-------------------------------------------------------------------------*/
+
+	/*-------------------------------------------------------------------------
+		Filtering:
+	-------------------------------------------------------------------------*/
 
 		public function getFilterTypes($data) {
 			return array(
@@ -694,11 +738,12 @@
 				array('regex-search', $data->type == 'regex-search', 'Regex Search')
 			);
 		}
-		
+
 		public function processFilter($data) {
 			$defaults = (object)array(
-				'value'		=> '',
-				'type'		=> 'is'
+				'allow-null' =>		false,
+				'type' =>			'is',
+				'value' =>			''
 			);
 
 			if (empty($data)) {
@@ -707,11 +752,15 @@
 
 			$data = (object)$data;
 
-			if (!isset($data->type)) {
+			if (isset($data->{'allow-null'}) === false) {
+				$data->{'allow-null'} = $defaults->{'allow-null'};
+			}
+
+			if (isset($data->type) === false) {
 				$data->type = $defaults->type;
 			}
 
-			if (!isset($data->value)) {
+			if (isset($data->value) === false) {
 				$data->value = '';
 			}
 
@@ -735,19 +784,19 @@
 				sprintf('value', $this->{'element-name'}),
 				$data->value
 			));
-			
+
 			$label->appendChild(Widget::Input(
 				'element-name', $this->{'element-name'}, 'hidden'
 			));
-			
+
 			$wrapper->appendChild(Widget::Group(
 				$type_label, $label
 			));
 		}
-		
+
 		public function buildJoinQuery(&$joins) {
 			$db = Symphony::Database();
-			
+
 			$table = $db->prepareQuery(sprintf(
 				'`tbl_data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
 			));
@@ -755,25 +804,25 @@
 				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key
 			);
 			$joins .= sprintf(
-				"\nLEFT OUTER JOIN %s AS %s ON (e.id = %2\$s.entry_id)",
+				"\nRIGHT JOIN %s AS %s ON (e.id = %2\$s.entry_id)",
 				$table, $handle
 			);
-			
+
 			return $handle;
 		}
-		
+
 		public function buildFilterJoin(&$joins) {
 			return $this->buildJoinQuery($joins);
 		}
-		
+
 		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output) {
 			$filter = $this->processFilter($filter);
 			$filter_join = DataSource::FILTER_OR;
 			$db = Symphony::Database();
 
 			$values = DataSource::prepareFilterValue($filter->value, $parameter_output, $filter_join);
-			
-			if (!is_array($values)) $values = array();
+
+			if (is_array($values) === false) $values = array();
 
 			// Exact matches:
 			if ($filter->type == 'is' or $filter->type == 'is-not') {
@@ -789,11 +838,15 @@
 					}
 
 					$statements[] = $db->prepareQuery(
-						"'%s' IN ({$handle}.value, {$handle}.handle)", array($value)
+						"'%s' IN ({$handle}.value)", array($value)
+					);
+
+					$statements[] = $db->prepareQuery(
+						"'%s' IN ({$handle}.handle)", array(lang::createHandle($value))
 					);
 				}
 
-				if(empty($statements)) return true;
+				if (empty($statements)) return true;
 
 				if ($filter_join == DataSource::FILTER_OR) {
 					$statement = "(\n\t" . implode("\n\tOR ", $statements) . "\n)";
@@ -810,9 +863,19 @@
 				$where[] = $statement;
 			}
 
+			else if ($filter->type == 'is-null') {
+				$handle = $this->buildFilterJoin($joins);
+				$where[] = $db->prepareQuery("{$handle}.value IS NULL");
+			}
+
+			else if ($filter->type == 'is-not-null') {
+				$handle = $this->buildFilterJoin($joins);
+				$where[] = $db->prepareQuery("{$handle}.value IS NOT NULL");
+			}
+
 			else if ($filter->type == 'contains' or $filter->type == 'does-not-contain') {
 				$statements = array();
-				
+
 				if ($filter_join == DataSource::FILTER_OR) {
 					$handle = $this->buildFilterJoin($joins);
 				}
@@ -861,26 +924,26 @@
 
 			return true;
 		}
-		
+
 		public function buildDSFilterSQL() {
 			// TODO: Cleanup before release.
 			throw new Exception('Field->buildDSFilterSQL() is obsolete, use buildFilterQuery instead.');
 		}
 
-		/*-------------------------------------------------------------------------
-			Grouping:
-		-------------------------------------------------------------------------*/
-		
+	/*-------------------------------------------------------------------------
+		Grouping:
+	-------------------------------------------------------------------------*/
+
 		public function groupRecords($records){
 			throw new FieldException(
 				__('Data source output grouping is not supported by the <code>%s</code> field', array($this->handle))
 			);
 		}
 
-		/*-------------------------------------------------------------------------
-			Sorting:
-		-------------------------------------------------------------------------*/
-		
+	/*-------------------------------------------------------------------------
+		Sorting:
+	-------------------------------------------------------------------------*/
+
 		public function buildSortingJoin(&$joins) {
 			return $this->buildJoinQuery($joins);
 		}
@@ -889,64 +952,9 @@
 			$handle = $this->buildSortingJoin($joins);
 			$order = "{$handle}.value %1\$s";
 		}
-		
+
 		public function buildSortingSQL() {
 			// TODO: Cleanup before release.
 			throw new Exception('Field->buildSortingSQL() is obsolete, use buildSortingQuery instead.');
 		}
-		
-		/*-------------------------------------------------------------------------
-			Deprecated:
-		-------------------------------------------------------------------------
-
-		public function entryDataCleanup($entry_id, $data=NULL){
-			Symphony::Database()->delete('tbl_entries_data_' . $this->id, array($entry_id), "`entry_id` = %d ");
-
-			return true;
-		}
-
-		public function removeSectionAssociation($child_field_id){
-			Symphony::Database()->delete("tbl_sections_association", array($child_field_id), "`child_section_field_id` = %d");
-		}
-
-		public function createSectionAssociation($parent_section_id, $child_field_id, $parent_field_id=NULL, $cascading_deletion=false){
-
-			if($parent_section_id == NULL && !$parent_field_id) return false;
-
-			if($parent_section_id == NULL) $parent_section_id = Symphony::Database()->fetchVar('parent_section', 0, "SELECT `parent_section` FROM `tbl_fields` WHERE `id` = '$parent_field_id' LIMIT 1");
-
-			$child_section_id = Symphony::Database()->fetchVar('parent_section', 0, "SELECT `parent_section` FROM `tbl_fields` WHERE `id` = '$child_field_id' LIMIT 1");
-
-			$fields = array('parent_section_id' => $parent_section_id,
-							'parent_section_field_id' => $parent_field_id,
-							'child_section_id' => $child_section_id,
-							'child_section_field_id' => $child_field_id,
-							'cascading_deletion' => ($cascading_deletion ? 'yes' : 'no'));
-
-			if(!Symphony::Database()->insert('tbl_sections_association', $fields)) return false;
-
-			return true;
-		}
-
-		public function getExampleFormMarkup(){
-			$label = Widget::Label($this->label);
-			$label->appendChild(Widget::Input('fields['.$this->{'element-name'}.']'));
-
-			return $label;
-		}
-
-		public function fetchAssociatedEntrySearchValue($data, $field_id=NULL, $parent_entry_id=NULL){
-			return $data;
-		}
-
-		public function fetchAssociatedEntryCount($value){
-		}
-
-		public function fetchAssociatedEntryIDs($value){
-		}
-
-		protected static function isFilterRegex($string){
-			if(preg_match('/^regexp:/i', $string)) return true;
-		}
-*/
 	}

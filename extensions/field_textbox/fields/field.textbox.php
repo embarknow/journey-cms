@@ -18,7 +18,7 @@
 			$this->_name = 'Text Box';
 
 			// Set defaults:
-			$this->{'size'} = 'medium';
+			$this->{'text-size'} = 'medium';
 
 			$this->sizes = array(
 				array('single', false, __('Single Line')),
@@ -52,7 +52,7 @@
 						KEY `entry_id` (`entry_id`),
 						FULLTEXT KEY `value` (`value`),
 						FULLTEXT KEY `value_formatted` (`value_formatted`)
-					)
+					) ENGINE=MyISAM;
 				",
 				$this->{'section'},
 				$this->{'element-name'}
@@ -156,6 +156,29 @@
 
 		protected function repairEntities($value) {
 			return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
+		}
+
+		protected function repairMarkup($value) {
+			$tidy = new Tidy();
+			$tidy->parseString(
+				$value, array(
+					'drop-font-tags'				=> true,
+					'drop-proprietary-attributes'	=> true,
+					'enclose-text'					=> true,
+					'enclose-block-text'			=> true,
+					'hide-comments'					=> true,
+					'numeric-entities'				=> true,
+					'output-xhtml'					=> true,
+					'wrap'							=> 0,
+
+					// HTML5 Elements:
+					'new-blocklevel-tags'			=> 'section nav article aside hgroup header footer figure figcaption ruby video audio canvas details datagrid summary menu',
+					'new-inline-tags'				=> 'time mark rt rp output progress meter',
+					'new-empty-tags'				=> 'wbr source keygen command'
+				), 'utf8'
+			);
+
+			return $tidy->body()->value;
 		}
 
 	/*-------------------------------------------------------------------------
@@ -310,11 +333,11 @@
 			$classes = array();
 
 			$label = Widget::Label(
-				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0 
-					? $this->{'publish-label'} 
+				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0
+					? $this->{'publish-label'}
 					: $this->name)
 			);
-			
+
 			$optional = '';
 
 			if ($this->{'required'} != 'yes') {
@@ -408,7 +431,7 @@
 			if (!$this->applyValidationRules($data->value)) {
 				$errors->append(
 					null, (object)array(
-					 	'message' => __("'%s' contains invalid data. Please check the contents.", array($this->label)),
+					 	'message' => __("'%s' contains invalid data. Please check the contents.", array($this->{'publish-label'})),
 						'code' => self::ERROR_INVALID
 					)
 				);
@@ -420,8 +443,7 @@
 				$errors->append(
 					null, (object)array(
 					 	'message' => __("'%s' must be no longer than %s characters.", array(
-							$this->{'label'},
-							$length
+							$this->{'publish-label'}, $length
 						)),
 						'code' => self::ERROR_INVALID
 					)
@@ -435,14 +457,15 @@
 
 		public function applyFormatting($value) {
 			if (isset($this->{'text-formatter'}) && $this->{'text-formatter'} != TextFormatter::NONE) {
-
-				try{
+				try {
 					$formatter = TextFormatter::loadFromHandle($this->{'text-formatter'});
 					$result = $formatter->run($value);
 					$result = preg_replace('/&(?![a-z]{0,4}\w{2,3};|#[x0-9a-f]{2,6};)/i', '&amp;', $result);
+
 					return $result;
 				}
-				catch(Exception $e){
+
+				catch (Exception $e) {
 					// Problem loading the formatter
 					// TODO: Decide is we should be handling this better.
 				}
@@ -473,12 +496,12 @@
 
 			if (!is_null($data)) {
 				$data = stripslashes($data);
-				
+
 				$result->handle = Lang::createHandle($data);
 				$result->value = $data;
 				$result->value_formatted = $this->applyFormatting($data);
 			}
-			
+
 			return $result;
 		}
 
@@ -493,7 +516,7 @@
 			);
 		}
 
-		public function appendFormattedElement(&$wrapper, $data, $mode = null) {
+		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry=NULL) {
 			if ($mode == 'unformatted') {
 				$value = trim($data->value);
 			}
@@ -502,6 +525,8 @@
 				$mode = 'formatted';
 				$value = trim($data->value_formatted);
 			}
+
+			if(is_null($value) || empty($value)) return;
 
 			$result = $wrapper->ownerDocument->createElement($this->{'element-name'});
 
@@ -513,8 +538,23 @@
 			else if ($value) {
 				$value = $this->repairEntities($value);
 				$fragment = $wrapper->ownerDocument->createDocumentFragment();
-				$fragment->appendXML($value);
-				$result->appendChild($fragment);
+
+				try {
+					$fragment->appendXML($value);
+				}
+
+				catch (Exception $e) {
+					$value = $this->repairMarkup($value);
+					$fragment->appendXML($value);
+				}
+
+				try {
+					$result->appendChild($fragment);
+				}
+
+				catch (Exception $e) {
+					// Only get 'Document Fragment is empty' errors here.
+				}
 			}
 
 			$attributes = array(
@@ -532,29 +572,29 @@
 
 			$wrapper->appendChild($result);
 		}
-		
-		public function getParameterOutputValue(StdClass $data, Entry $entry=NULL) {
+
+		public function getParameterOutputValue($data, Entry $entry=NULL) {
 			return $data->handle;
 		}
 
 	/*-------------------------------------------------------------------------
 		Filtering:
 	-------------------------------------------------------------------------*/
-		
+
 		public function getFilterTypes($data) {
 			$filters = parent::getFilterTypes($data);
 			$filters[] = array(
 				'boolean-search', $data->type == 'boolean-search', 'Boolean Search'
 			);
-			
+
 			return $filters;
 		}
-		
+
 		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output) {
 			$filter = $this->processFilter($filter);
 			$filter_join = DataSource::FILTER_OR;
 			$db = Symphony::Database();
-			
+
 			// Boolean searches:
 			if ($filter->type == 'boolean-search') {
 				$handle = $this->buildFilterJoin($joins);
@@ -562,21 +602,21 @@
 					trim($filter->value), $parameter_output
 				);
 				$mode = (preg_match('/^not(\W)/i', $value) ? '-' : '+');
-				
+
 				// Replace ' and ' with ' +':
 				$value = preg_replace('/(\W)and(\W)/i', '\\1+\\2', $value);
 				$value = preg_replace('/(^)and(\W)|(\W)and($)/i', '\\2\\3', $value);
 				$value = preg_replace('/(\W)not(\W)/i', '\\1-\\2', $value);
 				$value = preg_replace('/(^)not(\W)|(\W)not($)/i', '\\2\\3', $value);
 				$value = preg_replace('/([\+\-])\s*/', '\\1', $mode . $value);
-				
+
 				$statement = $db->prepareQuery("MATCH ({$handle}.value) AGAINST ('%s' IN BOOLEAN MODE)", array($value));
-				
+
 				$where[] = "(\n\t{$statement}\n)";
-				
+
 				return true;
 			}
-			
+
 			return parent::buildFilterQuery($filter, $joins, $where, $parameter_output);
 		}
 

@@ -5,9 +5,9 @@
 	Class UserResult extends DBCMySQLResult{
 		public function current(){
 			$record = parent::current();
-			
+
 			$user = new User;
-			
+
 			foreach($record as $key => $value){
 				$user->$key = $value;
 			}
@@ -60,18 +60,16 @@
 
 	}
 
-	Class User{
-
+	class User {
 		private $_fields;
 
 		public function __construct(){
 			$this->_fields = array();
 		}
 
-		public static function load($id){
-			
-			$user = new self;
-			
+		public static function load($id) {
+			$user = new self();
+
 			$result = Symphony::Database()->query("SELECT * FROM `tbl_users` WHERE `id` = '%s' LIMIT 1", array($id));
 
 			if (!$result->valid()) return false;
@@ -85,7 +83,7 @@
 			return $user;
 		}
 
-		public static function loadUserFromUsername($username){
+		public static function loadUserFromUsername($username) {
 			$result = Symphony::Database()->query("
 					SELECT
 						u.*
@@ -99,29 +97,28 @@
 				array($username)
 			);
 
-			if(!$result->valid()) return null;
+			if ($result->valid() === false) return null;
 
 			$row = $result->current();
+			$user = new self();
 
-			foreach($row as $key => $val){
-				$this->$key = $val;
+			foreach ($row as $key => $value) {
+				$user->$key = $value;
 			}
 
-			return true;
+			return $user;
 		}
 
-		public function verifyToken($token){
-
-			if($this->auth_token_active == 'no') return false;
+		public function verifyToken($token) {
+			if ($this->auth_token_active == 'no') return false;
 
 			$t = General::substrmin(md5($this->username . $this->password), 8);
 
-			if($t == $token){
+			if ($t == $token) {
 				return true;
 			}
 
 			return false;
-
 		}
 
 		public function createAuthToken(){
@@ -181,10 +178,10 @@
 		}
 
 		public static function save(User $user){
-			
+
 			$fields = $user->fields();
 			unset($fields['id']);
-			
+
 			try{
 				if(isset($user->id) && !is_null($user->id)){
 					Symphony::Database()->update('tbl_users', $fields, array($user->id), "`id` = %d");
@@ -196,15 +193,15 @@
 			catch(DatabaseException $e){
 				return false;
 			}
-			
+
 			return $user->id;
 		}
-		
+
 
 		public static function delete($id){
 			return Symphony::Database()->delete('tbl_users', array($id), "`id` = %d");
 		}
-		
+
 		public static function deactivateAuthToken($id){
 			return Symphony::Database()->update("UPDATE `tbl_users` SET `auth_token_active` = 'no' WHERE `id` = '%d' LIMIT 1", array($id));
 		}

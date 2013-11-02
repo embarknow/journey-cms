@@ -216,10 +216,7 @@
 		***/
 		public static function sendEmail($to_email, $from_email, $from_name, $subject, $message, array $additional_headers = array()) {
 			## Check for injection attacks (http://securephp.damonkohler.com/index.php/Email_Injection)
-			if ((eregi("\r", $from_email) || eregi("\n", $from_email))
-				|| (eregi("\r", $from_name) || eregi("\n", $from_name))){
-					return false;
-		   	}
+			if (preg_match('/(\\n|\\r)/', $from_email) || preg_match('/(\\n|\\r)/', $from_name)) return false;
 			####
 
 			$subject = self::encodeHeader($subject, 'UTF-8');
@@ -251,7 +248,7 @@
 				$headers[] = sprintf('%s: %s', $header, $value);
 			}
 
-			return mail($to_email, $subject, @wordwrap($message, 70), @implode("\r\n", $headers) . "\r\n", "-f{$from_email}");
+			return mail($to_email, $subject, @wordwrap($message, 70), @implode("\n", $headers) . "\n", "-f{$from_email}");
 
 		}
 
@@ -351,6 +348,8 @@
 
 		***/
 		public static function realiseDirectory($path, $mode = '0755'){
+			if(is_dir($path)) return true;
+
 			return @mkdir($path, intval($mode, 8), true);
 		}
 
@@ -426,7 +425,7 @@
 
 			return $result;
 		}
-		
+
 		public static function var_export($expressions, $return=false, $indenting=0){
 			$result = var_export($expressions, $return);
 			if($indenting > 0){
@@ -435,7 +434,7 @@
 			}
 			return $result;
 		}
-		
+
 		/***
 
 		Method: getPostData
@@ -549,12 +548,12 @@
 				if (empty($value)) continue;
 
 				if (is_int($element_name)) {
-					$child = Symphony::Parent()->Page->createElement('item');
+					$child = $parent->ownerDocument->createElement('item');
 					$child->setAttribute('index', $element_name + 1);
 				}
 
 				else {
-					$child = Symphony::Parent()->Page->createElement($element_name);
+					$child = $parent->ownerDocument->createElement($element_name);
 				}
 
 				if(is_array($value)){
@@ -591,13 +590,13 @@
 			if(!file_put_contents($file, $data)){
 				return false;
 			}
-			
+
 			try{
 				@chmod($file, intval($perm, 8));
 			}
 			// Just in case there is a warning that triggers an exception
 			catch(Exception $e){}
-			
+
 			return true;
 		}
 
@@ -788,7 +787,7 @@
 		public static function fileSortR($f1, $f2){
 			return strcmp($f2['name'], $f1['name']);
 		}
-		
+
 		/***
 
 		Method: optionsSort
@@ -806,23 +805,39 @@
 
 		Method: dependenciesSort
 		Description: Sort a tree of dependencies and return them in execution order.
-		Param: $dependencies Tree of dependnecies
+		Param: $unsorted Tree of dependnecies
 		Return: array
 
 		***/
-		public static function dependenciesSort(array $dependencies) {
-			self::$dependencies = $dependencies;
-			
-			uksort(self::$dependencies, array('self', 'dependenciesSortCallback'));
-			
-			return array_keys(self::$dependencies);
-		}
-		
-		protected static $dependencies;
-		
-		protected function dependenciesSortCallback($a, $b) {
-			return (in_array($b, self::$dependencies[$a]) ? 1 : -1);
-		}
+		public static function dependenciesSort(array $unsorted) {
+					$sorted = array();
+
+					// Add data sources with dependencies:
+					while (!empty($unsorted)) {
+						// Add data sources in order:
+						foreach ($unsorted as $parent => $children) {
+							if(is_null($children)) continue;
+
+							foreach ($children as $child) if (!(
+								$child == $parent
+								|| !array_key_exists($child, $unsorted)
+								|| in_array($child, $sorted)
+							)) continue 2;
+
+							$sorted[] = $parent;
+
+							unset($unsorted[$parent], $parent);
+						}
+
+						// Data source could not be put in order:
+						if (isset($parent)) {
+							$sorted[] = $parent;
+
+							unset($unsorted[$parent]);
+						}
+					}
+					return $sorted;
+				}
 
 		/***
 
@@ -901,22 +916,33 @@
 		}
 
 
-		public static function uploadFile($dest_path, $dest_name, $tmp_name, $perm='0777'){
-			##Upload the file
-			if(@is_uploaded_file($tmp_name)) {
-
+		public static function uploadFile($dest_path, $dest_name, $tmp_name, $perm = '0777') {
+			// Upload the file
+			if (is_uploaded_file($tmp_name) === true) {
 				$dest_path = rtrim($dest_path, '/') . '/';
 
-				##Try place the file in the correction location
-				if(@move_uploaded_file($tmp_name, $dest_path . $dest_name)){
-					@chmod($dest_path . $dest_name, intval($perm, 8));
+				// Try place the file in the correction location
+				if (move_uploaded_file($tmp_name, $dest_path . $dest_name) !== false) {
+					chmod($dest_path . $dest_name, intval($perm, 8));
+
 					return true;
 				}
 			}
 
-			##Could not move the file
 			return false;
+		}
 
+		public static function uploadData($dest_path, $dest_name, $tmp_data, $perm = '0777') {
+			$dest_path = rtrim($dest_path, '/') . '/';
+
+			// Try place the file in the correction location:
+			if (file_put_contents($dest_path . $dest_name, $tmp_data) !== false) {
+				chmod($dest_path . $dest_name, intval($perm, 8));
+
+				return true;
+			}
+
+			return false;
 		}
 
 		/***
@@ -969,7 +995,7 @@
 			}
 			return rmdir($path);
 		}
-		
+
 		public static function escapeCommas($string){
 			return preg_replace('/(?<!\\\\),/', "\\,", $string);
 		}
@@ -977,6 +1003,6 @@
 		public static function removeEscapedCommas($string){
 			return preg_replace('/(?<!\\\\)\\\\,/', ',', $string);
 		}
-		
+
 
 	}

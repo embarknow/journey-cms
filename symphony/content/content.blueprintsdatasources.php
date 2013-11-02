@@ -27,14 +27,16 @@
 			$this->editing = $this->failed = false;
 			$this->datasource = $this->handle = $this->status = $this->type = NULL;
 			$this->types = array();
-			
-			foreach (new ExtensionIterator(ExtensionIterator::FLAG_TYPE, array('Data Source')) as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
-				$handle = Extension::getHandleFromPath($path);
-				
-				if (Extension::status($handle) != Extension::STATUS_ENABLED) continue;
+
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::TYPE =>		'Data Source',
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
+
+			foreach ($extensions as $extension) {
 				if (!method_exists($extension, 'getDataSourceTypes')) continue;
-				
+
 				foreach ($extension->getDataSourceTypes() as $type) {
 					$this->types[$type->class] = $type;
 				}
@@ -51,7 +53,7 @@
 		}
 
 		public function __viewIndex() {
-			
+
 			// This is the 'correct' way to append a string containing an entity
 			$title = $this->createElement('title');
 			$title->appendChild($this->createTextNode(__('Symphony') . ' '));
@@ -151,11 +153,11 @@
 					if (is_null($ds->getType())) {
 						$col_type = Widget::TableData(__('Unknown'), array('class' => 'inactive'));
 					}
-					
+
 					else{
 						$col_type = Widget::TableData($this->types[$ds->getType()]->name);
 					}
-					
+
 					$dsTableBody[] = Widget::TableRow(array(
 						$col_name, $col_source, $col_type, $col_views
 					));
@@ -202,12 +204,12 @@
 				if (is_null($this->type)){
 					$this->type = Symphony::Configuration()->core()->{'default-datasource-type'};
 				}
-				
+
 				// Should the default type or the selected type no longer be valid, choose the first available one instead
 				if(!in_array($this->type, array_keys($this->types))){
 					$this->type = current(array_keys($this->types));
 				}
-				
+
 				foreach ($this->types as $type) {
 					if ($type->class != $this->type) continue;
 
@@ -217,7 +219,7 @@
 							? $_POST['fields']
 							: NULL
 					);
-					
+
 					break;
 				}
 			}
@@ -274,7 +276,7 @@
 				);
 			}
 		}
-		
+
 		protected function __viewForm() {
 
 			// Show page alert:
@@ -341,18 +343,18 @@
 			else{
 				$header = $this->xpath('//h2')->item(0);
 				$options = array();
-				
+
 				foreach ($this->types as $type) {
 					$options[] = array($type->class, ($this->type == $type->class), $type->name);
 				}
-				
+
 				usort($options, 'General::optionsSort');
 				$select = Widget::Select('type', $options);
-				
+
 				$header->prependChild($select);
 				$header->prependChild(new DOMText(__('New')));
 			}
-			
+
 			if($this->datasource instanceof Datasource){
 				$this->datasource->view($this->Form, $this->errors);
 			}

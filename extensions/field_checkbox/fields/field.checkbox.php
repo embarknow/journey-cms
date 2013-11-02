@@ -16,7 +16,7 @@
 						PRIMARY KEY  (`id`),
 						KEY `entry_id` (`entry_id`),
 						KEY `value` (`value`)
-					) TYPE=MyISAM;",
+					) ENGINE=MyISAM;",
 					$this->{'section'},
 					$this->{'element-name'},
 					($this->{'default-state'} == 'on' ? 'yes' : 'no')
@@ -112,6 +112,9 @@
 
 			else $value = ($data->value == 'yes' ? 'yes' : 'no');
 
+			$input = Widget::Input('fields['.$this->{'element-name'}.']', 'no', 'hidden');
+			$wrapper->appendChild($input);
+
 			$label = Widget::Label();
 			$input = Widget::Input('fields['.$this->{'element-name'}.']', 'yes', 'checkbox', ($value == 'yes' ? array('checked' => 'checked') : array()));
 
@@ -131,12 +134,33 @@
 		public function processData($data, Entry $entry=NULL){
 			$states = array('on', 'yes');
 
-			if($this->{'required'} == 'yes' && !in_array(strtolower($data), $states)) {
-				$data = null;
+			// Reuse entry data:
+			if (isset($entry->data()->{$this->{'element-name'}})) {
+				$result = $entry->data()->{$this->{'element-name'}};
 			}
-			else $data = (in_array(strtolower($data), $states)) ? 'yes' : 'no';
 
-   			return parent::processData($data, $entry);
+			// Define default state:
+			else {
+				$result = (object)array(
+					'value'	=>		(
+										in_array(strtolower($this->{'default-state'}), $states)
+											? 'no'
+											: 'yes'
+									)
+				);
+			}
+
+			if ($data !== null) {
+				if ($this->{'required'} == 'yes' && !in_array(strtolower($data), $states)) {
+					$result->value = null;
+				}
+
+				else {
+					$result->value = (in_array(strtolower($data), $states)) ? 'yes' : 'no';
+				}
+			}
+
+			return $result;
 		}
 
 		/*-------------------------------------------------------------------------
@@ -145,12 +169,12 @@
 
 		public function displayDatasourceFilterPanel(SymphonyDOMElement $wrapper, $data=NULL, MessageStack $errors=NULL){
 			parent::displayDatasourceFilterPanel($wrapper, $data, $errors);
-			
+
 			$div = $wrapper->ownerDocument->createElement('div');
-			
+
 			$label = $wrapper->ownerDocument->xpath('.//label[last()]', $wrapper)->item(0);
 			$label->wrapWith($div);
-				
+
 			$existing_options = array('yes', 'no');
 
 			$optionlist = $wrapper->ownerDocument->createElement('ul');
@@ -161,36 +185,68 @@
 			$div->appendChild($optionlist);
 		}
 
+		public function buildJoinQuery(&$joins) {
+			$db = Symphony::Database();
+
+			$table = $db->prepareQuery(sprintf(
+				'`tbl_data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
+			));
+			$handle = sprintf(
+				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key
+			);
+			$joins .= sprintf(
+				"\nLEFT JOIN %s AS %s ON (e.id = %2\$s.entry_id)",
+				$table, $handle
+			);
+
+			return $handle;
+		}
+
 		public function buildFilterQuery($filter, &$joins, array &$where, Register $ParameterOutput=NULL){
+			$filter = $this->processFilter($filter);
+			$filter_join = DataSource::FILTER_OR;
+			$db = Symphony::Database();
 
-			self::$key++;
+			$values = DataSource::prepareFilterValue($filter->value, $ParameterOutput, $filter_join);
 
-			$value = DataSource::prepareFilterValue($filter['value'], $ParameterOutput, $operation_type);
+			if (is_array($values) === false) $values = array();
 
-			$joins .= sprintf('
-				LEFT OUTER JOIN `tbl_data_%2$s_%3$s` AS t%1$s ON (e.id = t%1$s.entry_id)
-			', self::$key, $this->section, $this->{'element-name'});
+			if ($filter->type == 'is' or $filter->type == 'is-not') {
+				$statements = array();
 
-			if ($operation_type == DataSource::FILTER_AND) {
-				$clause = NULL;
-				foreach ($value as $v) {
-					$clause .= sprintf(
-						"(t%1\$s.value %2\$s '%3\$s') AND",
-						self::$key,
-						$filter['type'] == 'is-not' ? '<>' : '=',
-						$v
-					);
+				if ($filter_join == DataSource::FILTER_OR) {
+					$handle = $this->buildFilterJoin($joins);
 				}
-				$where[] = sprintf("(%s)", preg_replace('/AND$/i', NULL, $clause));
-			}
 
-			else {
-				$where[] = sprintf(
-					"(t%1\$s.value %2\$s IN ('%3\$s'))",
-					self::$key,
-					$filter['type'] == 'is-not' ? 'NOT' : NULL,
-					implode("', '", $value)
-				);
+				foreach ($values as $index => $value) {
+					if ($filter->type == 'is') {
+						$statements[] = $db->prepareQuery(
+							"'%s' IN ({$handle}.value)", array($value)
+						);
+					}
+
+					else {
+						$statements[] = $db->prepareQuery(
+							"'%s' NOT IN ({$handle}.value)", array($value)
+						);
+					}
+				}
+
+				if ($filter->{'allow-null'} === true) {
+					$statements[] = $db->prepareQuery("{$handle}.value IS NULL");
+				}
+
+				if (empty($statements)) return true;
+
+				if ($filter_join == DataSource::FILTER_OR) {
+					$statement = "(\n\t" . implode("\n\tOR ", $statements) . "\n)";
+				}
+
+				else {
+					$statement = "(\n\t" . implode("\n\tAND ", $statements) . "\n)";
+				}
+
+				$where[] = $statement;
 			}
 
 			return true;

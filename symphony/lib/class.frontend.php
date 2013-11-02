@@ -3,102 +3,16 @@
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');
 	require_once(LIB . '/class.lang.php');
-	
-	Class Parameter{
-
-		public $value;
-		public $key;
-
-		public function __construct($key, $value){
-			$this->value = $value;
-			$this->key = $key;
-		}
-
-		public function __toString(){
-			if(is_array($this->value)) return implode(',', $this->value);
-			return (!is_null($this->value) ? (string)$this->value : '');
-		}
-	}
-
-	Final Class Register implements Iterator{
-
-		private $parameters;
-
-		private $position;
-		private $keys;
-
-		public function register(array $params){
-			foreach($params as $key => $value) $this->$key = $value;
-		}
-
-		public function __construct(){
-			$this->parameters = array();
-			$this->position = 0;
-		}
-
-		public function __set($name, $value){
-			$this->parameters[$name] = new Parameter($name, $value);
-			$this->keys = array_keys($this->parameters);
-		}
-
-		public function __get($name){
-			if(isset($this->parameters[$name])){
-				return $this->parameters[$name];
-			}
-			throw new Exception("No such parameter '{$name}'");
-		}
-
-		public function __isset($name){
-			return (isset($this->parameters[$name]) && ($this->parameters[$name] instanceof Parameter));
-		}
-
-		public function current(){
-			return current($this->parameters);
-		}
-
-		public function next(){
-			$this->position++;
-			next($this->parameters);
-		}
-
-		public function position(){
-			return $this->position;
-		}
-
-		public function rewind(){
-			reset($this->parameters);
-			$this->position = 0;
-		}
-
-		public function key(){
-			return $this->keys[$this->position];
-		}
-
-		public function length(){
-			return count($this->parameters);
-		}
-
-		public function valid(){
-			return $this->position < $this->length();
-		}
-
-		public function toArray(){
-			$result = array();
-			foreach($this as $key => $parameter){
-				$result[$key] = (string)$parameter;
-			}
-			return $result;
-		}
-	}
+	require_once(LIB . '/class.register.php');
 
 	Class FrontendPageNotFoundException extends SymphonyErrorPage{
 		public function __construct(View $page=NULL){
-			
+
 			if(is_null($page)){
 				$views = View::findFromType('404');
 				$page = array_shift($views);
 			}
-			
+
 			parent::__construct(
 				__('The page you requested does not exist.'),
 				__('Page Not Found'),
@@ -109,30 +23,6 @@
 	}
 
 	Class FrontendPageNotFoundExceptionHandler extends SymphonyErrorPageHandler{
-		/*
-		public static function render($e){
-			// TODO: Fix me to use Views
-
-			$view = View::loadFromURL($_SERVER['PHP_SELF']);
-			$page_id = Symphony::Database()->fetchVar('page_id', 0, "SELECT `page_id` FROM `tbl_pages_types` WHERE `type` = '404' LIMIT 1");
-
-			if(is_null($page_id)){
-				parent::render(new SymphonyErrorPage(
-					__('The page you requested does not exist.'),
-					__('Page Not Found'),
-					'error',
-					array('header' => 'HTTP/1.0 404 Not Found')
-				));
-			}
-			else{
-				$url = '/' . Frontend::instance()->resolvePagePath($page_id) . '/';
-
-				$output = Frontend::instance()->display($url);
-				header(sprintf('Content-Length: %d', strlen($output)));
-				echo $output;
-				exit;
-			}
-		}*/
 		public static function render($e){
 			parent::render($e);
 		}
@@ -143,7 +33,7 @@
 		protected static $Document;
 		protected static $Parameters;
 		protected static $Headers;
-		
+
 		public static function instance() {
 			if (!(self::$_instance instanceof Frontend)) {
 				self::$_instance = new self;
@@ -159,46 +49,48 @@
 		public static function Headers() {
 			return self::$Headers;
 		}
-		
+
 		public static function Document() {
 			return self::$Document;
 		}
-		
+
 		public static function Parameters() {
 			return self::$Parameters;
 		}
-		
+
 		public function __construct() {
 			parent::__construct();
-			
+
 			self::$Headers = new DocumentHeaders;
-			
+
 			self::$Document = new XMLDocument;
 			self::$Document->appendChild(
 				self::$Document->createElement('data')
 			);
-			
+
 			Widget::init(self::$Document);
 		}
-		
+
 		public function resolve($url=NULL){
-			try{
-				if(is_null($url)){
+			try {
+				if (is_null($url)) {
 					$views = View::findFromType('index');
 					self::$view = array_shift($views);
 				}
-				else{
+
+				else {
 					self::$view = View::loadFromURL($url);
 				}
 
-				if(!(self::$view instanceof View)) throw new Exception('Page not found');
+				if (!(self::$view instanceof View)) {
+					throw new Exception('Page not found');
+				}
 
-				if(!Frontend::instance()->isLoggedIn() && in_array('admin', self::$view->types)){
-
+				if (!Frontend::instance()->isLoggedIn() && in_array('admin', self::$view->types)) {
 					$views = View::findFromType('403');
 					self::$view = array_shift($views);
 
-					if(!(self::$view instanceof View)){
+					if (!(self::$view instanceof View)) {
 						throw new SymphonyErrorPage(
 							__('Please <a href="%s">login</a> to view this page.', array(ADMIN_URL . '/login/')),
 							__('Forbidden'), NULL,
@@ -208,18 +100,21 @@
 				}
 			}
 
-			catch(Exception $e){
+			catch (Exception $e) {
 				$views = View::findFromType('404');
 				self::$view = array_shift($views);
 
-				if(!(self::$view instanceof View)){
+				if (!(self::$view instanceof View)) {
 					throw new FrontendPageNotFoundException($url);
 				}
 			}
 		}
-		
+
 		public function display($url=NULL){
-			
+			Profiler::begin('Render the current page');
+
+			self::$Parameters = new Register;
+
 			// Default headers. Can be overwritten later
 			//self::$Headers->append('HTTP/1.0 200 OK');
 			self::$Headers->append('Content-Type', 'text/html;charset=utf-8');
@@ -227,7 +122,12 @@
 			self::$Headers->append('Last-Modified', gmdate('D, d M Y H:i:s') . ' GMT');
 			self::$Headers->append('Cache-Control', 'no-cache, must-revalidate, max-age=0');
 			self::$Headers->append('Pragma', 'no-cache');
-			
+
+
+			// RESOLVING THE VIEW -----------------------------
+
+			Profiler::begin('Resolving the view');
+
 			####
 			# Delegate: FrontendPreInitialise
 			# Description: TODO
@@ -255,66 +155,103 @@
 				)
 			);
 
-			// SETTING UP PARAMETERS --------------------------
-			self::$Parameters = new Register;
+			if (isset(self::$view->{'pathname'})) {
+				Profiler::store('location', self::$view->{'pathname'}, 'system/resource action/loaded text/xml+xslt');
+			}
 
+			Profiler::store('url', $url);
+			Profiler::end();
+
+
+			// SETTING UP PARAMETERS --------------------------
+
+			Profiler::begin('Setting up parameters');
+
+			$clean = function($parameter) {
+				return htmlspecialchars($parameter, ENT_QUOTES, 'UTF-8');
+			};
+
+			// Make sure all URL parameters defined by the view are set:
+			if (isset(self::$view->{'url-parameters'}) && is_array(self::$view->{'url-parameters'})) {
+				foreach (self::$view->{'url-parameters'} as $parameter) {
+					self::$Parameters->{$parameter} = null;
+				}
+
+				foreach (self::$view->parameters() as $parameter => $value) {
+					self::$Parameters->{$parameter} = htmlspecialchars(str_replace(' ', '+', $value), ENT_QUOTES, 'UTF-8');
+				}
+			}
+
+			// Import actual GET parameters:
+			if (is_array($_GET) && empty($_GET) === false) {
+				$sanitize = function($value) {
+					return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+				};
+
+				foreach ($_GET as $parameter => $value) {
+					if (in_array($parameter, array('symphony-page'))) continue;
+
+					if (is_array($value)) {
+						self::$Parameters->{$parameter} = array_map($sanitize, $value);
+					}
+
+					else {
+						self::$Parameters->{$parameter} = $sanitize($value);
+					}
+				}
+			}
+
+			// Import cookie values as parameters:
+			if (is_array($_COOKIE[__SYM_COOKIE_PREFIX__]) && !empty($_COOKIE[__SYM_COOKIE_PREFIX__])) {
+				foreach ($_COOKIE[__SYM_COOKIE_PREFIX__] as $parameter => $value) {
+					self::$Parameters->{"cookie-{$parameter}"} = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+				}
+			}
+
+			// Non-overridable parameters:
 			$root_page = array_shift(explode('/', self::$view->parent()->path));
-			$current_path = explode(dirname($_SERVER['SCRIPT_NAME']), $_SERVER['REQUEST_URI'], 2);
-			$current_path = '/' . ltrim(end($current_path), '/');
+			$current_url = parse_url(URL);
+			$current_url['path'] = $_SERVER['REQUEST_URI'];
+			$current_url = unparse_url($current_url);
 
 			self::$Parameters->register(array(
-				'today' => DateTimeObj::get('Y-m-d'),
-				'current-time' => DateTimeObj::get('H:i'),
-				'this-year' => DateTimeObj::get('Y'),
-				'this-month' => DateTimeObj::get('m'),
-				'this-day' => DateTimeObj::get('d'),
-				'timezone' => date_default_timezone_get(),
-				'website-name' =>Symphony::Configuration()->core()->symphony->sitename,
-				'symphony-version' =>Symphony::Configuration()->core()->symphony->version,
-				'upload-limit' => min(
-					ini_size_to_bytes(ini_get('upload_max_filesize')),
-					Symphony::Configuration()->core()->symphony->{'maximum-upload-size'}
-				),
-				'root' => URL,
-				'workspace' => URL . '/workspace',
-				'page-title' => self::$view->title,
-				'root-page' => (!is_null($root_page) ? $root_page : self::$view->handle),
-				'current-page' => self::$view->handle,
-				'current-path' => $current_path,
-				'parent-path' => '/' . self::$view->path,
-				'current-url' => URL . $current_path,
+				'today' =>					DateTimeObj::get('Y-m-d'),
+				'current-time' =>			DateTimeObj::get('H:i'),
+				'this-year' =>				DateTimeObj::get('Y'),
+				'this-month' =>				DateTimeObj::get('m'),
+				'this-day' =>				DateTimeObj::get('d'),
+				'timezone' =>				date_default_timezone_get(),
+				'website-name' =>			Symphony::Configuration()->core()->symphony->sitename,
+				'symphony-version' =>		Symphony::Configuration()->core()->symphony->version,
+				'root' =>					URL,
+				'relative-root' =>			ROOT_PATH,
+				'workspace' =>				URL . '/workspace',
+				'page-title' =>				self::$view->title,
+				'root-page' =>				(
+												$root_page !== null
+													? $root_page
+													: self::$view->handle
+											),
+				'current-page' =>			self::$view->handle,
+				'current-path' =>			(
+												CURRENT_PATH
+													? CURRENT_PATH
+													: '/'
+											),
+				'parent-path' =>			'/' . self::$view->path,
+				'current-url' =>			$current_url
 			));
 
-			if(isset(self::$view->{'url-parameters'}) && is_array(self::$view->{'url-parameters'})){
-				foreach(self::$view->{'url-parameters'} as $p){
-					self::$Parameters->$p = NULL;
-				}
+			Profiler::end();
 
-				foreach(self::$view->parameters() as $p => $v){
-					self::$Parameters->$p = str_replace(' ', '+', $v);
-				}
-
-			}
-
-			if(is_array($_GET) && !empty($_GET)){
-				foreach($_GET as $key => $val){
-					if(in_array($key, array('symphony-page', 'debug', 'profile'))) continue;
-					// self::$Parameters->{"url-{$key}"} = $val; "url" is not prepended by $_GET params
-					self::$Parameters->{$key} = $val;
-				}
-			}
-
-			if(is_array($_COOKIE[__SYM_COOKIE_PREFIX__]) && !empty($_COOKIE[__SYM_COOKIE_PREFIX__])){
-				foreach($_COOKIE[__SYM_COOKIE_PREFIX__] as $key => $val){
-					self::$Parameters->{"cookie-{$key}"} = $val;
-				}
-			}
 
 			// RENDER THE VIEW --------------------------
 
 			// Can ask the view to operate on an existing
 			// Document. Useful if we pass it around beyond
 			// the scope of View::render()
+
+			Profiler::begin('Render the view');
 
 			####
 			# Delegate: FrontendPreRender
@@ -324,10 +261,10 @@
 				'FrontendPreRender',
 				'/frontend/',
 				array(
-					'view' => &self::$view,
-					'parameters' => &self::$Parameters,
-					'document' => &self::$Document,
-					'headers' => &self::$Headers
+					'view' =>		self::$view,
+					'parameters' =>	self::$Parameters,
+					'document' =>	self::$Document,
+					'headers' =>	self::$Headers
 				)
 			);
 
@@ -341,15 +278,33 @@
 				'FrontendPostRender',
 				'/frontend/',
 				array(
-					'output' => &$output,
-					'headers' => &self::$Headers
+					'output' =>		$output,
+					'headers' =>	self::$Headers
 				)
 			);
-			
+
+			// Find the current content type:
+			$headers = self::$Headers->headers();
+			$content_type = isset($headers['content-type'])
+				? $headers['content-type']
+				: null;
+
 			self::Headers()->render();
-			
+
+			// Send as HTML:
+			if (preg_match('%\b(application|text)/html%', $content_type)) {
+				$output = $output->saveHTML();
+			}
+
+			// Send as XML:
+			else {
+				$output = $output->saveXML();
+			}
+
+			Profiler::end();
+			Profiler::end();
+
 			return $output;
-			
 		}
 	}
 

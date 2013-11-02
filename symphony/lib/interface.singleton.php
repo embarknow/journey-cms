@@ -1,6 +1,6 @@
 <?php
 
-	Interface Singleton{
+	interface Singleton{
 		public static function instance();
 	}
 

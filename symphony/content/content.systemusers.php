@@ -8,7 +8,7 @@
 		private $user;
 
 		public function __viewIndex(){
-			
+
 			$this->setTitle(__('Symphony') . ' &ndash; ' . __('Users'));
 
 			$this->appendSubheading(__('Users'), Widget::Anchor(
@@ -102,12 +102,6 @@
 
 				$checked = array_keys($_POST['items']);
 
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting an User. ID is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('user_id' => $user_id));
-
 				foreach($checked as $user_id){
 					if(Administration::instance()->User->id == $user_id) continue;
 					User::delete($user_id);
@@ -126,11 +120,11 @@
 		}
 
 		public function __viewEdit(){
-			
+
 			if(!($this->user instanceof User) && !($this->user = User::load((int)$this->_context[1]))){
 				throw new SymphonyErrorPage('The user profile you requested does not exist.', 'User not found');
 			}
-			
+
 			$this->__form();
 		}
 
@@ -145,7 +139,7 @@
 
 			## Handle unknow context
 			if(!in_array($this->_context[0], array('new', 'edit'))) throw new AdministrationPageNotFoundException;
-			
+
 			$callback = Administration::instance()->getPageCallback();
 			if(isset($callback['flag'])){
 				switch($callback['flag']){
@@ -182,7 +176,7 @@
 
 				}
 			}
-			
+
 			$isOwner = false;
 
 			/*if(isset($_POST['fields']))
@@ -198,7 +192,7 @@
 			}
 
 			else */
-			
+
 
 
 			if($this->_context[0] == 'edit' && $this->user->id == Administration::instance()->User->id) $isOwner = true;
@@ -347,7 +341,11 @@
 				$this->user->first_name = General::sanitize($fields['first_name']);
 				$this->user->last_name = General::sanitize($fields['last_name']);
 				$this->user->last_seen = NULL;
-				$this->user->password = (trim($fields['password']) == '' ? NULL : md5($fields['password']));
+				$this->user->password = (
+					trim($fields['password']) == ''
+					? null
+					: Cryptography::hash($fields['password'])
+				);
 				$this->user->default_section = $fields['default_section'];
 				$this->user->auth_token_active = ($fields['auth_token_active'] ? $fields['auth_token_active'] : 'no');
 				$this->user->language = $fields['language'];
@@ -389,8 +387,8 @@
 				}
 				else{
 					$this->alerts()->append(
-						__('Unknown errors occurred while attempting to save. Please check your <a href="%s">activity log</a>.', 
-						array(ADMIN_URL . '/system/log/')), 
+						__('Unknown errors occurred while attempting to save. Please check your <a href="%s">activity log</a>.',
+						array(ADMIN_URL . '/system/log/')),
 						AlertStack::ERROR
 					);
 				}
@@ -415,8 +413,8 @@
 				$this->user->first_name = General::sanitize($fields['first_name']);
 				$this->user->last_name = General::sanitize($fields['last_name']);
 
-				if(trim($fields['password']) != ''){
-					$this->user->password = md5($fields['password']);
+				if (trim($fields['password']) != '') {
+					$this->user->password = Cryptography::hash($fields['password']);
 					$changing_password = true;
 				}
 
@@ -465,8 +463,8 @@
 
 					else{
 						$this->alerts()->append(
-							__('Unknown errors occurred while attempting to save. Please check your <a href="%s">activity log</a>.', 
-							array(ADMIN_URL . '/system/log/')), 
+							__('Unknown errors occurred while attempting to save. Please check your <a href="%s">activity log</a>.',
+							array(ADMIN_URL . '/system/log/')),
 							AlertStack::ERROR
 						);
 					}
@@ -478,17 +476,9 @@
 			}
 
 			elseif(array_key_exists('delete', $_POST['action'])){
-
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting an User. ID is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('user_id' => $user_id));
-
 				User::delete($user_id);
 
 				redirect(ADMIN_URL . '/system/users/');
 			}
 		}
-
 	}

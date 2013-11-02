@@ -90,7 +90,7 @@
 			$right = $layout->createColumn(Layout::SMALL);
 
 			$this->_existing_file = (isset($this->_context[1]) ? $this->_context[1] . '.xsl' : NULL);
-			
+
 			## Handle unknown context
 			if(!in_array($this->_context[0], array('new', 'edit'))) throw new AdministrationPageNotFoundException;
 
@@ -269,7 +269,7 @@
 		            if(General::right($fields['name'], 4) != '.xsl') $fields['name'] .= '.xsl';
 
 					$file = UTILITIES . '/' . $fields['name'];
-					
+
 					// TODO: Does it really need stripslashed? Funky.
 					$fields['template'] = stripslashes($fields['template']);
 
@@ -278,7 +278,7 @@
 						$this->errors->name = __('A Utility with that name already exists. Please choose another.');
 
 					elseif($this->_context[0] == 'new' && is_file($file)) $this->errors->name = __('A Utility with that name already exists. Please choose another.');
-					
+
 					##Write the file
 					elseif(!$write = General::writeFile($file, $fields['template'],Symphony::Configuration()->core()->symphony->{'file-write-mode'})) {
 						$this->alerts()->append(
@@ -294,12 +294,6 @@
 						if($this->_existing_file && $file != UTILITIES . '/' . $this->_existing_file)
 							General::deleteFile(UTILITIES . '/' . $this->_existing_file);
 
-						## FIXME: Fix this delegate
-						###
-						# Delegate: Edit
-						# Description: After saving the asset, the file path is provided.
-						//Extension::notify('Edit', getCurrentPage(), array('file' => $file));
-
 						redirect(ADMIN_URL . '/blueprints/utilities/edit/'.str_replace('.xsl', '', $fields['name']) . '/'.($this->_context[0] == 'new' ? 'created' : 'saved') . '/');
 
 					}
@@ -307,12 +301,6 @@
 			}
 
 			elseif($this->_context[0] == 'edit' && array_key_exists('delete', $_POST['action'])){
-
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting the asset file. Target file path is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('file' => WORKSPACE . '/' . $this->_existing_file_rel));
 				$this->__actionDelete(UTILITIES . '/' . $this->_existing_file, ADMIN_URL . '/blueprints/components/');
 		  	}
 		}

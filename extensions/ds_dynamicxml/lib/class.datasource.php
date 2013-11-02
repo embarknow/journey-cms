@@ -26,9 +26,9 @@
 		public function getTemplate(){
 			return EXTENSIONS . '/ds_dynamicxml/templates/datasource.php';
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
-		
+
 		public function prepare(array $data = null) {
 			if(!is_null($data)){
 				if(isset($data['about']['name'])) $this->about()->name = $data['about']['name'];
@@ -97,7 +97,7 @@
 				}
 			}
 		}
-		
+
 		public function view(SymphonyDOMElement $wrapper, MessageStack $errors) {
 			$page = $wrapper->ownerDocument;
 			$page->insertNodeIntoHead($page->createScriptElement(URL . '/extensions/ds_sections/assets/view.js'), 55533140);
@@ -148,7 +148,7 @@
 		//	Timeouts ------------------------------------------------------------
 
 			$fieldset = Widget::Fieldset(__('Time Limits'));
-			
+
 			$label = Widget::Label(__('Cache Limit'));
 			$label->appendChild(Widget::Input(
 				'fields[cache-lifetime]', max(0, intval($this->parameters()->{'cache-lifetime'})))
@@ -167,8 +167,8 @@
 					'class' => 'help'
 				))
 			);
-			
-			
+
+
 			$label = Widget::Label(__('Gateway Timeout'));
 			$label->appendChild(Widget::Input(
 				'fields[timeout]', max(1, intval($this->parameters()->{'timeout'})))
@@ -211,10 +211,10 @@
 
 		//	Namespace Declarations
 			$fieldset = Widget::Fieldset(__('Namespace Declarations'), $page->createElement('em', 'Optional'));
-			
+
 			$duplicator = new Duplicator(__('Add Namespace'));
 			$this->appendNamespace($duplicator);
-			
+
 			if(is_array($this->parameters()->namespaces)){
 				foreach($this->parameters()->namespaces as $index => $namespace) {
 					$this->appendNamespace($duplicator, $namespace);
@@ -228,15 +228,15 @@
 
 		protected function appendNamespace(Duplicator $duplicator, array $namespace=NULL) {
 			$document = $duplicator->ownerDocument;
-		
+
 			if (is_null($namespace)) {
 				$item = $duplicator->createTemplate(__('Namespace'));
 			}
-		
+
 			else {
 				$item = $duplicator->createInstance(__('Namespace'));
 			}
-			
+
 			$group = $document->createElement('div');
 			$group->setAttribute('class', 'group double');
 
@@ -298,198 +298,176 @@
 
 			return parent::save($errors);
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
 
 		public function render(Register $ParameterOutput){
-			$result = null;
-			$doc = new XMLDocument;
+			$result = new XMLDocument;
+			$root = $result->createElement($this->parameters()->{'root-element'});
 
-			if(isset($this->parameters()->url)){
+			if (isset($this->parameters()->url)) {
 				$this->parameters()->url = self::replaceParametersInString($this->parameters()->url, $ParameterOutput);
 			}
-			
-			if(isset($this->parameters()->xpath)){
+
+			if (isset($this->parameters()->xpath)) {
 				$this->parameters()->xpath = self::replaceParametersInString($this->parameters()->xpath, $ParameterOutput);
 			}
-			
-			$cache_id = md5($this->parameters()->url . serialize($this->parameters()->namespaces) . $this->parameters()->xpath);
 
-			$cache = Cache::instance();
-			$cachedData = $cache->read($cache_id);
+			$cache_id = md5(
+				$this->parameters()->url
+				. serialize($this->parameters()->namespaces)
+				. $this->parameters()->xpath
+			);
 
-			$writeToCache = false;
-			$force_empty_result = false;
-			$valid = true;
-			$result = NULL;
+			$cache = new Cache(
+				Cache::SOURCE_EXTENSION, 'ds_dynamicxml',
+				$this->parameters()->{'cache-lifetime'} * 60
+			);
+			$hasFreshData = false;
+			$hasCachedData = isset($cache->{$cache_id});
 			$creation = DateTimeObj::get('c');
 
 			if(isset($this->parameters()->timeout)){
 				$timeout = (int)max(1, $this->parameters()->timeout);
 			}
 
-			if((!is_array($cachedData) || empty($cachedData)) || (time() - $cachedData['creation']) > ($this->parameters()->{'cache-timeout'} * 60)){
-				if(Mutex::acquire($cache_id, $timeout, TMP)){
+			if ($hasCachedData === false) {
+				$start = microtime(true);
 
-					$start = precision_timer();
+				$ch = new Gateway;
 
-					$ch = new Gateway;
+				$ch->init();
+				$ch->setopt('URL', $this->parameters()->url);
+				$ch->setopt('TIMEOUT', $this->parameters()->timeout);
+				$xml = $ch->exec();
+				$hasFreshData = true;
 
-					$ch->init();
-					$ch->setopt('URL', $this->parameters()->url);
-					$ch->setopt('TIMEOUT', $this->parameters()->timeout);
-					$xml = $ch->exec();
-					$writeToCache = true;
+				$end = microtime(true) - $start;
 
-					$end = precision_timer('STOP', $start);
+				$info = $ch->getInfoLast();
 
-					$info = $ch->getInfoLast();
+				$xml = trim($xml);
+				$knownType = preg_match('/(xml|plain|text)/i', $info['content_type']);
 
-					Mutex::release($cache_id, TMP);
-
-					$xml = trim($xml);
-
-					if((int)$info['http_code'] != 200 || !preg_match('/(xml|plain|text)/i', $info['content_type'])){
-
-						$writeToCache = false;
-
-						if(is_array($cachedData) && !empty($cachedData)){
-							$xml = trim($cachedData['data']);
-							$valid = false;
-							$creation = DateTimeObj::get('c', $cachedData['creation']);
-						}
-
-						else{
-							$result = $doc->createElement($this->parameters()->{'root-element'});
-							$result->setAttribute('valid', 'false');
-
-							if($end > $timeout){
-								$result->appendChild(
-									$doc->createElement('error',
-										sprintf('Request timed out. %d second limit reached.', $timeout)
-									)
-								);
-							}
-							else{
-								$result->appendChild(
-									$doc->createElement('error',
-										sprintf('Status code %d was returned. Content-type: %s', $info['http_code'], $info['content_type'])
-									)
-								);
-							}
-
-							return $result;
-						}
-					}
-
-					elseif(strlen($xml) > 0 && !General::validateXML($xml, $errors)){
-
-						$writeToCache = false;
-
-						if(is_array($cachedData) && !empty($cachedData)){
-							$xml = trim($cachedData['data']);
-							$valid = false;
-							$creation = DateTimeObj::get('c', $cachedData['creation']);
-						}
-
-						else{
-							$result = $doc->createElement(
-								$this->parameters()->{'root-element'},
-								$doc->createElement('error', __('XML returned is invalid.')),
-								array('valid' => 'false')
-							);
-
-							return $result;
-						}
-
-					}
-
-					elseif(strlen($xml) == 0){
-						$force_empty_result = true;
-					}
-
+				if ((integer)$info['http_code'] != 200 || $knownType === false) {
+					$hasFreshData = false;
 				}
 
-				elseif(is_array($cachedData) && !empty($cachedData)){
-					$xml = trim($cachedData['data']);
-					$valid = false;
-					$creation = DateTimeObj::get('c', $cachedData['creation']);
-					if(empty($xml)) $force_empty_result = true;
-				}
-
-				else $force_empty_result = true;
-
-			}
-
-			else{
-				$xml = trim($cachedData['data']);
-				$creation = DateTimeObj::get('c', $cachedData['creation']);
-			}
-
-			if(!$force_empty_result) {
-				$result = new XMLDocument;
-				$root =	$result->createElement($this->parameters()->{'root-element'});
-
-				//XPath Approach, saves Transforming the Document.
-				$xDom = new XMLDocument;
-				$xDom->loadXML($xml);
-
-				if($xDom->hasErrors()) {
-
+				if ($hasFreshData === false && $hasCachedData === false) {
 					$root->setAttribute('valid', 'false');
-					$root->appendChild(
-						$result->createElement('error', __('XML returned is invalid.'))
-					);
 
-					$messages = $result->createElement('messages');
-
-					foreach($xDom->getErrors() as $e){
-						if(strlen(trim($e->message)) == 0) continue;
-						$messages->appendChild(
-							$result->createElement('item', General::sanitize($e->message))
+					if ($end > $timeout) {
+						$root->appendChild(
+							$result->createElement('error',
+								sprintf('Request timed out. %d second limit reached.', $timeout)
+							)
 						);
 					}
-					$root->appendChild($messages);
 
+					else {
+						$root->appendChild(
+							$result->createElement('error', sprintf(
+								'Status code %d was returned. Content-type: %s',
+								$info['http_code'], $info['content_type']
+							))
+						);
+					}
+
+					return $result;
+				}
+
+				$validXML = General::validateXML($xml, $errors);
+
+				if (strlen($xml) > 0 && $validXML === false) {
+					$hasFreshData = false;
+				}
+
+				if ($hasFreshData === false && $hasCachedData === false) {
+					$root->setAttribute('valud', 'false');
+					$root->appendChild(
+						$root->createElement('error', __('XML returned is invalid.'))
+					);
+
+					return $result;
+				}
+
+				if (strlen($xml) == 0) {
+					return $this->emptyXMLSet($root);
+				}
+			}
+
+			else {
+				$xml = $cache->{$cache_id};
+			}
+
+			//XPath Approach, saves Transforming the Document.
+			$xDom = new XMLDocument;
+			$xDom->loadXML($xml);
+
+			if ($xDom->hasErrors()) {
+				$root->setAttribute('valid', 'false');
+				$root->appendChild(
+					$result->createElement('error', __('XML returned is invalid.'))
+				);
+
+				$messages = $result->createElement('messages');
+
+				foreach($xDom->getErrors() as $e){
+					if(strlen(trim($e->message)) == 0) continue;
+					$messages->appendChild(
+						$result->createElement('item', General::sanitize($e->message))
+					);
+				}
+				$root->appendChild($messages);
+				$result->appendChild($root);
+
+				return $result;
+			}
+
+			$xpath = new DOMXPath($xDom);
+
+			## Namespaces
+			if (is_array($this->parameters()->namespaces) && !empty($this->parameters()->namespaces)) {
+				foreach($this->parameters()->namespaces as $index => $namespace) {
+					$xpath->registerNamespace($namespace['name'], $namespace['uri']);
+				}
+			}
+
+			$xpath_list = $xpath->query($this->parameters()->xpath);
+
+			foreach ($xpath_list as $node) {
+				if ($node instanceof XMLDocument) {
+					$root->appendChild(
+						$result->importNode($node->documentElement, true)
+					);
 				}
 
 				else {
-					if($writeToCache){
-						$cache->write($cache_id, $xml);
-					}
-
-					$xpath = new DOMXPath($xDom);
-
-					## Namespaces
-					if(is_array($this->parameters()->namespaces) && !empty($this->parameters()->namespaces)){
-						foreach($this->parameters()->namespaces as $index => $namespace) {
-							$xpath->registerNamespace($namespace['name'], $namespace['uri']);
-						}
-					}
-
-					$xpath_list = $xpath->query($this->parameters()->xpath);
-
-					foreach($xpath_list as $node) {
-						if($node instanceof XMLDocument) {
-							$root->appendChild(
-								$result->importNode($node->documentElement, true)
-							);
-						}
-
-						else {
-							$root->appendChild(
-								$result->importNode($node, true)
-							);
-						}
-
-					}
-
-					$root->setAttribute('status', ($valid === true ? 'fresh' : 'stale'));
-					$root->setAttribute('creation', $creation);
+					$root->appendChild(
+						$result->importNode($node, true)
+					);
 				}
 			}
 
-			if(!$root->hasChildNodes() || $force_empty_result) $this->emptyXMLSet($root);
+			$root->setAttribute('status', (
+				$hasFreshData === true
+					? 'fresh'
+					: 'stale'
+			));
+			$root->setAttribute('creation', $creation);
+
+			if ($hasFreshData) {
+				try {
+					$cache->{$cache_id} = $xml;
+				}
+
+				catch (Exception $e) {
+					Symphony::$Log->writeToLog(sprintf(
+						'Unable to write datasource cache to disk for %s.',
+						get_class($this)
+					));
+				}
+			}
 
 			$result->appendChild($root);
 

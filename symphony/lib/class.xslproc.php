@@ -2,47 +2,53 @@
 
 	require_once(LIB . '/class.messagestack.php');
 
-	Class XSLProcException extends Exception{
+	class XSLProcException extends Exception {
 		private $error;
 
-		public function getType(){
+		public function getType() {
 			return $this->error->type;
 		}
 
-		public function __construct($message){
+		public function __construct($message) {
 			parent::__construct($message);
+
 			$this->error = NULL;
 			$bFoundFile = false;
 
-			if(XSLProc::getErrors() instanceof MessageStack){
-				foreach(XSLProc::getErrors() as $e){
-					if($e->type == XSLProc::ERROR_XML){
-						$this->error = $errors[0];
-						$this->file = XSLProc::lastXML();
-						$this->line = $this->error->line;
+			if (XSLProc::getErrors() instanceof MessageStack) {
+				foreach (XSLProc::getErrors() as $e) {
+					if ($e->type == XSLProc::ERROR_XML) {
+						$this->error = (object)array();
+						$this->error->file = XSLProc::lastXML();
+						$this->error->line = $e->line;
 						$bFoundFile = true;
+
 						break;
 					}
-					elseif(strlen(trim($e->file)) == 0) continue;
 
-					$this->error = $errors[0];
+					else if (strlen(trim($e->file)) == 0) {
+						continue;
+					}
 
-					$this->file = $this->error->file;
-					$this->line = $this->error->line;
+					$this->error = (object)array();
+					$this->error->file = $e->file;
+					$this->error->line = $e->line;
 					$bFoundFile = true;
+
 					break;
 				}
 
-				if(is_null($this->error)){
+				if (is_null($this->error)) {
 					foreach(XSLProc::getErrors() as $e){
-						if(preg_match_all('/(\/?[^\/\s]+\/.+.xsl) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)){
+						if (preg_match_all('/(\/?[^\/\s]+\/.+.xsl) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)) {
 							$this->file = $matches[0][1];
 							$this->line = $matches[0][2];
 							$bFoundFile = true;
+
 							break;
 						}
 
-						elseif(preg_match_all('/([^:]+): (.+) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)){
+						else if (preg_match_all('/([^:]+): (.+) line (\d+)/i', $e->message, $matches, PREG_SET_ORDER)) {
 							//throw new Exception("Fix XSLPROC Frontend doesn't have access to Page");
 
 							$this->line = $matches[0][3];
@@ -52,24 +58,6 @@
 					}
 				}
 			}
-
-/*
-			// FIXME: This happens when there is an error in the page XSL. Since it is loaded in to a string then passed to the processor it does not return a file
-			if(!$bFoundFile){
-				$page = Symphony::parent()->Page()->pageData();
-				$this->file = VIEWS . '/' . $page['filelocation'];
-				$this->line = 0;
-
-				// Need to look for a potential line number, since
-				// it will not have been grabbed
-				foreach($errors as $e){
-					if($e->line > 0){
-						$this->line = $e->line;
-						break;
-					}
-				}
-			}
-*/
 		}
 	}
 
@@ -182,11 +170,11 @@
 		}
 
 		static private function processLibXMLerrors($type=self::ERROR_XML){
-			if(!(self::$errors instanceof MessageStack)){
+			if (!(self::$errors instanceof MessageStack)) {
 				self::$errors = new MessageStack;
 			}
 
-			foreach(libxml_get_errors() as $error){
+			foreach (libxml_get_errors() as $error) {
 				$error->type = $type;
 				self::$errors->append(NULL, $error);
 			}
@@ -238,6 +226,7 @@
 			$result = null;
 
 			libxml_use_internal_errors(true);
+			libxml_clear_errors();
 
 			if($xml instanceof DOMDocument){
 				$XMLDoc = $xml;
@@ -272,7 +261,7 @@
 				}
 			}
 
-			if(is_null($result) && self::hasErrors()) {
+			if (is_null($result) && self::hasErrors() && !isset($_GET['profiler'])) {
 				throw new XSLProcException('Transformation Failed');
 			}
 
@@ -286,5 +275,4 @@
 		static public function getErrors(){
 			return self::$errors;
 		}
-
 	}

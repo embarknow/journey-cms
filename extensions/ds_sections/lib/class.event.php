@@ -296,6 +296,7 @@
 
 			if(isset($postdata['id'])){
 				$entry = Entry::loadFromID($postdata['id']);
+				$root->setAttribute('id', $entry->id);
 				$type = 'edit';
 			}
 			else{
@@ -398,6 +399,8 @@
 			$document = $wrapper->ownerDocument;
 
 			foreach ($values as $key => $value) {
+				if ($key == 'tmp_data') continue;
+
 				if (is_numeric($key)) {
 					$element = $document->createElement('item');
 				}

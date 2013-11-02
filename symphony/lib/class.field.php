@@ -17,50 +17,37 @@
 		}
 	}
 
-	Class FieldIterator implements Iterator{
+	class FieldIterator extends ArrayIterator {
+		protected static $cache;
 
-		private $position;
-		private $fields;
+		public function __construct() {
+			if (isset(self::$cache) === false) {
+				$fields = array();
 
-		public function __construct(){
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::TYPE =>		'Field',
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
 
-			$this->fields = array();
-			$this->position = 0;
+				foreach ($extensions as $extension) {
+					if (method_exists($extension, 'getFieldTypes') === false) continue;
 
-			$extensions = new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED);
+					foreach ($extension->getFieldTypes() as $info) {
+						$field = new $info->class();
+						$reflection = new ReflectionObject($field);
 
-			foreach ($extensions as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
-				if (!is_dir($path . '/fields')) continue;
+						// Set 'type' property:
+						$field->type = preg_replace('%^field\.|\.php$%', null, basename($reflection->getFileName()));
 
-				foreach(new FieldFilterIterator($path . '/fields') as $file){
-					$this->fields[] = $file->getPathname();
+						$fields[$field->type] = $field;
+					}
 				}
+
+				self::$cache = $fields;
 			}
-		}
 
-		public function length(){
-			return count($this->fields);
-		}
-
-		public function rewind(){
-			$this->position = 0;
-		}
-
-		public function current(){
-			return $this->fields[$this->position]; //Datasource::loadFromPath($this->events[$this->position]);
-		}
-
-		public function key(){
-			return $this->position;
-		}
-
-		public function next(){
-			++$this->position;
-		}
-
-		public function valid(){
-			return isset($this->fields[$this->position]);
+			parent::__construct(self::$cache);
 		}
 	}
 
@@ -74,6 +61,7 @@
 
 		protected $_handle;
 		protected $_name;
+		public $file;
 
 		// Status codes
 		const STATUS_OK = 'ok';
@@ -85,6 +73,8 @@
 		const ERROR_DUPLICATE = 'duplicate';
 		const ERROR_CUSTOM = 'custom';
 		const ERROR_INVALID_QNAME = 'invalid qname';
+		const ERROR_WEAK = 'weak';
+		const ERROR_SHORT = 'short';
 
 		// Filtering Flags
 		const FLAG_TOGGLEABLE = 'toggeable';
@@ -95,6 +85,9 @@
 
 		public function __construct(){
 			if(is_null(self::$key)) self::$key = 0;
+
+			$reflection = new ReflectionObject($this);
+			$this->file = $reflection->getFileName();
 
 			$this->properties = new StdClass;
 
@@ -107,7 +100,7 @@
 		public function __isset($name) {
 			return isset($this->properties->$name);
 		}
-		
+
 		public function __unset($name) {
 			unset($this->properties->$name);
 		}
@@ -116,15 +109,15 @@
 			if ($name == 'guid' and !isset($this->guid)) {
 				$this->guid = Field::createGUID($this);
 			}
-			
-			if ($name == 'publish-label' && ($this->properties->{$name} == '' || !isset($this->{$name}))) {
-				$this->{$name} = $this->properties->name;
+
+			if ($name == "publish-label") {
+				$this->{'publish-label'} = $this->properties->name;
 			}
-			
+
 			if (!isset($this->properties->$name)) {
 				return null;
 			}
-			
+
 			return $this->properties->$name;
 		}
 
@@ -270,18 +263,18 @@
 		Load:
 	-------------------------------------------------------------------------*/
 
-		public static function load($pathname){
-			if(!is_array(self::$loaded)){
+		public static function load($pathname) {
+			if (is_array(self::$loaded) === false) {
 				self::$loaded = array();
 			}
 
-			if(!is_file($pathname)){
+			if (is_file($pathname) === false) {
 		        throw new FieldException(
 					__('Could not find Field <code>%s</code>. If the Field was provided by an Extension, ensure that it is installed, and enabled.', array(basename($pathname)))
 				);
 			}
 
-			if(!isset(self::$loaded[$pathname])){
+			if (isset(self::$loaded[$pathname]) === false) {
 				self::$loaded[$pathname] = require($pathname);
 			}
 
@@ -291,12 +284,14 @@
 			return $obj;
 		}
 
-		public static function loadFromType($type){
-			return self::load(self::__find($type) . "/field.{$type}.php");
+		public static function loadFromType($type) {
+			$fields = new FieldIterator();
+
+			return clone $fields[$type];
 		}
 
 		public static function loadFromXMLDefinition(SimpleXMLElement $xml){
-			if(!isset($xml->type)){
+			if (isset($xml->type) === false) {
 				throw new FieldException('Section XML contains fields with no type specified.');
 			}
 
@@ -305,26 +300,6 @@
 
 			return $field;
 		}
-
-		protected static $find_cache = array();
-
-		protected static function __find($type){
-			if (array_key_exists($type, self::$find_cache)) {
-				return self::$find_cache[$type];
-			}
-
-			foreach (new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $e){
-				$path = Extension::getPathFromClass(get_class($e));
-
-				if(is_file("{$path}/fields/field.{$type}.php")){
-					self::$find_cache[$type] = "{$path}/fields";
-
-					return self::$find_cache[$type];
-				}
-			}
-
-		    return false;
-	    }
 
 	/*-------------------------------------------------------------------------
 		Utilities:
@@ -648,9 +623,23 @@
 			}
 		}
 
-		public function processData($data, Entry $entry=NULL){
+		/**
+		 * Can the field process this raw data?
+		 *
+		 * Used to determine if field data should be overwritten with the
+		 * result of processData when saving entries.
+		 *
+		 * @param	mixed	$data
+		 * @param	Entry	$entry
+		 *
+		 * @return	boolean
+		 */
+		public function canProcessData($data, Entry $entry = null) {
+			return $data !== null;
+		}
 
-			if(isset($entry->data()->{$this->{'element-name'}})){
+		public function processData($data, Entry $entry = null) {
+			if (isset($entry->data()->{$this->{'element-name'}})) {
 				$result = $entry->data()->{$this->{'element-name'}};
 			}
 
@@ -681,9 +670,10 @@
 		// TODO: Support an array of data objects. This is important for
 		// fields like Select box or anything that allows mutliple values
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
-			$data->entry_id = $entry->id;
+			if (is_array($data)) $data = (object)$data;
+			if (isset($data->id) === false) $data->id = null;
 
-			if (!isset($data->id)) $data->id = NULL;
+			$data->entry_id = $entry->id;
 
 			try {
 				Symphony::Database()->insert(
@@ -732,7 +722,7 @@
 			);
 		}
 
-		public function getParameterOutputValue(StdClass $data, Entry $entry=NULL){
+		public function getParameterOutputValue($data, Entry $entry=NULL){
 			if(is_null($data->value)) return;
 
 			return $this->prepareTableValue($data);
@@ -755,8 +745,9 @@
 
 		public function processFilter($data) {
 			$defaults = (object)array(
-				'value'		=> '',
-				'type'		=> 'is'
+				'allow-null' =>		false,
+				'type' =>			'is',
+				'value' =>			''
 			);
 
 			if (empty($data)) {
@@ -765,11 +756,15 @@
 
 			$data = (object)$data;
 
-			if (!isset($data->type)) {
+			if (isset($data->{'allow-null'}) === false) {
+				$data->{'allow-null'} = $defaults->{'allow-null'};
+			}
+
+			if (isset($data->type) === false) {
 				$data->type = $defaults->type;
 			}
 
-			if (!isset($data->value)) {
+			if (isset($data->value) === false) {
 				$data->value = '';
 			}
 
@@ -813,7 +808,7 @@
 				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key
 			);
 			$joins .= sprintf(
-				"\nLEFT OUTER JOIN %s AS %s ON (e.id = %2\$s.entry_id)",
+				"\nRIGHT JOIN %s AS %s ON (e.id = %2\$s.entry_id)",
 				$table, $handle
 			);
 
@@ -831,7 +826,7 @@
 
 			$values = DataSource::prepareFilterValue($filter->value, $parameter_output, $filter_join);
 
-			if (!is_array($values)) $values = array();
+			if (is_array($values) === false) $values = array();
 
 			// Exact matches:
 			if ($filter->type == 'is' or $filter->type == 'is-not') {
@@ -840,18 +835,22 @@
 				if ($filter_join == DataSource::FILTER_OR) {
 					$handle = $this->buildFilterJoin($joins);
 				}
-				
+
 				foreach ($values as $index => $value) {
 					if ($filter_join != DataSource::FILTER_OR) {
 						$handle = $this->buildFilterJoin($joins);
 					}
 
 					$statements[] = $db->prepareQuery(
-						"'%s' IN ({$handle}.value, {$handle}.handle)", array($value)
+						"'%s' IN ({$handle}.value)", array($value)
+					);
+
+					$statements[] = $db->prepareQuery(
+						"'%s' IN ({$handle}.handle)", array(lang::createHandle($value))
 					);
 				}
 
-				if(empty($statements)) return true;
+				if (empty($statements)) return true;
 
 				if ($filter_join == DataSource::FILTER_OR) {
 					$statement = "(\n\t" . implode("\n\tOR ", $statements) . "\n)";
@@ -867,7 +866,7 @@
 
 				$where[] = $statement;
 			}
-			
+
 			else if ($filter->type == 'is-null') {
 				$handle = $this->buildFilterJoin($joins);
 				$where[] = $db->prepareQuery("{$handle}.value IS NULL");
@@ -876,6 +875,16 @@
 			else if ($filter->type == 'is-null') {
 				$handle = $this->buildFilterJoin($joins);
 				$where[] = $db->prepareQuery("{$handle}.value IS NULL");
+			}
+
+			else if ($filter->type == 'is-null') {
+				$handle = $this->buildFilterJoin($joins);
+				$where[] = $db->prepareQuery("{$handle}.value IS NULL");
+			}
+
+			else if ($filter->type == 'is-not-null') {
+				$handle = $this->buildFilterJoin($joins);
+				$where[] = $db->prepareQuery("{$handle}.value IS NOT NULL");
 			}
 
 			else if ($filter->type == 'contains' or $filter->type == 'does-not-contain') {

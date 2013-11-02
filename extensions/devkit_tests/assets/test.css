@@ -1,0 +1,22 @@
+dl.stack dt {
+	font-weight: bold;
+}
+dl.stack dd {
+	font: 11px/16px monospace;
+	margin: 0 0 1em 20px;
+	max-width: 50em;
+	white-space: pre-wrap;
+}
+dl.stack dd.bad {
+	color: #770000;
+}
+dl.stack dd.good {
+	color: #007700;
+}
+
+p.result {
+	color: #00aa00;
+}
+p.result.failed {
+	color: #aa0000;
+}

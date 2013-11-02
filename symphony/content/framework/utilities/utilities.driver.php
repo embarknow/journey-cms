@@ -343,12 +343,6 @@
 						if($this->_existing_file && $file != UTILITIES . '/' . $this->_existing_file)
 							General::deleteFile(UTILITIES . '/' . $this->_existing_file);
 
-						## FIXME: Fix this delegate
-						###
-						# Delegate: Edit
-						# Description: After saving the asset, the file path is provided.
-						//Extension::notify('Edit', getCurrentPage(), array('file' => $file));
-
 						redirect(ADMIN_URL . '/blueprints/utilities/edit/'.str_replace('.xsl', '', $fields['name']) . '/'.($this->_context[0] == 'new' ? 'created' : 'saved') . '/');
 
 					}
@@ -356,12 +350,6 @@
 			}
 
 			elseif($this->_context[0] == 'edit' && array_key_exists('delete', $_POST['action'])){
-
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting the asset file. Target file path is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('file' => WORKSPACE . '/' . $this->_existing_file_rel));
 				$this->__actionDelete(UTILITIES . '/' . $this->_existing_file, ADMIN_URL . '/blueprints/components/');
 		  	}
 		}

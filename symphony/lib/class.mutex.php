@@ -1,53 +1,18 @@
 <?php
-
-	Class Mutex{
-
-		public static function acquire($id, $ttl=5, $path='.'){
-			$lockFile = self::__generateLockFileName($id, $path);
-
-			if(self::__lockExists($lockFile)){
-				$age = time() - filectime($lockFile); 
-
-				if($age < $ttl) return false;
-				
-			}
+	
+	class Mutex {
+		static public function acquire($id, $ttl = 5) {
+			$id = md5($id);
+			$exists = apc_fetch($id);
 			
-			return self::__createLock($lockFile);
-
-		}
-
-		public static function release($id, $path='.'){
-			$lockFile = self::__GenerateLockFileName($id, $path);
-
-			if(self::__lockExists($lockFile)) return unlink($lockFile);
-
-			return true;
-		}
-
-		public static function refresh($id, $ttl=5, $path='.'){
-			return touch(self::__generateLockFileName($id, $path));
-		}
-
-		private static function __createLock($lockFile){
-
-			if(!$fp = fopen($lockFile, 'w')) return false;
-
-			fwrite($fp, 'Mutex lock file - DO NOT DELETE');
-			fclose($fp);
-
-			touch($lockFile);
+			if ($exists) return false;
 			
-			return true;
-		}	
-
-		private static function __lockExists($lockFile){
-			return file_exists($lockFile);
+			return apc_store($id, true, $ttl);
 		}
-
-		private static function __generateLockFileName($id, $path){
-			return rtrim($path, '/') . '/' . md5($id) . '.lock';
+		
+		static public function release($id) {
+			return apc_delete(md5($id));
 		}
-
 	}
 	
 ?>

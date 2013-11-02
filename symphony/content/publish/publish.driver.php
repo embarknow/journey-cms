@@ -3,9 +3,7 @@
 	/**
 	* PublishDriver class...
 	*/
-
-	Class PublishDriver {
-
+	class PublishDriver {
 		public $document;
 		public $url;
 		public $view;
@@ -18,7 +16,7 @@
 
 			// Probably a neater way to store and fetch the section handle
 			$this->section = Section::loadFromHandle($this->view->params[0]);
-			
+
 			$this->setTitle();
 		}
 
@@ -192,6 +190,7 @@
 
 				return false;
 			}
+<<<<<<< HEAD:symphony/content/publish/publish.driver.php
 			$this->$function();
 		}
 
@@ -204,6 +203,8 @@
 		}
 
 		public function __viewIndex(){
+=======
+>>>>>>> stable:symphony/content/content.publish.php
 
 			/*
 			**	Pagination, get the total number of entries and work out
@@ -516,7 +517,7 @@
 			$section = Section::loadFromHandle($callback['context']['section_handle']);
 
 			// Check that a layout and fields exist
-			if(isset($section->fields)) {
+			if(empty($section->fields)) {
 				$this->alerts()->append(
 					__(
 						'It looks like you\'re trying to create an entry. Perhaps you want fields first? <a href="%s">Click here to create some.</a>',

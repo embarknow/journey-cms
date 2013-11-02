@@ -33,7 +33,7 @@
 			return $entry;
 		}
 
-		public function setSchema(Array $schema = array()) {
+		public function setSchema(array $schema = []) {
 			$this->schema = array_keys($schema);
 		}
 	}
@@ -106,8 +106,13 @@
 				throw new EntryException('The following error occurred during saving: ' . $e->getMessage());
 			}
 
-			foreach($section->fields as $field){
+			foreach ($section->fields as $field) {
 				$field_handle = $field->{'element-name'};
+				$field_data = (
+					isset($data[$field_handle])
+						? $data[$field_handle]
+						: null
+				);
 
 				//	The current behaviour is stupid, nulling fields if they are omitting from the form
 				//	as it breaks Frontend form submissions that don't have the complete set of fields for
@@ -117,9 +122,10 @@
 				//	in your frontend forms, or be prepared to have their values NULL'd ^BA.
 				//	if(!isset($data[$field_handle]) continue;
 
-				$result = $field->processData((!isset($data[$field_handle]) ? NULL : $data[$field_handle]), $this);
-
-				$this->data()->$field_handle = $result;
+				if ($field->canProcessData($field_data, $this)) {
+					$result = $field->processData($field_data, $this);
+					$this->data()->$field_handle = $result;
+				}
 			}
 		}
 
@@ -128,8 +134,7 @@
 			$section = Section::loadFromHandle($entry->section);
 
 			try {
-				// TODO: Pass this onto fields so that they can override. Very important for recursive deletion.
-				foreach($section->fields as $field){
+				foreach ($section->fields as $field) {
 					Symphony::Database()->delete(
 						sprintf('tbl_data_%s_%s', $section->handle, $field->{'element-name'}),
 						array($entry->id),
@@ -139,14 +144,13 @@
 			}
 
 			catch (Exception $e) {
-				// TODO: Do something about fields that don't implement this correctly.
+				Symphony::Log()->pushExceptionToLog($e);
 			}
 
 			Symphony::Database()->delete('tbl_entries', array($entry->id), " `id` = %d LIMIT 1");
 		}
 
 		public static function save(self $entry, MessageStack &$errors){
-
 			if(!isset($entry->section) || strlen(trim($entry->section)) == 0){
 				throw new EntryException('A section must be specified before attempting to save.');
 			}

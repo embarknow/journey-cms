@@ -21,6 +21,7 @@
 		private $_guid;
 
 		public function __construct(){
+			$this->_about = new StdClass();
 
 			// Set root location
 			$this->location = VIEWS;

@@ -7,15 +7,17 @@
 		}
 
 		public function create() {
-			return Symphony::Database()->query(sprintf('
-				CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
-				  	`id` INT(11) unsigned NOT NULL AUTO_INCREMENT,
-				  	`entry_id` INT(11) UNSIGNED NOT NULL,
-				  	`value` DOUBLE DEFAULT NULL,
-				  	PRIMARY KEY (`id`),
-				  	KEY `entry_id` (`entry_id`),
-				  	KEY `value` (`value`)
-				) ENGINE=MyISAM;',
+			return Symphony::Database()->query(sprintf(
+				"
+					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					  	`id` INT(11) unsigned NOT NULL AUTO_INCREMENT,
+					  	`entry_id` INT(11) UNSIGNED NOT NULL,
+					  	`value` DOUBLE DEFAULT NULL,
+					  	PRIMARY KEY (`id`),
+					  	KEY `entry_id` (`entry_id`),
+					  	KEY `value` (`value`)
+					) ENGINE=MyISAM;
+				",
 				$this->{'section'},
 				$this->{'element-name'},
 				$this->{'column-type'}
@@ -98,14 +100,14 @@
 	/*-------------------------------------------------------------------------
 		Input:
 	-------------------------------------------------------------------------*/
-		
+
 		public function validateData(MessageStack $errors, Entry $entry, $data = null) {
 			if (self::STATUS_OK != parent::validateData($errors, $entry, $data)) {
 				return self::STATUS_ERROR;
 			}
-			
+
 			if (!isset($data->value) || empty($data->value)) return self::STATUS_OK;
-			
+
 			if (!is_numeric($data->value)) {
 				$errors->append(
 					null, (object)array(
@@ -113,17 +115,17 @@
 						'code' => self::ERROR_INVALID
 					)
 				);
-				
+
 				return self::STATUS_ERROR;
 			}
-			
+
 			return self::STATUS_OK;
 		}
-		
+
 	/*-------------------------------------------------------------------------
 		Filtering:
 	-------------------------------------------------------------------------*/
-		
+
 		public function getFilterTypes($data) {
 			return array(
 				array('is', false, __('Is')),
@@ -134,13 +136,13 @@
 				array('more-than-or-equal', $data->type == 'more-than-or-equal', __('More than or equal'))
 			);
 		}
-		
+
 		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output = null) {
 			$filter = $this->processFilter($filter);
 			$filter_join = DataSource::FILTER_OR;
 			$db = Symphony::Database();
 			$statements = array();
-			
+
 			// Exact matches:
 			switch ($filter->type) {
 				case 'is':					$operator = '='; break;
@@ -150,34 +152,34 @@
 				case 'more-than':			$operator = '<'; break;
 				case 'more-than-or-equal':	$operator = '<='; break;
 			}
-			
+
 			if (empty($this->last_handle)) {
 				$this->join_handle = $this->buildFilterJoin($joins);
 			}
-			
+
 			$handle = $this->join_handle;
-			
+
 			$value = DataSource::replaceParametersInString(
 				trim($filter->value), $parameter_output
 			);
-			
+
 			$statements[] = $db->prepareQuery(
 				"%d {$operator} {$handle}.value",
 				array($value)
 			);
-			
+
 			if (empty($statements)) return true;
-			
+
 			if ($filter_join == DataSource::FILTER_OR) {
 				$statement = "(\n\t" . implode("\n\tOR ", $statements) . "\n)";
 			}
-			
+
 			else {
 				$statement = "(\n\t" . implode("\n\tAND ", $statements) . "\n)";
 			}
-			
+
 			$where[] = $statement;
-			
+
 			return true;
 		}
 
@@ -216,5 +218,3 @@
 	}
 
 	return 'FieldNumber';
-
-?>

@@ -1,8 +1,6 @@
 <?php
-	
-	require_once 'lib/class.datasource.php';
 
-	class Extension_DS_DynamicXML implements iExtension {
+	class Extension_DS_DynamicXML implements ExtensionInterface {
 		public function about() {
 			return (object)array(
 				'name'			=> 'Dynamic XML DataSource',
@@ -12,8 +10,8 @@
 					'Data Source', 'Core'
 				),
 				'author'		=> (object)array(
-					'name'			=> 'Symphony Team',
-					'website'		=> 'http://symphony-cms.com/',
+					'name'			=> 'R&B Creative',
+					'website'		=> 'http://www.randb.com.au/',
 					'email'			=> 'team@symphony-cms.com'
 				),
 				'provides'		=> array(
@@ -26,8 +24,10 @@
 	/*-------------------------------------------------------------------------
 		DataSources:
 	-------------------------------------------------------------------------*/
-		
+
 		public function getDataSourceTypes() {
+			require_once __DIR__ . '/lib/class.datasource.php';
+
 			return array(
 				(object)array(
 					'class'		=> 'DynamicXMLDataSource',
@@ -36,5 +36,5 @@
 			);
 		}
 	}
-	
+
 	return 'Extension_DS_DynamicXML';

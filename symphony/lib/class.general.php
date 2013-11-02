@@ -248,7 +248,7 @@
 				$headers[] = sprintf('%s: %s', $header, $value);
 			}
 
-			return mail($to_email, $subject, @wordwrap($message, 70), @implode("\r\n", $headers) . "\r\n", "-f{$from_email}");
+			return mail($to_email, $subject, @wordwrap($message, 70), @implode("\n", $headers) . "\n", "-f{$from_email}");
 
 		}
 
@@ -548,12 +548,12 @@
 				if (empty($value)) continue;
 
 				if (is_int($element_name)) {
-					$child = Symphony::Parent()->Page->createElement('item');
+					$child = $parent->ownerDocument->createElement('item');
 					$child->setAttribute('index', $element_name + 1);
 				}
 
 				else {
-					$child = Symphony::Parent()->Page->createElement($element_name);
+					$child = $parent->ownerDocument->createElement($element_name);
 				}
 
 				if(is_array($value)){
@@ -816,6 +816,8 @@
 			while (!empty($unsorted)) {
 				// Add data sources in order:
 				foreach ($unsorted as $parent => $children) {
+					if (is_null($children)) continue;
+
 					foreach ($children as $child) if (!(
 						$child == $parent
 						|| !array_key_exists($child, $unsorted)
@@ -915,22 +917,33 @@
 		}
 
 
-		public static function uploadFile($dest_path, $dest_name, $tmp_name, $perm='0777'){
-			##Upload the file
-			if(@is_uploaded_file($tmp_name)) {
-
+		public static function uploadFile($dest_path, $dest_name, $tmp_name, $perm = '0777') {
+			// Upload the file
+			if (is_uploaded_file($tmp_name) === true) {
 				$dest_path = rtrim($dest_path, '/') . '/';
 
-				##Try place the file in the correction location
-				if(@move_uploaded_file($tmp_name, $dest_path . $dest_name)){
-					@chmod($dest_path . $dest_name, intval($perm, 8));
+				// Try place the file in the correction location
+				if (move_uploaded_file($tmp_name, $dest_path . $dest_name) !== false) {
+					chmod($dest_path . $dest_name, intval($perm, 8));
+
 					return true;
 				}
 			}
 
-			##Could not move the file
 			return false;
+		}
 
+		public static function uploadData($dest_path, $dest_name, $tmp_data, $perm = '0777') {
+			$dest_path = rtrim($dest_path, '/') . '/';
+
+			// Try place the file in the correction location:
+			if (file_put_contents($dest_path . $dest_name, $tmp_data) !== false) {
+				chmod($dest_path . $dest_name, intval($perm, 8));
+
+				return true;
+			}
+
+			return false;
 		}
 
 		/***
@@ -991,6 +1004,4 @@
 		public static function removeEscapedCommas($string){
 			return preg_replace('/(?<!\\\\)\\\\,/', ',', $string);
 		}
-
-
 	}

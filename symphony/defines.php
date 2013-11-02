@@ -28,7 +28,7 @@
 
 	define_safe('TEMPLATES', SYMPHONY . '/templates');
 
-	define_safe('STARTTIME', precision_timer());
+	define_safe('STARTTIME', microtime(true));
 
 	define_safe('TWO_WEEKS',	(60 * 60 * 24 * 14));
 	define_safe('CACHE_LIFETIME', TWO_WEEKS);
@@ -40,5 +40,15 @@
 
 	define_safe('__SECURE__', (HTTPS == 'on'));
 	define_safe('URL', 'http' . (defined('__SECURE__') && __SECURE__ ? 's' : '') . '://' . DOMAIN);
+
+	$root_url = parse_url(URL);
+
+	define_safe('ROOT_PATH', $root_url['path']);
+	define_safe('CURRENT_PATH', (
+		isset($_GET['symphony-page'])
+		&& strlen(ltrim($_GET['symphony-page'], '/')) > 0
+			? '/' . ltrim($_GET['symphony-page'], '/')
+			: null
+	));
 
 	define_safe('ACTIVITY_LOG', LOGS . '/main');

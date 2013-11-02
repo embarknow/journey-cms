@@ -1,48 +1,52 @@
 <?php
-	
-	require_once(LIB . '/class.htmldocument.php');
-	require_once(LIB . '/class.view.php');
-	require_once(LIB . '/class.urlwriter.php');
-	
+
+	require_once LIB . '/class.htmldocument.php';
+	require_once LIB . '/class.view.php';
+	require_once LIB . '/class.urlwriter.php';
+
 	class DevKit extends View {
 		protected $document;
 		protected $data;
 		protected $url;
-		
-		public function __construct(View $view) {
+
+		public function __construct() {
 			parent::__construct();
-			
+
 			$this->document = new HTMLDocument();
-			
-			$this->view = $view;
+
+			$this->view = Frontend::loadedView();
 			$this->data = (object)array();
-			$this->url = new URLWriter(URL . getCurrentPage(), $_GET);
-			
+			$this->url = new URLWriter(URL . CURRENT_PATH, $_GET);
+
 			// Remove symphony parameters:
 			unset($this->url->parameters()->{'symphony-page'});
 			unset($this->url->parameters()->{'symphony-renderer'});
 		}
-		
+
 		public function __isset($name) {
 			return isset($this->data->$name);
 		}
-		
+
 		public function __get($name) {
 			if ($name == 'title' and !isset($this->title)) {
 				$this->title = __('Untitled');
 			}
-			
+
 			return $this->data->$name;
 		}
-		
+
 		public function __set($name, $value) {
+			if (isset($this->data) === false) {
+				$this->data = new StdClass();
+			}
+
 			$this->data->$name = $value;
 		}
-		
+
 		public function templatePathname() {
 			return $this->view->templatePathname();
 		}
-		
+
 		protected function createScriptElement($path) {
 			$element = $this->document->createElement('script');
 			$element->setAttribute('type', 'text/javascript');
@@ -60,29 +64,29 @@
 			$element->setAttribute('rel', 'stylesheet');
 			$element->setAttribute('media', $type);
 			$element->setAttribute('href', $path);
-			
+
 			return $element;
 		}
-		
+
 		public function render(Register $parameters, XMLDocument &$document) {
 			Widget::init($this->document);
-			
+
 			$this->appendHead($this->document->documentElement);
 			$this->appendBody($this->document->documentElement);
-			
+
 			return $this->document->saveHTML();
 		}
-		
+
 		protected function appendHead(DOMElement $wrapper) {
 			$head = $this->document->xpath('/html/head[1]')->item(0);
-			
+
 			$this->appendTitle($head);
 			$this->appendIncludes($head);
 			$wrapper->appendChild($head);
-			
+
 			return $head;
 		}
-		
+
 		protected function appendTitle(DOMElement $wrapper) {
 			$title = $this->document->createElement('title');
 			$title->appendChild($this->document->createTextNode(
@@ -100,54 +104,54 @@
 			$title->appendChild($this->document->createTextNode(
 				' ' . $this->title
 			));
-			
+
 			$wrapper->appendChild($title);
-			
+
 			return $title;
 		}
-		
+
 		protected function appendIncludes(DOMElement $wrapper) {
 			$wrapper->appendChild(
 				$this->createStylesheetElement(ADMIN_URL . '/assets/css/devkit.css')
 			);
 		}
-		
+
 		protected function appendBody(DOMElement $wrapper) {
 			$body = $this->document->xpath('/html/body[1]')->item(0);
-			
+
 			$this->appendContent($body);
 			$this->appendSidebar($body);
-			
+
 			$wrapper->appendChild($body);
-			
+
 			return $body;
 		}
-		
+
 		protected function appendContent(DOMElement $wrapper) {
 			$container = $this->document->createElement('div');
 			$container->setAttribute('id', 'content');
-			
+
 			$wrapper->appendChild($container);
-			
+
 			return $container;
 		}
-		
+
 		protected function appendSidebar(DOMElement $wrapper) {
 			$container = $this->document->createElement('div');
 			$container->setAttribute('id', 'sidebar');
-			
+
 			// Header:
 			$header = $this->document->createElement('h1');
 			$header->appendChild(Widget::Anchor(
 				$this->view->title, (string)$this->url
 			));
 			$container->appendChild($header);
-			
+
 			$list = $this->document->createElement('ul');
 			$list->setAttribute('class', 'menu');
-			
+
 			$root = $this->document->createElement('navigation');
-			
+
 			####
 			# Delegate: DevKiAppendtMenuItem
 			# Description: Allow navigation XML to be manipulated before it is rendered.
@@ -159,46 +163,46 @@
 					'wrapper'	=> $root
 				)
 			);
-			
+
 			if ($root->hasChildNodes()) {
 				foreach ($root->childNodes as $node) {
 					if ($node->getAttribute('active') == 'yes') {
 						$item = $this->document->createElement('li', $node->getAttribute('name'));
 					}
-					
+
 					else {
 						$handle = $node->getAttribute('handle');
-						
+
 						$url = clone $this->url;
 						$url->parameters()->$handle = null;
-						
+
 						$item = $this->document->createElement('li');
 						$item->appendChild(Widget::Anchor(
 							$node->getAttribute('name'),
-							'?' . (string)$url
+							(string)$url
 						));
 					}
-					
+
 					$list->appendChild($item);
 				}
 			}
-			
+
 			$item = $this->document->createElement('li');
 			$item->appendChild(Widget::Anchor(
 				__('Edit'), ADMIN_URL . '/blueprints/views/edit/' . $this->view->handle . '/'
 			));
 			$list->prependChild($item);
-			
+
 			$container->appendChild($list);
-			
+
 			// Main:
 			$fieldset = Widget::Fieldset(__('Pages'));
 			$container->appendChild($fieldset);
 			$wrapper->appendChild($container);
-			
+
 			return $container;
 		}
-		
+
 		protected function appendLink(DOMElement $wrapper, $name, $link, $active = false) {
 			$item = $this->document->createElement('li');
 			$anchor = $this->document->createElement('a');
@@ -207,16 +211,14 @@
 			$anchor->appendChild(
 				$this->document->createTextNode($name)
 			);
-			
+
 			if ($active == true) {
 				$anchor->setAttribute('class', 'active');
 			}
-			
+
 			$item->appendChild($anchor);
 			$wrapper->appendChild($item);
-			
+
 			return $item;
 		}
 	}
-	
-?>

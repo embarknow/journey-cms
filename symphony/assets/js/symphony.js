@@ -134,7 +134,7 @@ var Symphony;
 					.attr('id', 'alerts')
 					.insertAfter('form');
 			}
-			
+
 			var self = Symphony.Alert;
 			var block = function() {
 				return false;
@@ -334,10 +334,10 @@ var Symphony;
 			});
 		}
 	};
-	
+
 	// Start timers:
 	window.setInterval(Symphony.Alert.ticker, 1000);
-	
+
 	// Initialize notices:
 	$(document).ready(function() {
 		$('#alerts > li').each(function() {
@@ -371,53 +371,53 @@ var Symphony;
 /*-----------------------------------------------------------------------------
 	Tabs
 -----------------------------------------------------------------------------*/
-	
+
 	$(document).ready(function() {
 		var tabs = $('#tab');
-		
+
 		// No tabs:
 		if (tabs.length == 0) return;
-		
+
 		var form = $('form');
 		var changed = false;
-		
+
 		Symphony.Language.add({
 			'You have unsaved changes, please save first.': false
 		});
-		
+
 		// Form has errors:
 		changed = form.find('.invalid:first').length == 1;
-		
+
 		// Listen for changes:
 		form.bind('change', function() {
 			changed = true;
 		});
-		
+
 		// Save before changing tabs:
 		tabs.find('a').bind('click', function() {
 			if (changed == false) return true;
-			
+
 			Symphony.Alert.post(
 				'<div class="message">'
 				+ Symphony.Language.get('You have unsaved changes, please save first.')
 				+ '</div>',
 				'error'
 			);
-			
+
 			return false;
 		});
 	});
-	
+
 /*-----------------------------------------------------------------------------
 	Master Switch
 -----------------------------------------------------------------------------*/
-	
+
 	$(document).ready(function() {
 		$('h2 select').bind('change', function() {
 			window.location.search = '?type=' + $(this).val();
 		});
 	});
-	
+
 /*-----------------------------------------------------------------------------
 	Sections Page
 -----------------------------------------------------------------------------*/
@@ -425,12 +425,12 @@ var Symphony;
 	jQuery(document).ready(function() {
 		var duplicator = jQuery('#section-duplicator');
 		var layout = jQuery('#section-layout');
-		
+
 		// Not on the section editor:
 		if (duplicator.length == 0 && layout.length == 0) return;
 
 		var form = $('form');
-		
+
 		if (duplicator.length) {
 			if (duplicator.find('.instances > li .invalid').length) {
 				duplicator.find('.tabs > li:first')
@@ -540,37 +540,37 @@ var Symphony;
 		var table = $('#views-list');
 		var rows = table.find('tbody tr');
 		var depth = 0;
-		
+
 		// Insert toggle controls:
 		rows.each(function() {
 			var row = $(this);
 			var cell = row
 				.find('td:first')
 				.addClass('toggle');
-			
+
 			// Children:
 			if (this.className) {
 				var classes = this.className.split(' ');
 				var depth = classes.length - 1;
 				var parents = $('.' + classes.join(', .'));
-				
+
 				row.addClass('child');
 				row.data().depth = depth;
 				row.data().parents = parents;
-				
+
 				$('<span />')
 					.html('&#x21b5;')
 					.css('margin-left', (depth * 20) + 'px')
 					.prependTo(cell);
 			}
-			
+
 			// Parents:
 			else {
 				var children = $('.' + row.attr('id'));
-				
+
 				row.addClass('parent');
 				row.data().children = children;
-				
+
 				if (children.length) {
 					$('<a />')
 						.text('▼')
@@ -578,58 +578,68 @@ var Symphony;
 						.prependTo(cell);
 				}
 			}
-			
+
 			cell.wrapInner('<div />');
 		});
-		
-		$('#views-list td.toggle a, #views-list td.toggle + td span').live('mousedown', function() {
-			return false;
-		});
-		
-		$('#views-list td.toggle a').live('click', function() {
-			var link = $(this);
-			var row = link.parents('tr');
-			var children = row.data().children;
-			
-			if (link.is('.hide')) {
-				link.text('▼').removeClass('hide').addClass('show');
-				children
-					.remove()
-					.removeClass('selected');
-			}
-			
-			else if (link.is('.show')) {
-				link.text('▼').removeClass('show').addClass('hide');
-				children
-					.removeClass('selected')
-					.insertAfter(row);
-				
-				if (row.is('.selected')) {
-					children.addClass('selected');
+
+		$('#views-list td.toggle a, #views-list td.toggle + td span')
+			.on('mousedown', function() {
+				return false;
+			});
+
+		$('#views-list td.toggle a')
+			.on('click', function() {
+				var link = $(this);
+				var row = link.parents('tr');
+				var children = row.data().children;
+
+				if (link.is('.hide')) {
+					link.text('▼').removeClass('hide').addClass('show');
+					children
+						.remove()
+						.removeClass('selected');
 				}
-			}
-		});
-		
-		$('#views-list td.toggle + td span').live('click', function() {
-			$(this).parent().click();
-			
-			return false;
-		});
-		
+
+				else if (link.is('.show')) {
+					link.text('▼').removeClass('show').addClass('hide');
+					children
+						.removeClass('selected')
+						.insertAfter(row);
+
+					if (row.is('.selected')) {
+						children.addClass('selected');
+					}
+				}
+			});
+
+		$('#views-list td.toggle + td span')
+			.on('click', function() {
+				$(this).parent().click();
+
+				return false;
+			});
+
 		// Collapse by default on long pages:
 		if (table.find('tbody tr').length > 17) {
 			$('#views-list tr[id] td.toggle a').click();
 		}
+
+		// Remove children:
+		rows
+			.filter('.child')
+			.remove();
 	});
-	
+
 /*-----------------------------------------------------------------------------
 	rel[external]
 -----------------------------------------------------------------------------*/
 
 	$(window).ready(function() {
-		$('a[rel=external]').live("click", function() {
-			window.open($(this).attr('href'));
-			return false;
-		});
+		$('a[rel=external]')
+			.on("click", function() {
+				window.open($(this).attr('href'));
+
+				return false;
+			});
 	});
 })(jQuery.noConflict());

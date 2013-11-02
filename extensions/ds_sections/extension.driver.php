@@ -1,9 +1,6 @@
 <?php
 
-	require_once 'lib/class.datasource.php';
-	require_once 'lib/class.event.php';
-
-	Class Extension_DS_Sections implements iExtension {
+	class Extension_DS_Sections implements ExtensionInterface {
 		public function about() {
 			return (object)array(
 				'name'			=> 'Sections DataSource and Event',
@@ -13,8 +10,8 @@
 					'Data Source', 'Event', 'Core'
 				),
 				'author'		=> (object)array(
-					'name'			=> 'Symphony Team',
-					'website'		=> 'http://symphony-cms.com/',
+					'name'			=> 'R&B Creative',
+					'website'		=> 'http://www.randb.com.au/',
 					'email'			=> 'team@symphony-cms.com'
 				),
 				'provides'		=> array(
@@ -23,12 +20,14 @@
 				'description'	=> 'Create data sources from an XML string.'
 			);
 		}
-		
+
 	/*-------------------------------------------------------------------------
 		DataSources and Events:
 	-------------------------------------------------------------------------*/
-		
+
 		public function getDataSourceTypes() {
+			require_once __DIR__ . '/lib/class.datasource.php';
+
 			return array(
 				(object)array(
 					'class'		=> 'SectionsDataSource',
@@ -36,8 +35,10 @@
 				)
 			);
 		}
-		
+
 		public function getEventTypes() {
+			require_once __DIR__ . '/lib/class.event.php';
+
 			return array(
 				(object)array(
 					'class'		=> 'SectionsEvent',

@@ -27,7 +27,7 @@
 			if (!(self::$_instance instanceof Controller)) {
 				self::$_instance = new self;
 			}
-			
+
 			return self::$_instance;
 		}
 
@@ -49,7 +49,7 @@
 
 			$path = null;
 
-			// Is this for access to real non-Symphony files and dirs?
+			// Resolve a filesystem reference:
 			if (file_exists(realpath($renderer))) {
 				$path = realpath($renderer);
 
@@ -60,22 +60,25 @@
 				}
 			}
 
-			// Set path to renderer
+			// Set path to renderer:
 			else if (file_exists(LIB . "/class.{$renderer}view.php")) {
 				$path = LIB . "/class.{$renderer}view.php";
 			}
 
 			if (is_null($path)) {
-				throw new Exception('Invalid Symphony renderer specified.');
+				throw new Exception("Invalid Symphony renderer handle specified. {$handle} given.");
 			}
 
-			// Include renderer view class
-			require_once($path);
+			Profiler::begin('Begin Symphony execution');
 
-			// Instantiate the view object
-			$classname = ucfirst($renderer) . 'View';
-			
-			return new $classname();
+			require_once($path);
+			$class = ucfirst($renderer) . 'View';
+			$renderer = new $class();
+
+			Profiler::store('class', $class, 'system/class');
+			Profiler::store('location', $path, 'system/resource action/executed');
+
+			return $renderer;
 		}
 
 		/**
@@ -111,7 +114,7 @@
 		*/
 		public function renderView() {
 			// Set URL
-			$this->url = getCurrentPage();
+			$this->url = CURRENT_PATH;
 
 			// Create view
 			$this->View = $this->createView();
@@ -121,6 +124,9 @@
 
 			// Initialize context
 			$this->initializeContext();
+
+			// Allow Devkits to take control before any rendering occurs:
+			boot\devkit('ExecuteEarlyDevKit');
 
 			// Tell the view to build its output
 			$output = $this->View->buildOutput();

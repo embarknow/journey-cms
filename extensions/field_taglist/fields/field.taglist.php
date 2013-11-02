@@ -7,7 +7,7 @@
 			$this->_name = __('Tag List');
 
 			$this->{'suggestion-source-threshold'} = 2;
-			$this->{'tag-delimiter'} = ',';
+			$this->{'delimiter'} = ',';
 			$this->{'suggestion-list-include-existing'} = false;
 
 		}
@@ -125,7 +125,7 @@
 		}
 
 		public function __tagArrayToString(array $tags){
-			return (!empty($tags)) ? implode($this->{'tag-delimiter'} . ' ', $tags) : null;
+			return (!empty($tags)) ? implode($this->{'delimiter'} . ' ', $tags) : null;
 		}
 
 		public function applyValidationRules($data) {
@@ -190,7 +190,7 @@
 			$group->appendChild($label);
 
 			// Custom delimiter
-			$input = Widget::Input('delimiter', $this->{'tag-delimiter'});
+			$input = Widget::Input('delimiter', $this->{'delimiter'});
 			$label = Widget::Label(__('Tag Delimiter'), $input);
 			$group->appendChild($label);
 
@@ -208,31 +208,34 @@
 			$wrapper->appendChild($options_list);
 		}
 
-		public function loadSettingsFromSimpleXMLObject(SimpleXMLElement $xml){
-
+		public function loadSettingsFromSimpleXMLObject(SimpleXMLElement $xml) {
 			$suggestion_list_source = array();
-			if(isset($xml->{'suggestion-list-source'})){
+			$suggestion_list_existing = false;
 
-				if(isset($xml->{'suggestion-list-source'}->attributes()->{'include-existing'})){
-					$this->{'suggestion-list-include-existing'} =
-						(string)$xml->{'suggestion-list-source'}->attributes()->{'include-existing'} == 'yes'
+			if (isset($xml->{'suggestion-list-source'})) {
+				if (isset($xml->{'suggestion-list-source'}->attributes()->{'include-existing'})) {
+					$suggestion_list_existing =
+						(string)$xml->{'suggestion-list-source'}
+							->attributes()
+							->{'include-existing'} == 'yes'
 							? true
 							: false;
 				}
 
-				foreach($xml->{'suggestion-list-source'}->item as $item){
+				foreach ($xml->{'suggestion-list-source'}->item as $item) {
 					$key = sprintf('%s::%s', (string)$item->attributes()->section, (string)$item->attributes()->field);
 					$suggestion_list_source[$key] = array((string)$item->attributes()->section, (string)$item->attributes()->field);
 				}
 			}
+
 			unset($xml->{'suggestion-list-source'});
 
-
-			foreach($xml as $property_name => $property_value){
+			foreach ($xml as $property_name => $property_value) {
 				$data[(string)$property_name] = (string)$property_value;
 			}
 
 			$this->{'suggestion-list-source'} = $suggestion_list_source;
+			$this->{'suggestion-list-include-existing'} = $suggestion_list_existing;
 
 			// Set field GUID:
 			if (isset($xml->attributes()->guid) and trim((string)$xml->attributes()->guid) != '') {
@@ -344,8 +347,19 @@
 
 			$data = General::array_remove_duplicates($data, true);
 
+			if ($this->{'required'} == 'yes' and empty($data)) {
+				$errors->append(
+					null, (object)array(
+					 	'message' => __("'%s' is a required field.", array($this->{'publish-label'})),
+						'code' => self::ERROR_MISSING
+					)
+				);
+
+				return self::STATUS_ERROR;
+			}
+
 			foreach($data as $tag) {
-				if ($this->{'required'} == 'yes' and strlen(trim($data->value)) == 0) {
+				if ($this->{'required'} == 'yes' and strlen(trim($tag)) == 0) {
 					$errors->append(
 						null, (object)array(
 						 	'message' => __("'%s' is a required field.", array($this->{'publish-label'})),
@@ -356,9 +370,9 @@
 					return self::STATUS_ERROR;
 				}
 
-				if (!isset($data->value)) return self::STATUS_OK;
+				if (!isset($tag)) return self::STATUS_OK;
 
-				if (!$this->applyValidationRules($data->value)) {
+				if (!$this->applyValidationRules($tag)) {
 					$errors->append(
 						null, (object)array(
 						 	'message' => __("'%s' contains invalid data. Please check the contents.", array($this->{'publish-label'})),
@@ -405,7 +419,7 @@
 			Output:
 		-------------------------------------------------------------------------*/
 
-	    public function toDoc() {
+	    	public function toDoc() {
 			$suggestion_list_source = NULL;
 			if(isset($this->properties->{'suggestion-list-source'}) && is_array($this->properties->{'suggestion-list-source'})){
 				$suggestion_list_source = $this->properties->{'suggestion-list-source'};
@@ -435,7 +449,17 @@
 			}
 
 			return $doc;
-	    }
+	    	}
+
+	    	public function getParameterOutputValue($data, Entry $entry=NULL) {
+
+
+	    		foreach($data as $tag){
+	    			$tags[] = $tag->handle;
+	    		}
+
+			return $tags;
+		}
 
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false){
 			return parent::loadDataFromDatabase($entry, true);
@@ -482,7 +506,6 @@
 				$this->prepopulateSource($div);
 			}
 		}
-
 	}
 
-	return 'fieldTagList';
+	return 'FieldTagList';

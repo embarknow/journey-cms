@@ -74,11 +74,21 @@
 			$this->event = $this->handle = $this->status = $this->type = NULL;
 			$this->types = array();
 
+<<<<<<< HEAD:symphony/content/framework/events/events.driver.php
 			foreach (new ExtensionIterator(ExtensionIterator::FLAG_TYPE, array('Event')) as $extension) {
 				$path = Extension::getPathFromClass(get_class($extension));
 				$handle = Extension::getHandleFromPath($path);
 
 				if (Extension::status($handle) != Extension::STATUS_ENABLED) continue;
+=======
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::TYPE =>		'Event',
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
+
+			foreach ($extensions as $extension) {
+>>>>>>> stable:symphony/content/content.blueprintsevents.php
 				if (!method_exists($extension, 'getEventTypes')) continue;
 
 				foreach ($extension->getEventTypes() as $type) {

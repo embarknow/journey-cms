@@ -2,31 +2,41 @@
 
 	require_once('class.errorhandler.php');
 
-	Class DatabaseException extends Exception{
+	class DatabaseException extends Exception {
 		private $error;
 
-		public function __construct($message, array $error=NULL){
+		public function __construct($message, array $error = null) {
 			parent::__construct($message);
 			$this->error = $error;
 		}
 
 		public function getQuery(){
-			return (isset($this->error['query']) ? $this->error['query'] : NULL);
+			return (
+				isset($this->error['query'])
+					? $this->error['query']
+					: null
+			);
 		}
 
-		public function getDatabaseErrorMessage(){
-			return (isset($this->error['message']) ? $this->error['message'] : $this->getMessage());
+		public function getDatabaseErrorMessage() {
+			return (
+				isset($this->error['message'])
+					? $this->error['message']
+					: $this->getMessage()
+			);
 		}
 
-		public function getDatabaseErrorCode(){
-			return (isset($this->error['code']) ? $this->error['code'] : NULL);
+		public function getDatabaseErrorCode() {
+			return (
+				isset($this->error['code'])
+					? $this->error['code']
+					: null
+			);
 		}
 	}
 
-	Class DatabaseExceptionHandler extends GenericExceptionHandler{
-
-		public static function render($e){
-
+	class DatabaseExceptionHandler extends GenericExceptionHandler{
+		public static function render($e) {
 			require_once('class.xslproc.php');
 
 			$xml = new DOMDocument('1.0', 'utf-8');
@@ -41,7 +51,6 @@
 				$details->appendChild($xml->createElement('query', General::sanitize($e->getQuery())));
 			}
 			$root->appendChild($details);
-
 
 			$trace = $xml->createElement('backtrace');
 
@@ -59,12 +68,10 @@
 			}
 			$root->appendChild($trace);
 
-			if(is_object(Symphony::Database()) && method_exists(Symphony::Database(), 'log')){
-
+			if (is_object(Symphony::Database()) && method_exists(Symphony::Database(), 'log')) {
 				$query_log = Symphony::Database()->log();
 
-				if(count($query_log) > 0){
-
+				if (count($query_log) > 0) {
 					$queries = $xml->createElement('query-log');
 
 					$query_log = array_reverse($query_log);
@@ -78,49 +85,32 @@
 
 					$root->appendChild($queries);
 				}
-
 			}
 
 			return parent::__transform($xml, 'exception.database.xsl');
 		}
 	}
 
-	Abstract Class Database{
+	abstract Class Database {
 		const UPDATE_ON_DUPLICATE = 1;
 
-	    private $_props;
-	    protected $_connection;
-		protected $_last_query;
-
-	    public function __set($name, $value){
-	        $this->_props[$name] = $value;
-	    }
-
-	    public function __get($name){
-	        if(isset($this->_props[$name])) return $this->_props[$name];
-			return null;
-	    }
+		protected $connection;
 
 		abstract public function close();
 		abstract public function escape($string);
 		abstract public function connect($string);
-		abstract public function select($database);
 		abstract public function insert($table, array $fields, $flag = null);
 		abstract public function update($table, array $fields, array $values=NULL, $where = null);
 		abstract public function delete($table, array $values=NULL, $where = null);
 		abstract public function query($query);
 		abstract public function truncate($table);
-		abstract public function lastError();
 		abstract public function connected();
-
 	}
 
-	Abstract Class DatabaseResultIterator implements Iterator{
-
+	abstract Class DatabaseResultIterator implements Iterator {
 		const RESULT_ARRAY = 0;
 		const RESULT_OBJECT = 1;
 
-		protected $_db;
 		protected $_result;
 		protected $_position;
 		protected $_lastPosition;
@@ -129,17 +119,14 @@
 
 		public $resultOutput;
 
-		public function __construct(&$db, $result){
-			$this->_db = $db;
+		public function __construct($result) {
 			$this->_result = $result;
-
 			$this->_position = 0;
-			$this->_lastPosition = NULL;
-
-			$this->_current = NULL;
+			$this->_lastPosition = null;
+			$this->_current = null;
 		}
 
-		public function next(){
+		public function next() {
 			$this->_position++;
 		}
 
@@ -147,7 +134,7 @@
 			$this->_position = $offset;
 		}
 
-		public function position(){
+		public function position() {
 			return $this->_position;
 		}
 
@@ -155,131 +142,104 @@
 			$this->_position = 0;
 		}
 
-		public function key(){
+		public function key() {
 			return $this->_position;
 		}
 
-		public function length(){
+		public function length() {
 			return $this->_length;
 		}
 
-		public function valid(){
+		public function valid() {
 			return $this->_position < $this->_length;
 		}
 
-		public function resultColumn($column){
-			$result = array();
+		public function resultColumn($column) {
 			$this->rewind();
 
-			if(!$this->valid()) return false;
+			if ($this->valid() === false) return false;
 
+			$result = array();
 			$this->resultOutput = DatabaseResultIterator::RESULT_OBJECT;
 
-			foreach($this as $r) $result[] = $r->$column;
+			foreach ($this as $r) {
+				$result[] = $r->$column;
+			}
 
 			$this->rewind();
+
 			return $result;
 		}
 
-		public function resultValue($key, $offset=0){
+		public function resultValue($key, $offset = 0) {
+			if ($offset == 0) {
+				$this->rewind();
+			}
 
-			if($offset == 0) $this->rewind();
-			else $this->offset($offset);
+			else {
+				$this->offset($offset);
+			}
 
-			if(!$this->valid()) return false;
+			if ($this->valid() === false) return false;
 
 			$this->resultOutput = DatabaseResultIterator::RESULT_OBJECT;
 
 			return $this->current()->$key;
-
 		}
-
 	}
 
-	Class DBCMySQLResult extends DatabaseResultIterator{
+	class DBCMySQLResult extends DatabaseResultIterator {
+		public function __construct(PDOStatement $result) {
+			parent::__construct($result);
 
-		public function __construct(Database $db, $result){
-			parent::__construct($db, $result);
-
-			if(!is_resource($this->_result)) throw new DatabaseException("Not a valid MySQL Resource.");
-
-			$this->_length = (integer)mysql_num_rows($this->_result);
+			$this->_length = (integer)$result->rowCount();
 
 			$this->resultOutput = self::RESULT_OBJECT;
 		}
 
-		public function __destruct(){
-			if(is_resource($this->_result)) mysql_free_result($this->_result);
-		}
-
-		public function current(){
-			// TODO: Finalise Exception Message
+		public function current() {
 			if ($this->_length == 0) {
 				throw new DatabaseException('Cannot get current, no data returned.');
 			}
 
-			if($this->_lastPosition != NULL && $this->position() != ($this->_lastPosition + 1)){
-				mysql_data_seek($this->_result, $this->position());
-			}
-
-			$this->_current = ($this->resultOutput == self::RESULT_OBJECT
-				? mysql_fetch_object($this->_result)
-				: mysql_fetch_assoc($this->_result)
+			$this->_current = (
+				$this->resultOutput == self::RESULT_OBJECT
+					? $this->_result->fetch(PDO::FETCH_OBJ, PDO::FETCH_ORI_ABS, $this->position())
+					: $this->_result->fetch(PDO::FETCH_ASSOC, PDO::FETCH_ORI_ABS, $this->position())
 			);
 
 			return $this->_current;
 		}
 
-		public function rewind(){
-			// TODO: Finalise Exception Message
-			if($this->_length == 0) throw new DatabaseException('Cannot rewind, no data returned.');
-
-			mysql_data_seek($this->_result, 0);
+		public function rewind() {
+			if ($this->_length == 0) {
+				throw new DatabaseException('Cannot rewind, no data returned.');
+			}
 
 			$this->_position = 0;
 		}
-
 	}
 
-	Class DBCMySQL extends Database{
-	    protected $log;
+	class DBCMySQL extends Database {
+		protected $log;
 		protected $query_caching = false;
-		protected static $queries = 0;
+		protected $lastException;
+		protected $lastQuery;
 
-	    protected function handleError($query) {
-			$message = @mysql_error();
-			$code = @mysql_errno();
+		public function connected() {
+			return $this->connection instanceof PDO;
+		}
 
-			$this->log['error'][] = array(
-				'query'	=> $query,
-				'message'	=> $message,
-				'code'	=> $code
-			);
+		public function prepare($statement, array $driver_options = array()) {
+			return $this->connection->prepare($statement, $driver_options);
+		}
 
-			throw new DatabaseException(
-				__(
-					'MySQL Error (%1$s): %2$s in query "%3$s"',
-					array($code, $message, $query)
-				),
-				end($this->log['error'])
-			);
-	    }
-
-	    public function connected(){
-	        if(is_resource($this->_connection)) return true;
-			return false;
-	    }
-
-	    public function affectedRows(){
-	        return @mysql_affected_rows($this->_connection);
-	    }
-
-		public function prepareQuery($query, array $values=NULL){
+		public function prepareQuery($query, array $values = null) {
 			if ($this->prefix != 'tbl_') {
 				$query = preg_replace('/tbl_([^\b`]+)/i', $this->prefix . '\\1', $query);
 			}
 
-			if(is_array($values) && !empty($values)){
+			if (is_array($values) && empty($values) === false) {
 				// Sanitise values:
 				$values = array_map(array($this, 'escape'), $values);
 
@@ -294,67 +254,51 @@
 			return $query;
 		}
 
-	    public function connect($string, $resource=NULL){
-
-			/*
-				stdClass Object
-				(
-				    [scheme] => mysql
-				    [host] => localhost
-				    [port] => 8889
-				    [user] => root
-				    [pass] => root
-				    [path] => symphony
-				)
-			*/
-
+		public function connect($string) {
 			$details = (object)parse_url($string);
 			$details->path = trim($details->path, '/');
-			
-			if(!isset($details->pass)) $details->pass = '';
+			$conf = Symphony::Configuration()->{'db'}();
 
-	        if(is_null($details->path)) throw new DatabaseException('MySQL database not selected');
+			$string = sprintf(
+				'mysql:host=%s;port=%s;dbname=%s',
+				$details->host,
+				$details->port,
+				$details->path
+			);
 
-	        if(is_null($details->host)) throw new DatabaseException('MySQL hostname not set');
-
-			if(isset($resource) && is_resource($resource)){
-				$this->_connection = $resource;
+			// Already connected:
+			if (isset($this->connection)) {
 				return true;
 			}
 
-	        $this->_connection = @mysql_connect($details->host . ':' . $details->port, $details->user, $details->pass);
+			// Establish new connection:
+			try {
+				$this->connection = new PDO($string, $details->user, $details->pass, array(
+					PDO::ATTR_ERRMODE =>					PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_DEFAULT_FETCH_MODE =>			PDO::FETCH_OBJ,
+					PDO::ATTR_PERSISTENT =>					false,
+					PDO::MYSQL_ATTR_INIT_COMMAND =>			"SET NAMES utf8; SET time_zone = '+00:00'",
+					PDO::MYSQL_ATTR_USE_BUFFERED_QUERY =>	true
+				));
 
-	        if($this->_connection === false){
+				if ($conf->{'disable-query-caching'} == "no") {
+					$this->query_caching = true;
+				}
+			}
+
+			catch (PDOException $e) {
 				throw new DatabaseException('There was a problem whilst attempting to establish a database connection. Please check all connection information is correct.');
 			}
 
-	        $this->select($details->path);
-
-			if(Symphony::Configuration()->{'db'}()->{'disable-query-caching'} == "no") {
-				$this->query_caching = true;
-			}
-
-		    if(!is_null($this->character_encoding)) $this->query("SET CHARACTER SET '{$this->character_encoding}'");
-		    if(!is_null($this->character_set)) $this->query("SET NAMES '{$this->character_set}'");
-
-			$this->query("SET time_zone = '+00:00'");
-	    }
-
-	    public function close(){
-			if(isset($this->_connection)) {
-				mysql_close($this->_connection);
-		        $this->_connection = null;
-			}
-	    }
-
-		public function escape($string){
-			return (function_exists('mysql_real_escape_string')
-						? mysql_real_escape_string($string, $this->_connection)
-						: addslashes($string));
+			return true;
 		}
 
-		public function select($database){
-			if(!mysql_select_db($database, $this->_connection)) throw new DatabaseException('Could not select database "'.$database.'"');
+		public function close() {
+			$this->connection = null;
+		}
+
+		public function escape($string) {
+			return substr($this->connection->quote($string), 1, -1);
 		}
 
 		public function insert($table, array $fields, $flag = null) {
@@ -364,6 +308,7 @@
 				if (strlen($value) == 0) {
 					$sets[] = "`{$key}` = NULL";
 				}
+
 				else {
 					$values[] = $value;
 					$sets[] = "`{$key}` = '%" . count($values) . '$s\'';
@@ -378,7 +323,7 @@
 
 			$this->query($query, $values, null, false);
 
-			return mysql_insert_id($this->_connection);
+			return $this->connection->lastInsertId();
 		}
 
 		public function update($table, array $fields, array $values = null, $where = null) {
@@ -388,6 +333,7 @@
 				if (strlen($value) == 0) {
 					$sets[] = "`{$key}` = NULL";
 				}
+
 				else {
 					$set_values[] = $value;
 					$sets[] = "`{$key}` = '%s'";
@@ -414,133 +360,78 @@
 			return $this->query("TRUNCATE TABLE `{$table}`", array(), null, false);
 		}
 
-	    public function query($query, array $values = null, $returnType = null, $buffer = true) {
-	        if (!$this->connected()) throw new DatabaseException('No Database Connection Found.');
-			
-			if (is_null($returnType)) {
-				$returnType = 'DBCMySQLResult';
+		public function query($query, array $values = null, $return_type = null, $buffer = true) {
+			if (!$this->connected()) throw new DatabaseException('No Database Connection Found.');
+
+			if (is_null($return_type)) {
+				$return_type = 'DBCMySQLResult';
 			}
-			
+
 			$query = $this->prepareQuery($query, $values);
-			$this->_last_query = $query;
-			
+			$this->lastException = null;
+			$this->lastQuery = $query;
+
 			if ($buffer) {
-				$result = mysql_query($query, $this->_connection);
+				$this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 			}
-			
+
 			else {
-				$result = mysql_unbuffered_query($query, $this->_connection);
+				$this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 			}
 
-			self::$queries++;
+			try {
+				Profiler::begin('Executing database query');
+				Profiler::store('query', $query, 'system/database-query action/executed data/sql text/sql');
+				$result = $this->connection->query($query);
+				Profiler::end();
+			}
 
-			if ($result === false) $this->handleError($query);
+			catch (PDOException $e) {
+				Profiler::store('exception', $e->getMessage(), 'system/exeption');
+				Profiler::end();
 
-			if (!is_resource($result)) return $result;
+				$this->lastException = $e;
 
-	        return new $returnType($this, $result);
-	    }
+				$this->log['error'][] = array(
+					'query' =>		$query,
+					'message' =>	$e->getMessage(),
+					'code' =>		$e->getCode()
+				);
 
-		public function cleanFields(array $array){
+				throw new DatabaseException(
+					__(
+						'MySQL Error (%1$s): %2$s in query "%3$s"',
+						array($e->getCode(), $e->getMessage(), $query)
+					),
+					end($this->log['error'])
+				);
+			}
 
-			foreach($array as $key => $val){
+			return new $return_type($result);
+		}
+
+		public function cleanFields(array $array) {
+			foreach ($array as $key => $val) {
 				$array[$key] = (strlen($val) == 0 ? 'NULL' : "'".$this->escape(trim($val))."'");
 			}
 
 			return $array;
 		}
 
-		public function lastInsertID(){
-			return mysql_insert_id($this->_connection);
+		public function lastInsertId() {
+			return $this->connection->lastInsertId();
 		}
 
-		public function lastError(){
+		public function lastError() {
 			return array(
-				mysql_errno(),
-				($this->connected() ? mysql_error($this->_connection) : mysql_error()),
-				$this->lastQuery()
+				$this->lastException->getCode(),
+				$this->lastException->getMessage(),
+				$this->lastQuery
 			);
 		}
 
-		public function lastQuery(){
-			return $this->_last_query;
+
+		public function lastQuery() {
+			return $this->lastQuery;
 		}
-
-		public function debug() {
-			// TODO: This function/look at moving it to Profiler based.
-		}
-
-		public function getLastError() {
-			// TODO: This function
-		}
-	}
-
-	/*
-	**	Look at removing/altering/fixing this ..
-	*/
-	Final Class DBCMySQLProfiler extends DBCMySQL{
-
-		private static $query_log;
-
-		private static function __precisionTimer($action = 'start', $start_time = null){
-			return precision_timer($action, $start_time);
-		}
-
-		public function log(){
-			return self::$query_log;
-		}
-
-		public function queryCount(){
-			return count(self::$query_log);
-		}
-
-		public function slowQueryCount($threshold){
-
-			$total = 0;
-
-			foreach(self::$query_log as $q){
-				if((float)$q->time > $threshold) $total++;
-			}
-
-			return $total;
-		}
-
-		public function slowQueries($threshold){
-
-			$queries = array();
-
-			foreach(self::$query_log as $q){
-				if((float)$q->time > $threshold) $queries[] = $q;
-			}
-
-			return $queries;
-		}
-
-
-		public function queryTime(){
-
-			$total = 0.0;
-
-			foreach(self::$query_log as $q){
-				$total += (float)$q[1];
-			}
-
-			return number_format((float)$total, 4, '.', ',');
-		}
-
-		public function query($query, array $values=NULL, $returnType='DBCMySQLResult'){
-
-			$start = self::__precisionTimer();
-			$result = parent::query($query, $values, $returnType);
-			$query = preg_replace(array('/[\r\n]/', '/\s{2,}/'), ' ', $query);
-
-			if(!is_array(self::$query_log)){
-				self::$query_log = array();
-			}
-
-			self::$query_log[] = (object)array('query' => $query, 'time' => self::__precisionTimer('stop', $start));
-
-			return $result;
-		}
-
 	}

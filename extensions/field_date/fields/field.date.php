@@ -138,9 +138,54 @@
 		Input:
 	-------------------------------------------------------------------------*/
 
-		public function processData($data, Entry $entry=NULL){
+		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false) {
+			try {
+				$rows = Symphony::Database()->query(
+					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` = %s AND `value` IS NOT NULL ORDER BY `id` ASC",
+					array(
+						$entry->section,
+						$this->{'element-name'},
+						$entry->id
+					)
+				);
 
-			if(isset($entry->data()->{$this->{'element-name'}})){
+				return $rows->current();
+			}
+
+			catch (DatabaseException $e) {
+				// Oh oh....no data. oh well, have a smoke and then return
+			}
+		}
+
+		public function loadDataFromDatabaseEntries($section, $entry_ids) {
+			$result = array();
+
+			try {
+				$rows = Symphony::Database()->query(
+					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` IN (%s) AND `value` IS NOT NULL ORDER BY `id` ASC",
+					array(
+						$section,
+						$this->{'element-name'},
+						implode(',', $entry_ids)
+					)
+				);
+
+				foreach($rows as $r){
+					$result[] = $r;
+				}
+
+				return $result;
+			}
+
+			catch (DatabaseException $e) {
+				return $result;
+			}
+		}
+
+		public function processData($data, Entry $entry=NULL){
+			$timestamp = null;
+
+			if (isset($entry->data()->{$this->{'element-name'}})){
 				$result = $entry->data()->{$this->{'element-name'}};
 			}
 
@@ -150,24 +195,23 @@
 				);
 			}
 
-			if(is_null($data) || strlen(trim($data)) == 0){
-
-				$result->value = NULL;
+			if (is_null($data) || strlen(trim($data)) == 0) {
+				$result->value = null;
 
 				if ($this->{'pre-populate'} == 'yes') {
 					$timestamp = strtotime(DateTimeObj::get('c', null));
 				}
 			}
 
-			else{
+			else {
 				$timestamp = strtotime($data);
 			}
 
-			if(!is_null($timestamp) && $timestamp !== false){
+			if (is_null($timestamp) === false && $timestamp !== false) {
 				$result->value = DateTimeObj::getGMT('Y-m-d H:i:s', $timestamp);
 			}
 
-			else{
+			else {
 				$result->value = $data;
 			}
 
@@ -200,6 +244,26 @@
 		Output:
 	-------------------------------------------------------------------------*/
 
+		public function fetchIncludableElements() {
+			return array(
+				array(
+					'handle'	=> $this->{'element-name'},
+					'name'		=> $this->name,
+					'mode'		=> null
+				),
+				array(
+					'handle'	=> $this->{'element-name'} . ': unix-timestamp',
+					'name'		=> $this->name,
+					'mode'		=> 'Unix Timestamp'
+				),
+				array(
+					'handle'	=> $this->{'element-name'} . ': unix-timestamp-gmt',
+					'name'		=> $this->name,
+					'mode'		=> 'Unix Timestamp GMT'
+				)
+			);
+		}
+
 		public function prepareTableValue(StdClass $data, SymphonyDOMElement $link=NULL) {
 			$value = null;
 
@@ -213,7 +277,7 @@
 
 		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry=NULL) {
 			if (isset($data->value) && !is_null($data->value)) {
-				if ($mode == 'gmt') {
+				if ($mode == 'gmt' || $mode == 'unix-timestamp-gmt') {
 					$timestamp = strtotime($data->value);
 				}
 
@@ -221,9 +285,18 @@
 					$timestamp = DateTimeObj::toGMT($data->value);
 				}
 
-				$wrapper->appendChild(General::createXMLDateObject(
-					$wrapper->ownerDocument, $timestamp, $this->{'element-name'}
-				));
+				if ($mode == 'unix-timestamp' || $mode == 'unix-timestamp-gmt') {
+					$document = $wrapper->ownerDocument;
+					$element = $document->createElement($this->{'element-name'});
+					$element->setAttribute('unix-timestamp', $timestamp);
+					$wrapper->appendChild($element);
+				}
+
+				else {
+					$wrapper->appendChild(General::createXMLDateObject(
+						$wrapper->ownerDocument, $timestamp, $this->{'element-name'}
+					));
+				}
 			}
 		}
 
@@ -283,8 +356,6 @@
 			$db = Symphony::Database();
 			$statements = array();
 
-			if (!is_array($values)) $values = array();
-
 			// Exact matches:
 			switch ($filter->type) {
 				case 'is':						$operator = '='; break;
@@ -322,15 +393,7 @@
 
 			if (empty($statements)) return true;
 
-			if ($filter_join == DataSource::FILTER_OR) {
-				$statement = "(\n\t" . implode("\n\tOR ", $statements) . "\n)";
-			}
-
-			else {
-				$statement = "(\n\t" . implode("\n\tAND ", $statements) . "\n)";
-			}
-
-			$where[] = $statement;
+			$where[] = "(\n\t" . implode("\n\tAND ", $statements) . "\n)";
 
 			return true;
 		}
@@ -369,9 +432,7 @@
 			}
 
 			return $groups;
-
 		}
-
 	}
 
-	return 'fieldDate';
+	return 'FieldDate';

@@ -2,11 +2,11 @@
 
 	Class DocumentHeaders{
 		protected $headers;
-	
+
 		public function __construct(array $headers=array()){
 			$this->headers = $headers;
 		}
-	
+
 		public function append($name, $value=NULL){
 			$this->headers[strtolower($name)] = $name . (is_null($value) ? NULL : ": {$value}");
 		}
@@ -18,7 +18,7 @@
 				header($value);
 			}
 		}
-	
+
 		public function headers(){
 			return $this->headers;
 		}

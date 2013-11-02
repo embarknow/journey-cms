@@ -1,422 +1,122 @@
 <?php
 
-	require_once(LIB . '/class.mutex.php');
+	require_once LIB . '/class.mutex.php';
 
-	Class CacheResult{
-		private $data;
-		private $expiry;
-		private $creation;
-		private $key;
+	class Cache {
+		/**
+		 * The directory where cache files.
+		 */
+		static protected $directory = CACHE;
 
-		public function __get($name){
-			return $this->$name;
+		/**
+		 * The unique ID currently loaded.
+		 */
+		static protected $unique;
+
+		/**
+		 * The cache belongs to the Symphony core.
+		 */
+		const SOURCE_CORE = 'symphony';
+
+		/**
+		 * The cache belongs to an extension.
+		 */
+		const SOURCE_EXTENSION = 'extensions';
+
+		/**
+		 * Cache storage key.
+		 */
+		protected $key;
+
+		/**
+		 * Cache time to live.
+		 */
+		protected $ttl;
+
+		/**
+		 * Set the current working cache directory.
+		 *
+		 * @param	string	$directory
+		 *
+		 * @throws	InvalidArgumentException
+		 */
+		static public function setDirectory($directory = CACHE) {
+			$found = realpath($directory);
+
+			if ($found === false) {
+				throw new InvalidArgumentException(sprintf(
+					'Directory not found "%s".',
+					$directory
+				));
+			}
+
+			self::$directory = $found;
 		}
 
-		public function __construct($data, $key=NULL, $creation=NULL, $expiry=NULL){
-			$this->data = $data;
-			$this->key = $key;
-			$this->creation = $creation;
-			$this->expiry = $expiry;
-		}
-	}
+		/**
+		 * Create a new cache object.
+		 *
+		 * @param	string	$source
+		 *	One of `SOURCE_CORE` or `SOURCE_EXTENSION`.
+		 * @param	string	$role
+		 *	Handlised description of the cache.
+		 * @param	integer	$ttl
+		 *	Number of seconds to cache for.
+		 * @param	string	$unique
+		 *	A unique identifier used to namespace caches between sites.
+		 */
+		public function __construct($source, $role, $ttl = 3600, $unique = null) {
+			if ($unique === null) {
+				if (isset(self::$unique)) {
+					$unique = self::$unique;
+				}
 
-	Interface iCacheDriver{
-		public function read($key);
-		public function write($key, $data, $ttl=NULL);
-		public function delete($key);
-		public function purge();
-	}
+				if (is_file(self::$directory . '/id.cache')) {
+					self::$unique = $unique = file_get_contents(self::$directory . '/id.cache');
+				}
 
-	// 	TODO: Test, ensure read returns false on failure
-	Final Class CacheDriverMemcache implements iCacheDriver{
+				else {
+					self::$unique = $unique = uniqid();
 
-		static $_connection;
+					file_put_contents(self::$directory . '/id.cache', uniqid());
+				}
+			}
 
-		public function __construct(){
-			self::$_connection = new Memcache;
-			self::$_connection->connect('localhost', 11211);
-		}
-
-		public function __destruct(){
-			self::$_connection->close();
-			unset(self::$_connection);
-		}
-
-		public function read($key){
-			return self::$_connection->get($key);
-		}
-
-		public function write($key, $data, $ttl=NULL){
-			$data = new CacheResult($data, $key, time());
-			return self::$_connection->set($key, $data, MEMCACHE_COMPRESSED, $ttl);
+			$this->key = sprintf('%s,%s,%s', $source, $role, $unique);
+			$this->ttl = $ttl;
 		}
 
-		public function delete($key){
-			self::$_connection->delete($key);
+		public function __get($key) {
+			if (isset($this->{$key}) === false) {
+				return null;
+			}
+
+			return apc_fetch($this->key . ',' . $key);
 		}
 
-		public function purge(){
-			return self::$_connection->flush();
+		public function __isset($key) {
+			return apc_fetch($this->key . ',' . $key) !== false;
 		}
 
-	}
+		public function __set($key, $value) {
+			return apc_store($this->key . ',' . $key, $value, $this->ttl);
+		}
 
-	## Dummy driver. This is used as a simple way to totally disable the cache
-	Final Class CacheDriverNone{
-		public function __call($name, $args){
-			if($name == 'read') return false;
+		public function __unset($key) {
+			apc_delete($this->key . ',' . $key);
+		}
+
+		/**
+		 * Purge all caches belonging to this object.
+		 */
+		public function purge() {
+			apc_cache_search(
+				sprintf('/^%s/', preg_quote($this->key)),
+				function($item) {
+					apc_delete($item['info']);
+				}
+			);
+
 			return true;
 		}
 	}
-
-	Final Class CacheDriverAPC implements iCacheDriver{
-
-		public function read($key){
-			$success = NULL;
-			$result = apc_fetch($key, $success);
-
-			return ($success === true) ? $result : false;
-		}
-
-		public function write($key, $data, $ttl=NULL){
-			$data = new CacheResult($data, $key, time());
-
-			return apc_store($key, $data, $ttl);
-		}
-
-		public function delete($key){
-			return apc_delete($key);
-		}
-
-		public function purge(){
-			return apc_clear_cache('user');
-		}
-
-	}
-
-	Final Class CacheDriverFile implements iCacheDriver{
-
-		public function read($key, $encode = true){
-			if($encode) {
-				$cache_file = CACHE . '/' . md5($key) . '.cache';
-			}
-			else {
-				$cache_file = CACHE . '/' . $key . '.cache';
-			}
-
-			if(file_exists($cache_file)) {
-				$data = self::__decompress(file_get_contents($cache_file));
-
-				if($data === false)	Cache::delete($key, $encode);
-
-				return $data;
-			}
-			else {
-				return false;
-			}
-		}
-
-		public function write($key, $data, $encode = true, $ttl=NULL){
-			if($encode) {
-				$ekey = md5($key);
-			}
-			else {
-				$ekey = $key;
-			}
-
-			if(!Mutex::acquire($ekey, 2, TMP)) return;
-			$data = new CacheResult($data, $key, time());
-
-			$cache_file = CACHE . '/' . $ekey . '.cache';
-
-			file_put_contents($cache_file, self::__compress($data, $ttl));
-			Mutex::release($ekey, TMP);
-		}
-
-		public function delete($key, $encode = true){
-			if($encode) {
-				$cache_file = CACHE . '/' . md5($key) . '.cache';
-			}
-			else {
-				$cache_file = CACHE . '/' . $key . '.cache';
-			}
-
-			if(file_exists($cache_file)) unlink($cache_file);
-		}
-
-		public function purge(){
-			foreach(new DirectoryIterator(CACHE) as $file){
-				if($file->isDot() || $file->isDir() || !preg_match('/^[a-f0-9]{32}\.cache$/i', $file->getFilename())) continue;
-				unlink(CACHE . '/' . $file->getFilename());
-			}
-		}
-
-		private static function __decompress($data){
-
-			if(!preg_match('/^(0|1)::([a-f0-9]{32})::(-?\d+)\r\n\r\n(.*)/i', $data, $matches)) return false;
-
-			list($original, $serialize_bit, $checksum, $ttl, $data) = $matches;
-
-			$data = @gzuncompress(@base64_decode($matches[4]));
-
-			if(md5($data) != $checksum) return false;
-			elseif((integer)$ttl > 0 && $ttl <= time()) return false;
-
-			if((integer)$serialize_bit == 1) $data = unserialize($data);
-
-			return $data->data;
-		}
-
-		private static function __compress($data, $ttl=NULL){
-			$serialize_bit = '0';
-			if(is_array($data) || is_object($data)){
-				$data = serialize($data);
-				$serialize_bit = '1';
-			}
-
-			$checksum = md5($data);
-
-			if($ttl > 0) $ttl += time();
-			else $ttl = -1;
-
-			$data = "{$serialize_bit}::{$checksum}::{$ttl}\r\n\r\n" . @base64_encode(@gzcompress($data));
-
-			return $data;
-		}
-	}
-
-	//Final Class CacheDriverDB implements iCacheDriver{
-	//
-	//}
-
-	Class CacheException extends Exception{
-	}
-
-	Class Cache{
-
-	    static private $instance;
-		static private $driver;
-		static private $enabled;
-
-		static public function disable(){
-			self::$enabled = false;
-		}
-
-		static public function enable(){
-			self::$enabled = true;
-		}
-
-		static public function isEnabled(){
-			return (bool)self::$enabled;
-		}
-
-		private function __construct(){
-			self::enable();
-		}
-
-		static public function getDriver(){
-			return self::$driver;
-		}
-
-		static public function setDriver($driver){
-			$old = self::$driver;
-			self::$driver = $driver;
-			return $old;
-		}
-
-	    static public function instance($driver=NULL){
-
-			if(is_null($driver) && self::getDriver() == NULL) throw new CacheException('No cache driver was specified');
-			elseif(!is_null($driver) && $driver != self::getDriver()){
-				self::setDriver($driver);
-			}
-
-	        if(!(self::$instance instanceof Cache)){
-
-				$class = 'CacheDriver' . self::$driver;
-				if(!class_exists($class)){
-					throw new CacheException(__('The cache driver "%s" could not be found.', array(self::$driver)));
-				}
-				self::$instance = new $class;
-			}
-
-	        return self::$instance;
-	    }
-
-		/*public static function read($key){
-			if(!self::$enabled) return false;
-
-			return apc_fetch($key);
-		}
-
-		public static function write($key, $data, $ttl=NULL){
-			if(!self::$enabled) return;
-
-			return apc_store($key, $data, $ttl);
-		}
-
-		public static function delete($key){
-			if(!self::$enabled) return;
-
-			return apc_delete($key);
-		}
-
-		public static function purge(){
-			if(!self::$enabled) return;
-
-			return apc_clear_cache('user');
-		}
-		*/
-
-	/*	private static function __decompress($data){
-			if(!$data = @gzuncompress(@base64_decode($data))) return false;
-			return $data;
-		}
-
-		private static function __compress($data){
-			if(!$data = @base64_encode(@gzcompress($data))) return false;
-			return $data;
-		}*/
-
-
-		/*private function __optimise(){
-			Symphony::Database()->query('OPTIMIZE TABLE `tbl_cache`');
-		}
-
-		public function decompressData($data){
-			if(!$data = @gzuncompress(@base64_decode($data))) return false;
-			return $data;
-		}
-
-		public function compressData($data){
-			if(!$data = @base64_encode(@gzcompress($data))) return false;
-			return $data;
-		}
-
-		public function forceExpiry($identifier, $isID=false){
-			if(empty($identifier)) return;
-			Symphony::Database()->query("DELETE FROM `tbl_cache` WHERE `".($isID ? 'id' : 'hash')."` ".(is_array($identifier) ? "IN ('".@implode("','", $identifier)."')" : "= '$identifier' LIMIT 1"));
-			$this->clean();
-		}
-
-		public function clean(){
-			Symphony::Database()->query("DELETE FROM `tbl_cache` WHERE UNIX_TIMESTAMP() > `expiry`");
-			$this->__optimise();
-		}
-
-		public function check($hash){
-
-			if($records = Symphony::Database()->query("SELECT SQL_NO_CACHE * FROM `tbl_cache` WHERE `hash` = '$hash' AND (`expiry` IS NULL OR UNIX_TIMESTAMP() <= `expiry`) LIMIT 1")){
-
-				$c = $records->current();
-
-				if(!$c->data = $this->decompressData($c->data)){
-					$this->forceExpiry($hash);
-					return false;
-				}
-
-				return $c;
-
-			}
-
-			$this->clean();
-			return false;
-		}
-
-		public function write($hash, $data, $ttl=NULL){
-
-			if(!Mutex::acquire($hash, 2, TMP)) return;
-
-			$creation = time();
-			$expiry = NULL;
-
-			$ttl = intval($ttl);
-			if($ttl > 0) $expiry = $creation + $ttl;
-
-			if(!$data = $this->compressData($data)) return false;
-
-			$this->forceExpiry($hash);
-			$insert_id = Symphony::Database()->insert(array('hash' => $hash, 'creation' => $creation, 'expiry' => $expiry, 'data' => $data), 'tbl_cache');
-
-			Mutex::release($hash, TMP);
-
-			return $insert_id;
-
-		}*/
-
-	}
-
-/*
-
-	require_once(LIB . '/class.mutex.php');
-
-	##Interface for cacheable objects
-	Class Cacheable{
-
-		public $Database;
-
-		function __construct(MySQL $Database){
-			$this->Database = $Database;
-		}
-
-		private function __optimise(){
-			$this->Database->query('OPTIMIZE TABLE `tbl_cache`');
-		}
-
-		public function decompressData($data){
-			if(!$data = @gzuncompress(@base64_decode($data))) return false;
-			return $data;
-		}
-
-		public function compressData($data){
-			if(!$data = @base64_encode(@gzcompress($data))) return false;
-			return $data;
-		}
-
-		public function forceExpiry($hash){
-			$this->Database->query("DELETE FROM `tbl_cache` WHERE `hash` = '$hash' LIMIT 1");
-		}
-
-		public function clean(){
-			$this->Database->query("DELETE FROM `tbl_cache` WHERE UNIX_TIMESTAMP() > `expiry`");
-			$this->__optimise();
-		}
-
-		public function check($hash){
-
-			if($c = $this->Database->fetchRow(0, "SELECT SQL_NO_CACHE * FROM `tbl_cache` WHERE `hash` = '$hash' AND (`expiry` IS NULL OR UNIX_TIMESTAMP() <= `expiry`) LIMIT 1")){
-
-				if(!$c['data'] = $this->decompressData($c['data'])){
-					$this->forceExpiry($hash);
-					return false;
-				}
-
-				return $c;
-
-			}
-
-			$this->clean();
-			return false;
-		}
-
-		public function write($hash, $data, $ttl=NULL){
-
-			if(!Mutex::acquire($hash, 2, TMP)) return;
-
-			$creation = time();
-			$expiry = NULL;
-
-			$ttl = intval($ttl);
-			if($ttl > 0) $expiry = $creation + ($ttl * 60);
-
-			if(!$data = $this->compressData($data)) return false;
-
-			$this->forceExpiry($hash);
-			$this->Database->insert(array('hash' => $hash, 'creation' => $creation, 'expiry' => $expiry, 'data' => $data), 'tbl_cache');
-
-			Mutex::release($hash, TMP);
-
-		}
-
-	}
-*/

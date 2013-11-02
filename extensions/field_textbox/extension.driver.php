@@ -1,20 +1,31 @@
 <?php
 
-	class Extension_Field_TextBox implements iExtension {
+	class Extension_Field_TextBox implements ExtensionInterface {
 		public function about() {
 			return (object)array(
 				'name'			=> 'Text Box',
 				'version'		=> '2.0.17',
 				'release-date'	=> '2010-04-21',
 				'author'		=> (object)array(
-					'name'			=> 'Rowan Lewis',
-					'website'		=> 'http://rowanlewis.com/',
+					'name'			=> 'R&B Creative',
+					'website'		=> 'http://www.randb.com.au/',
 					'email'			=> 'me@rowanlewis.com'
 				),
 				'description' => 'An enhanced text input field.',
 				'type'			=> array(
 					'Field', 'Core'
 				),
+			);
+		}
+
+		public function getFieldTypes() {
+			require_once __DIR__ . '/fields/field.textbox.php';
+
+			return array(
+				(object)array(
+					'class'		=> 'FieldTextBox',
+					'name'		=> __('Text Box')
+				)
 			);
 		}
 

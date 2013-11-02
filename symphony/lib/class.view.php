@@ -1,8 +1,31 @@
 <?php
 
+	require_once(LIB . '/class.event.php');
 	require_once(LIB . '/class.documentheaders.php');
 
-	class ViewException extends Exception {}
+	Class ViewException extends Exception {}
+
+	Class ViewFilterIterator extends FilterIterator{
+		public function __construct($path=NULL, $recurse=true){
+			if(!is_null($path)) $path = VIEWS . '/' . trim($path, '/');
+			else $path = VIEWS;
+
+			parent::__construct(
+				$recurse == true
+					?	new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path), RecursiveIteratorIterator::SELF_FIRST)
+					:	new DirectoryIterator($path)
+			);
+
+		}
+
+		// Only return folders, and only those that have a 'X.config.xml' file within. This characterises a View.
+		public function accept(){
+			if($this->getInnerIterator()->isDir() == false) return false;
+			preg_match('/\/?([^\\\\\/]+)$/', $this->getInnerIterator()->getPathname(), $match); //Find the view handle
+
+			return (is_file(sprintf('%s/%s.config.xml', $this->getInnerIterator()->getPathname(), $match[1])));
+		}
+	}
 
 	/**
 	* Thought process: Views could stay simple and generic to allow for other
@@ -22,8 +45,7 @@
 			$this->headers->append('Last-Modified', gmdate('D, d M Y H:i:s') . ' GMT');
 			$this->headers->append('Cache-Control', 'no-cache, must-revalidate, max-age=0');
 			$this->headers->append('Pragma', 'no-cache');
-		}
-	}
+		}	}
 
 	/**
 	* Considering the above, I decided to add SymphonyView as a class of
@@ -58,43 +80,43 @@
 			$this->document->appendChild(
 				$this->document->createElement('data')
 			);
-			
+
 			//Initialize XSLT
 			$this->stylesheet = new XMLDocument;
-			
+
 			Widget::init($this->document);
 		}
 
 		/**
 		* Parses the URL to figure out what View to load
-		* 
+		*
 		* @param	$path		string	View path including URL parameters to attempt to find
 		* @param	$expression string	Expression used to match the view driver/conf file. Use printf syntax.
 		*/
 		public function parseURL($path, $expression = '%s.conf.xml') {
 			$parts = preg_split('/\//', $path, -1, PREG_SPLIT_NO_EMPTY);
 			$view = null;
-			
+
 			while (!empty($parts)) {
 				$part = array_shift($parts);
 				$file = sprintf(
 					'%s%s/%s/' . $expression,
 					$this->location, $view, $part, $part
 				);
-				
+
 				if (!is_file($file)) {
 					array_unshift($parts, $part);
-					
+
 					break;
 				}
 
 				$view = $view . "/{$part}";
 			}
-			
+
 			if (is_null($view)) {
 				throw new ViewException(__('View, %s, could not be found.', array($path)), self::ERROR_VIEW_NOT_FOUND);
 			}
-			
+
 			return $this->loadFromPath($view, (!empty($parts) ? $parts : null));
 		}
 
@@ -137,17 +159,17 @@
 			if (is_null($directory)) {
 				$dir = $this->location;
 			}
-			
+
 			else {
 				$dir = $directory;
 			}
-			
+
 			// Get current directory
 			$cwd = getcwd();
-			
+
 			// Move to tranformation directory
 			chdir($dir);
-			
+
 			// Perform transformation
 			$output = XSLProc::transform(
 				$this->document->saveXML(),
@@ -162,11 +184,11 @@
 			if (XSLProc::hasErrors() && !isset($_REQUEST['debug'])) {
 				throw new XSLProcException('Transformation Failed');
 			}
-			
+
 			// HACK: Simple debug output:
 			if (isset($_REQUEST['debug'])) {
 				$this->document->formatOutput = true;
-				
+
 				echo '<pre>', htmlentities($this->document->saveXML()); exit;
 			}
 
@@ -228,27 +250,5 @@
 
 		public function length(){
 			return $this->_length;
-		}
-	}
-
-	Class ViewFilterIterator extends FilterIterator{
-		public function __construct($path=NULL, $recurse=true){
-			if(!is_null($path)) $path = VIEWS . '/' . trim($path, '/');
-			else $path = VIEWS;
-
-			parent::__construct(
-				$recurse == true
-					?	new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path), RecursiveIteratorIterator::SELF_FIRST)
-					:	new DirectoryIterator($path)
-			);
-
-		}
-
-		// Only return folders, and only those that have a 'X.config.xml' file within. This characterises a View.
-		public function accept(){
-			if($this->getInnerIterator()->isDir() == false) return false;
-			preg_match('/\/?([^\\\\\/]+)$/', $this->getInnerIterator()->getPathname(), $match); //Find the view handle
-
-			return (file_exists(sprintf('%s/%s.config.xml', $this->getInnerIterator()->getPathname(), $match[1])));
 		}
 	}

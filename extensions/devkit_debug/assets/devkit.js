@@ -570,41 +570,59 @@
 		
 		// TODO: DO NOT RELEASE THIS AS IS
 		// It needs a lot of tidying up.
-		/*
 		var content = jQuery('#content');
 		var sidebar = jQuery('#sidebar');
-		var tab = jQuery('#tab');
 		var iframe = jQuery('iframe');
 		
-		// Make links take action in the iframe parent:
 		iframe.bind('load', function() {
-			var content = iframe.contents();
-			var target = function(event) {
-				if (event.target instanceof HTMLAnchorElement || event.target instanceof HTMLFormElement) {
-					jQuery(event.target).attr('target', '_parent');
-				}
-			};
+			var content = iframe.contents().get(0);
 			
-			// TODO: This is a nasty hack:
-			content.bind('click', target);
-			content.bind('submit', target);
-		});
-		
-		tab.bind('click', function() {
-			var hide = function() {
-				sidebar.removeClass('visible');
+			// Send link clicks to the parent:
+			jQuery('a[href]', content).live('click', function() {
+				var link = jQuery(this);
+				var url = link.attr('href');
 				
-				content.unbind('mousedown', hide);
-				iframe.contents().unbind('mousedown', hide);
-			};
+				if (!link.data().debug_url) {
+					link.data().debug_url = url;
+					
+					url += (
+						url.indexOf('?') >= 0
+							? '&' : '?'
+					);
+					url += 'debug=frontend';
+					
+					link.attr({
+						'href':		url,
+						'target':	'_parent'
+					});
+				}
+			});
 			
-			sidebar.addClass('visible');
-			content.bind('mousedown', hide);
-			iframe.contents().bind('mousedown', hide);
-			
-			return false;
+			// Send form submits to the parent:
+			jQuery('form', content).live('submit', function() {
+				var form = jQuery(this);
+				var url = '';
+				
+				if (form.attr('src')) {
+					url = form.attr('src');
+				}
+				
+				if (!form.data().debug_url) {
+					form.data().debug_url = url;
+					
+					url += (
+						url.indexOf('?') >= 0
+							? '&' : '?'
+					);
+					url += 'debug=frontend';
+					
+					form.attr({
+						'src':		url,
+						'target':	'_parent'
+					});
+				}
+			});
 		});
-		*/
 	});
 	
 /*---------------------------------------------------------------------------*/

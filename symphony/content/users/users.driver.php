@@ -3,9 +3,7 @@
 	/**
 	* UsersDriver class...
 	*/
-
-	Class UsersDriver {
-
+	class UsersDriver {
 		public $url;
 		public $view;
 
@@ -84,12 +82,6 @@
 			if($_POST['with-selected'] == 'delete'){
 
 				$checked = array_keys($_POST['items']);
-
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting an User. ID is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('user_id' => $user_id));
 
 				foreach($checked as $user_id){
 					if(Administration::instance()->User->id == $user_id) continue;
@@ -331,7 +323,11 @@
 				$this->user->first_name = General::sanitize($fields['first_name']);
 				$this->user->last_name = General::sanitize($fields['last_name']);
 				$this->user->last_seen = NULL;
-				$this->user->password = (trim($fields['password']) == '' ? NULL : md5($fields['password']));
+				$this->user->password = (
+					trim($fields['password']) == ''
+					? null
+					: Cryptography::hash($fields['password'])
+				);
 				$this->user->default_section = $fields['default_section'];
 				$this->user->auth_token_active = ($fields['auth_token_active'] ? $fields['auth_token_active'] : 'no');
 				$this->user->language = $fields['language'];
@@ -399,8 +395,8 @@
 				$this->user->first_name = General::sanitize($fields['first_name']);
 				$this->user->last_name = General::sanitize($fields['last_name']);
 
-				if(trim($fields['password']) != ''){
-					$this->user->password = md5($fields['password']);
+				if (trim($fields['password']) != '') {
+					$this->user->password = Cryptography::hash($fields['password']);
 					$changing_password = true;
 				}
 
@@ -462,13 +458,6 @@
 			}
 
 			elseif(array_key_exists('delete', $_POST['action'])){
-
-				## FIXME: Fix this delegate
-				###
-				# Delegate: Delete
-				# Description: Prior to deleting an User. ID is provided.
-				//Extension::notify('Delete', getCurrentPage(), array('user_id' => $user_id));
-
 				User::delete($user_id);
 
 				redirect(ADMIN_URL . '/system/users/');

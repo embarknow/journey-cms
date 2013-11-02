@@ -1,12 +1,3 @@
-[submodule "extensions/export_ensemble"]
-	path = extensions/export_ensemble
-	url = git://github.com/symphony/export_ensemble.git
-[submodule "extensions/markdown"]
-	path = extensions/markdown
-	url = git://github.com/symphony/markdown.git
-[submodule "extensions/maintenance_mode"]
-	path = extensions/maintenance_mode
-	url = git://github.com/symphony/maintenance_mode.git
-[submodule "extensions/jit_image_manipulation"]
-	path = extensions/jit_image_manipulation
-	url = git://github.com/symphony/jit_image_manipulation.git
+[submodule "extensions/xmlfield"]
+	path = extensions/xmlfield
+	url = http://github.com/pointybeard/xmlfield.git

@@ -17,6 +17,16 @@
 			$this->errors = new MessageStack;
 		}
 
+		public function evaluate($query, DOMNode $node = null) {
+			$xpath = new DOMXPath($this);
+
+			if ($node) {
+				return $xpath->evaluate($query, $node);
+			}
+
+			return $xpath->evaluate($query);
+		}
+
 		public function xpath($query, DOMNode $node = null){
 			$xpath = new DOMXPath($this);
 
@@ -44,7 +54,7 @@
 			return $result;
 		}
 
-		static function processLibXMLerrors(MessageStack $errors){
+		static function processLibXMLerrors(MessageStack $errors) {
 			foreach(libxml_get_errors() as $error){
 				$error->type = $type;
 				$errors->append(NULL, $error);
@@ -62,18 +72,32 @@
 		}
 
 		##	Overloaded Methods for DOMDocument
-		public function createElement($name, $value = null, array $attributes=NULL){
+		public function createElement($name, $value = null, array $attributes = null) {
 			try {
-				$element = parent::createElement($name);
+				try {
+					$element = parent::createElement($name);
+				}
+
+				catch (Exception $ex) {
+					if (mb_check_encoding($name, 'UTF-8') === false) {
+						$name = mb_convert_encoding($name, 'UTF-8');
+					}
+
+					// Strip unprintable characters:
+					$name = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $name);
+
+					// If the $name is numeric, prepend num_ to it:
+					if (is_numeric($name[0])) $name = "num_" . $name;
+
+					$element = parent::createElement($name);
+				}
 			}
-			catch (Exception $ex) {
-				//	Strip unprintable characters
-				$name = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($name));
 
-				//	If the $name is numeric, prepend num_ to it
-				if(is_numeric($name[0])) $name = "num_" . $name;
-
-				$element = parent::createElement($name);
+			catch (Exception $e) {
+				throw new Exception(sprintf(
+					'Invalid Character Error: %s (base64)',
+					base64_encode($name)
+				));
 			}
 
 			if(!is_null($value)) $element->setValue($value);
@@ -120,19 +144,19 @@
 			if ($value instanceof DOMElement || $value instanceof DOMDocumentFragment) {
 				$this->appendChild($value);
 			}
-			
+
 			else if (is_array($value) && !empty($value)) {
 				foreach ($value as $part) {
 					if ($part instanceof DOMElement || $part instanceof DOMDocumentFragment) {
 						$this->appendChild($part);
 					}
-					
+
 					else {
 						$this->appendChild(new DOMText($part));
 					}
 				}
 			}
-			
+
 			else if (!is_null($value) && is_string($value)) {
 				$this->appendChild(new DOMText($value));
 			}
@@ -142,7 +166,7 @@
 			if(is_array($attributes) && !empty($attributes)) {
 				foreach($attributes as $key => $val){
 					//	Temporary (I'd hope) ^BA
-					if(mb_detect_encoding($val) != "UTF-8") $val = utf8_encode($val);
+					$val = utf8_encode($val);
 					$this->setAttribute($key, $val);
 				}
 			}

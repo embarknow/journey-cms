@@ -1,90 +1,86 @@
 <?php
 
 	/***
-	
+
 	Method: redirect
 	Description: redirects the browser to a specified location. Safer than using a direct header() call
 	Param: $url - location to redirect to
-	
-	***/		
+
+	***/
    	function redirect ($url){
-		
+
 		$url = str_replace('Location:', NULL, $url); //Just make sure.
-		
+
 		if(headers_sent($filename, $line)){
 			print "<h1>Error: Cannot redirect to <a href=\"$url\">$url</a></h1><p>Output has already started in $filename on line $line</p>";
 			exit();
 		}
-		
+
+		header("HTTP/1.1 301 Moved Permanently");
 		header('Expires: Mon, 12 Dec 1982 06:00:00 GMT');
 		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 		header('Cache-Control: no-cache, must-revalidate, max-age=0');
 		header('Pragma: no-cache');
-        header("Location: $url");
-        exit();	
+		header('New-Location: ' . $url);
+		header("Location: $url");
+		exit();
     }
 
-	function array_union_simple($xx, $yy){
-		return                   
-	        array_merge(
-	            array_intersect($xx, $yy),
-	            array_diff($xx, $yy),
-	            array_diff($yy, $xx)
-	        );
+	function unparse_url(array $url) {
+		return sprintf(
+			'%s%s%s%s%s%s%s%s%s',
+			isset($url['scheme'])
+				? $url['scheme'] . '://' : '',
+			isset($url['user'])
+				? $url['user'] : '',
+			isset($url['pass'])
+				? ':' . $url['pass']  : '',
+			isset($url['user']) || isset($url['pass'])
+				? '@' : '',
+			isset($url['host'])
+				? $url['host'] : '',
+			isset($url['port'])
+				? ':' . $url['port'] : '',
+			isset($url['path'])
+				? $url['path'] : '',
+			isset($url['query'])
+				? '?' . $url['query'] : '',
+			isset($url['fragment'])
+				? '#' . $url['fragment'] : ''
+		);
 	}
 
-	function getcwd_safe(){
-		return str_replace('\\', '/', getcwd());
-	}
-	
-	function define_safe($name, $val){
-		if(!defined($name)) define($name, $val);
-	}
-	
-	function getCurrentPage($page = NULL) {
-		if (is_null($page) && isset($_GET['symphony-page'])){
-			$page = $_GET['symphony-page'];
+	/**
+	 * Search the apc user cache
+	 *
+	 * @param string $expression Perl compatible regular expression
+	 * @param Closure $callback Optional callback run on each item found
+	 */
+	function apc_cache_search($expression, Closure $callback = null) {
+		$data = apc_cache_info('user');
+		$found = array();
+
+		foreach ($data['cache_list'] as $item) {
+			if ((boolean)preg_match($expression, $item['info']) === false) continue;
+
+			if ($callback instanceof Closure) {
+				$callback($item);
+			}
+
+			$found[] = $item['info'];
 		}
-		
-		return (strlen(ltrim($page, '/')) > 0 ? '/' . ltrim($page, '/') : NULL);
-	}
-	
-	function precision_timer($action = 'start', $start_time = NULL){
-		$currtime = microtime(true);
-		
-		if($action == 'stop')
-			return $currtime - $start_time;
-		
-		return $currtime;
-	}
-	
-	## 'sys_get_temp_dir' doesnt exist in PHP 5.2 or lower.
-	## minghong at gmail dot com
-	## http://au2.php.net/sys_get_temp_dir
-	if (!function_exists('sys_get_temp_dir')){
-		function sys_get_temp_dir(){
-			
-			## Try to get from environment variable
-			if(!empty($_ENV['TMP'])): return realpath($_ENV['TMP']);
-			elseif(!empty($_ENV['TMPDIR'])): return realpath($_ENV['TMPDIR']);
-			elseif(!empty($_ENV['TEMP'])): return realpath($_ENV['TEMP']);
 
-			## Try creating a temporary file instead
-			else:
-		
-				$temp_file = tempnam(md5(uniqid(rand(), TRUE)), NULL);
-			
-				if(!$temp_file) return FALSE;
-
-				$temp_dir = realpath(dirname($temp_file));
-				unlink($temp_file);
-				return $temp_dir;
-		
-			endif;
-		
-		}
+		return $found;
 	}
-	
+
+	function define_safe($name, $val) {
+		if (!defined($name)) define($name, $val);
+	}
+
+	function getCurrentPage($page = null) {
+		throw new Exception('Function getCurrentPage is deprecated, use the CURRENT_PATH constant instead.');
+	}
+
 	// Convert php.ini size format to bytes
 	function ini_size_to_bytes($val) {
 	    $val = trim($val);

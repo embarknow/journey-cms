@@ -12,7 +12,7 @@
 	if (!defined('BITTER_CACHE_PATH')) {
 		define('BITTER_CACHE_PATH', './caches');
 	}
-	
+	set_time_limit(0);
 /*----------------------------------------------------------------------------*/
 	
 	class Bitter {

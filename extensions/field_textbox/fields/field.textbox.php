@@ -39,19 +39,21 @@
 		}
 
 		public function create() {
-			return Symphony::Database()->query(sprintf('
-				CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
-					`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-					`entry_id` INT(11) UNSIGNED NOT NULL,
-					`handle` VARCHAR(255) DEFAULT NULL,
-					`value` TEXT DEFAULT NULL,
-					`value_formatted` TEXT DEFAULT NULL,
-					`word_count` INT(11) UNSIGNED DEFAULT NULL,
-					PRIMARY KEY (`id`),
-					KEY `entry_id` (`entry_id`),
-					FULLTEXT KEY `value` (`value`),
-					FULLTEXT KEY `value_formatted` (`value_formatted`)
-				) ENGINE=MyISAM;',
+			return Symphony::Database()->query(sprintf(
+				"
+					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+						`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+						`entry_id` INT(11) UNSIGNED NOT NULL,
+						`handle` VARCHAR(255) DEFAULT NULL,
+						`value` TEXT DEFAULT NULL,
+						`value_formatted` TEXT DEFAULT NULL,
+						`word_count` INT(11) UNSIGNED DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						KEY `entry_id` (`entry_id`),
+						FULLTEXT KEY `value` (`value`),
+						FULLTEXT KEY `value_formatted` (`value_formatted`)
+					) ENGINE=MyISAM;
+				",
 				$this->{'section'},
 				$this->{'element-name'}
 			));
@@ -156,6 +158,29 @@
 			return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
 		}
 
+		protected function repairMarkup($value) {
+			$tidy = new Tidy();
+			$tidy->parseString(
+				$value, array(
+					'drop-font-tags'				=> true,
+					'drop-proprietary-attributes'	=> true,
+					'enclose-text'					=> true,
+					'enclose-block-text'			=> true,
+					'hide-comments'					=> true,
+					'numeric-entities'				=> true,
+					'output-xhtml'					=> true,
+					'wrap'							=> 0,
+
+					// HTML5 Elements:
+					'new-blocklevel-tags'			=> 'section nav article aside hgroup header footer figure figcaption ruby video audio canvas details datagrid summary menu',
+					'new-inline-tags'				=> 'time mark rt rp output progress meter',
+					'new-empty-tags'				=> 'wbr source keygen command'
+				), 'utf8'
+			);
+
+			return $tidy->body()->value;
+		}
+
 	/*-------------------------------------------------------------------------
 		Settings:
 	-------------------------------------------------------------------------*/
@@ -169,10 +194,6 @@
 		}
 
 		public function validateSettings(MessageStack $errors, $checkForDuplicates = true) {
-/*			if (trim((string)$this->{'text-length'}) == '') {
-				$errors->append('text-length', __('This is a required field.'));
-			}*/
-
 			if (trim((string)$this->{'column-length'}) == '') {
 				$errors->append('column-length', __('This is a required field.'));
 			}
@@ -513,8 +534,23 @@
 			else if ($value) {
 				$value = $this->repairEntities($value);
 				$fragment = $wrapper->ownerDocument->createDocumentFragment();
-				$fragment->appendXML($value);
-				$result->appendChild($fragment);
+
+				try {
+					$fragment->appendXML($value);
+				}
+
+				catch (Exception $e) {
+					$value = $this->repairMarkup($value);
+					$fragment->appendXML($value);
+				}
+
+				try {
+					$result->appendChild($fragment);
+				}
+
+				catch (Exception $e) {
+					// Only get 'Document Fragment is empty' errors here.
+				}
 			}
 
 			$attributes = array(
@@ -616,4 +652,3 @@
 	}
 
 	return 'FieldTextBox';
-

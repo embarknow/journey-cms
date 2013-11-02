@@ -30,25 +30,27 @@
 		}
 
 		public function create(){
-			return Symphony::Database()->query(sprintf('
-				CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
-					`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-					`entry_id` int(11) unsigned NOT NULL,
-					`name` text DEFAULT NULL,
-					`path` text DEFAULT NULL,
-					`file` text DEFAULT NULL,
-					`size` int(11) unsigned DEFAULT NULL,
-					`type` varchar(255) DEFAULT NULL,
-					`meta` text DEFAULT NULL,
-					PRIMARY KEY (`id`),
-					UNIQUE KEY `entry_id` (`entry_id`),
-					FULLTEXT KEY `name` (`name`),
-					FULLTEXT KEY `path` (`path`),
-					FULLTEXT KEY `file` (`file`)
-				) ENGINE=MyISAM;',
-				$this->section,
-				$this->{'element-name'}
-			));
+			return Symphony::Database()->query(
+				sprintf(
+					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+						`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+						`entry_id` int(11) unsigned NOT NULL,
+						`name` text DEFAULT NULL,
+						`path` text DEFAULT NULL,
+						`file` text DEFAULT NULL,
+						`size` int(11) unsigned DEFAULT NULL,
+						`type` varchar(255) DEFAULT NULL,
+						`meta` text DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `entry_id` (`entry_id`),
+						FULLTEXT KEY `name` (`name`),
+						FULLTEXT KEY `path` (`path`),
+						FULLTEXT KEY `file` (`file`)
+					) ENGINE=MyISAM;',
+					$this->section,
+					$this->{'element-name'}
+				)
+			);
 		}
 
 		public function allowDatasourceParamOutput() {
@@ -363,6 +365,13 @@
 			return $meta;
 		}
 
+		/**
+		 * Always process data, even when null.
+		 */
+		public function canProcessData($data, Entry $entry = null) {
+			return true;
+		}
+
 		public function processData($data, Entry $entry = null) {
 			$result = (object)array();
 			$existing = null;
@@ -590,7 +599,10 @@
 			$file = DOCROOT . '/' . $data->path . '/' . $data->file;
 
 			// Make sure we don't upload over the top of a pervious file:
-			if (isset($data->tmp_name) and $data->existing != $file and file_exists($file)) {
+			if (
+				(isset($data->tmp_name) || isset($data->tmp_data))
+				&& $data->existing != $file && file_exists($file)
+			) {
 				$errors->append(
 					null, (object)array(
 					 	'message' => __(
@@ -626,8 +638,34 @@
 			$file = DOCROOT . '/' . $data->path . '/' . $data->file;
 
 			// Upload the file:
-			if ($data->tmp_name and $data->error == 0) {
-				if (!General::uploadFile(DOCROOT . '/' . $data->path, $data->file, $data->tmp_name, $permissions)) {
+			if (isset($data->tmp_name) && $data->error == 0) {
+				$done = General::uploadFile(DOCROOT . '/' . $data->path, $data->file, $data->tmp_name, $permissions);
+
+				if ($done === false) {
+					$errors->append(
+						null, (object)array(
+						 	'message' => __(
+								'There was an error while trying to upload the file <code>%s</code> to the target directory <code>%s</code>.',
+								array($data->name, trim($data->path, '/'))
+						 	),
+							'code' => self::ERROR_INVALID
+						)
+					);
+
+					return self::STATUS_ERROR;
+				}
+
+				// Remove file being replaced:
+				if (isset($data->existing) and is_file($data->existing)) {
+					$this->cleanupData($entry, $data, $data->existing);
+				}
+			}
+
+			// Accept the file data:
+			if (isset($data->tmp_data) && $data->error == 0) {
+				$done = General::uploadData(DOCROOT . '/' . $data->path, $data->file, $data->tmp_data, $permissions);
+
+				if ($done === false) {
 					$errors->append(
 						null, (object)array(
 						 	'message' => __(
@@ -651,6 +689,7 @@
 			unset($data->existing);
 			unset($data->error);
 			unset($data->tmp_name);
+			unset($data->tmp_data);
 
 			// Make sure we save null values:
 			if (!isset($data->path)) {

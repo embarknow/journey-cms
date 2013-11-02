@@ -77,11 +77,21 @@
 			$this->datasource = $this->handle = $this->status = $this->type = NULL;
 			$this->types = array();
 
+<<<<<<< HEAD:symphony/content/framework/datasources/datasources.driver.php
 			foreach (new ExtensionIterator(ExtensionIterator::FLAG_TYPE, array('Data Source')) as $extension) {
 				$path = Extension::getPathFromClass(get_class($extension));
 				$handle = Extension::getHandleFromPath($path);
 
 				if (Extension::status($handle) != Extension::STATUS_ENABLED) continue;
+=======
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::TYPE =>		'Data Source',
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
+
+			foreach ($extensions as $extension) {
+>>>>>>> stable:symphony/content/content.blueprintsdatasources.php
 				if (!method_exists($extension, 'getDataSourceTypes')) continue;
 
 				foreach ($extension->getDataSourceTypes() as $type) {

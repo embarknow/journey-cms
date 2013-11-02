@@ -105,11 +105,11 @@
 			if(isset($dictionary) && is_array($dictionary)){
 				self::$_dictionary->merge($dictionary);
 			}
-			
+
 			if(isset($characters) && is_array($characters)){
 				self::$_transliterations_character_replacements = array_merge(self::$_transliterations_character_replacements, $characters);
 			}
-			
+
 			if(isset($patterns) && is_array($patterns)){
 				self::$_transliterations_pattern_replacements = array_merge(self::$_transliterations_pattern_replacements, $patterns);
 			}
@@ -144,25 +144,12 @@
 		public static function loadAll() {
 			// Load localisation file for the Symphony core
 			$file = Lang::findLanguagePath(Symphony::lang()) . '/lang.%s.php';
+
 			$path = sprintf($file, Symphony::lang());
-			if(is_file($path)) {
+
+			if (is_file($path)) {
 				Lang::load($file, Symphony::lang(), true);
 			}
-
-			// Load localisation files for extensions
-			foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-				$path = Extension::getPathFromClass(get_class($extension)) . '/lang/lang.%s.php';
-				if(is_file(sprintf($path, Symphony::lang()))){
-					Lang::add($path, Symphony::lang());
-				}
-			}
-			
-			/*foreach(ExtensionManager::instance()->listAll() as $handle => $e){
-				$path = ExtensionManager::instance()->__getClassPath($handle) . '/lang/lang.%s.php';
-				if($e['status'] == Extension::ENABLED && file_exists(sprintf($path, Symphony::lang()))){
-					Lang::add($path, Symphony::lang());
-				}
-			}*/
 		}
 
 		/**
@@ -172,24 +159,7 @@
 		 * the localisation files for other languages are stored in the extension folder.
 		 */
 		public static function findLanguagePath($lang) {
-			$file = sprintf('/lang.%s.php', $lang);
-			if(!is_file(LANG . $file)) {
-				foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-					$path = Extension::getPathFromClass(get_class($extension));
-					$handle = Extension::getHandleFromPath($path);
-					
-				//foreach(ExtensionManager::instance()->listAll() as $extension => $about) {
-					// Explicitly match localisation extensions
-					if(strpos($handle, 'lang_') === false) continue;
-					$path = EXTENSIONS . "/{$handle}/lang";
-					if(is_file($path . $file)) {
-						return $path;
-					}
-				}
-			}
-			else {
-				return LANG;
-			}
+			return LANG;
 		}
 
 		public static function add($path, $lang) {
@@ -281,11 +251,11 @@
 
 			// Strip out any tag
 			$string = strip_tags($string);
-			
+
 			// Remove single and double quotes first
 			$string = preg_replace('/[\'"]+/', NULL, $string);
-			
-			// Find all legal characters (although spaces, tabs, quotes (single & double) and 
+
+			// Find all legal characters (although spaces, tabs, quotes (single & double) and
 			// commas are legal, going to remove them to make the filename cleaner)
 			$count = preg_match_all('/[^\s\/?*:;{},\\\\]+/', $string, $matches);
 			/*if($count <= 0 || $count == false){
@@ -340,22 +310,26 @@
 		 * Return all available languages (core and extensions)
 		 * @return array language codes, e. g. 'en'
 		 */
-		public static function getAvailableLanguages($includeExtensions=false) {
+		public static function getAvailableLanguages($includeExtensions = false) {
 			$languages = array();
+
 			// Get core translation files
 			$languages = self::getLanguageCodes(LANG, $languages);
+
 			// Get extension translation files
-			if($includeExtensions) {
-				foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-					$path = Extension::getPathFromClass(get_class($extension)) . '/lang';
-					if(file_exists($path)) $languages = self::getLanguageCodes($path, $languages);
+			if ($includeExtensions) {
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
+
+				foreach ($extensions as $extension) {
+					if (file_exists($extension->path)) {
+						$languages = self::getLanguageCodes($extension->path, $languages);
+					}
 				}
-/*				foreach (ExtensionManager::instance()->listAll() as $extension => $about) {
-					$path = EXTENSIONS . '/' . $about['handle'] . '/lang';
-					if(file_exists($path)) $languages = self::getLanguageCodes($path, $languages);
-				}
-*/
 			}
+
 			// Return languages codes
 			return $languages;
 		}

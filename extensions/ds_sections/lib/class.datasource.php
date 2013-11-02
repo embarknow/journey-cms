@@ -190,7 +190,7 @@
 			$label = Widget::Label(__('Sort Order'));
 
 			$options = array(
-				array('asc', ('asc' == $this->parameters()->{'sort-order'}), __('Acending')),
+				array('asc', ('asc' == $this->parameters()->{'sort-order'}), __('Ascending')),
 				array('desc', ('desc' == $this->parameters()->{'sort-order'}), __('Descending')),
 				array('random', ('random' == $this->parameters()->{'sort-order'}), __('Random')),
 			);
@@ -574,19 +574,25 @@
 		public function render(Register $parameter_output, $joins = NULL, array $where = array(), $filter_operation_type = self::FILTER_AND){
 			$execute = true;
 
+			Profiler::begin('Building query');
+
+			if (
+				isset($this->parameters()->{'query-options'})
+				&& in_array('debug-query', $this->parameters()->{'query-options'})
+			) {
+				$start_timer = microtime(true);
+			}
+
 			$result = new XMLDocument;
 			$result->appendChild($result->createElement($this->parameters()->{'root-element'}));
 			$root = $result->documentElement;
 
-			//	Conditions
-			//	If any one condtion returns true (that is, do not execute), the DS will not execute at all
-			if(is_array($this->parameters()->conditions) && !empty($this->parameters()->conditions)) {
-				foreach($this->parameters()->conditions as $condition) {
-
-					if (isset($dump)) {
-						$dump->append($condition, strpos(':', $condition['parameter']));
-					}
-
+			// Conditions
+			if (
+				is_array($this->parameters()->conditions)
+				&& !empty($this->parameters()->conditions)
+			) {
+				foreach ($this->parameters()->conditions as $condition) {
 					if (strpos(':', $condition['parameter']) !== false) {
 						$c = Datasource::replaceParametersInString($condition['parameter'], $parameter_output);
 					}
@@ -601,14 +607,27 @@
 					}
 
 					// Is Set
-					elseif ($condition['logic'] == 'set' && !is_null($c)) {
+					else if ($condition['logic'] == 'set' && is_null($c) === false) {
 						$execute = false;
 					}
 
-					if ($execute !== true) {
-						return null;
+					else if (isset($condition['type'], $condition['value'])) {
+						$value = Datasource::replaceParametersInString($condition['value'], $parameter_output);
+
+						if ($condition['type'] === 'is' && $c != $value) {
+							$execute = false;
+						}
+
+						else if ($condition['type'] === 'is-not' && $c == $value) {
+							$execute = false;
+						}
 					}
 
+					if ($execute !== true) {
+						Profiler::end();
+
+						return null;
+					}
 				}
 			}
 
@@ -630,25 +649,26 @@
 				'current-page' => max(1, (int)self::replaceParametersInString($this->parameters()->page, $parameter_output)),
 			);
 
-			$pagination->{'record-start'} = max(0, ($pagination->{'current-page'} - 1) * $pagination->{'entries-per-page'});
+			$pagination->{'record-start'} = (max(1, $pagination->{'current-page'}) - 1)
+				* $pagination->{'entries-per-page'};
+			$order = $sort = null;
 
-			$order = $sort = NULL;
+			$this->parameters()->{'sort-order'} = self::replaceParametersInString($this->parameters()->{'sort-order'}, $parameter_output);
 
 			//	Apply the Sorting & Direction
-			if($this->parameters()->{'sort-order'} == 'random'){
+			if ($this->parameters()->{'sort-order'} == 'random') {
 				$order = 'RAND()';
 			}
 
-			else{
-
+			else {
 				$sort = (strtolower($this->parameters()->{'sort-order'}) == 'asc' ? 'ASC' : 'DESC');
 
 				// Set Default sort
 				$order = "e.id {$sort}";
 
 				// System Field
-				if(preg_match('/^system:/i', $this->parameters()->{'sort-field'})){
-					switch(preg_replace('/^system:/i', NULL, $this->parameters()->{'sort-field'})){
+				if (preg_match('/^system:/i', $this->parameters()->{'sort-field'})) {
+					switch (preg_replace('/^system:/i', null, $this->parameters()->{'sort-field'})) {
 						case 'id':
 							$order = "e.id {$sort}";
 							break;
@@ -663,12 +683,17 @@
 
 					}
 				}
+
 				// Non System Field
-				else{
-					$join = NULL;
+				else {
+					$join = null;
 					$sort_field = $section->fetchFieldByHandle($this->parameters()->{'sort-field'});
 
-					if($sort_field instanceof Field && $sort_field->isSortable() && method_exists($sort_field, "buildSortingQuery")) {
+					if (
+						$sort_field instanceof Field
+						&& $sort_field->isSortable()
+						&& method_exists($sort_field, "buildSortingQuery")
+					) {
 						$sort_field->buildSortingQuery($join, $order);
 
 						$joins .= sprintf($join, $sort_field->section, $sort_field->{'element-name'});
@@ -677,28 +702,32 @@
 				}
 			}
 
-			//	Process Datasource Filters for each of the Fields
-			if (is_array($this->parameters()->filters) && !empty($this->parameters()->filters)) {
+			// Process Datasource Filters for each of the Fields
+			if (
+				is_array($this->parameters()->filters)
+				&& !empty($this->parameters()->filters)
+			) {
 				foreach ($this->parameters()->filters as $k => $filter) {
 					if ($filter['element-name'] == 'system:id') {
 						$filter_value = $this->prepareFilterValue($filter['value'], $parameter_output);
 
-						if(!is_array($filter_value)) continue;
+						if (!is_array($filter_value)) continue;
 
 						$filter_value = array_map('intval', $filter_value);
 
-						if(empty($filter_value)) continue;
+						if (empty($filter_value)) continue;
 
 						$where[] = sprintf(
 							"(e.id %s IN (%s))",
-							($filter['type'] == 'is-not' ? 'NOT' : NULL),
+							($filter['type'] == 'is-not' ? 'NOT' : null),
 							implode(',', $filter_value)
 						);
 					}
 
 					else {
 						$field = $section->fetchFieldByHandle($filter['element-name']);
-						if($field instanceof Field) {
+
+						if ($field instanceof Field) {
 							$field->buildFilterQuery($filter, $joins, $where, $parameter_output);
 						}
 					}
@@ -708,72 +737,96 @@
 			// Escape percent symbol:
 			$where = array_map(create_function('$string', 'return str_replace(\'%\', \'%%\', $string);'), $where);
 
-			/*
-				NOT TESTED, UNOPTIMISED
+			// Unoptimized select statement:
+			$select_keywords = array(
+				'SELECT', 'DISTINCT', 'SQL_CALC_FOUND_ROWS'
+			);
 
-			//	Get unique tables and their alias and join
-			$tables = array();
-			$split = preg_split('/\s(LEFT OUTER JOIN)\s/', $joins, null, PREG_SPLIT_NO_EMPTY);
-			foreach($split as $table_join) {
-				preg_match_all('/`[a-z_]+\d?`\s/', $table_join, $matches);
-
-				if(!array_key_exists($matches[0][0], $tables)) {
-					$tables[$matches[0][0]] = array(
-						'alias' => $matches[0][1],
-						'join' => $table_join
-					);
-				}
+			// Remove distinct keyword:
+			if (
+				isset($this->parameters()->{'query-options'})
+				&& in_array('disable-select-distinct', $this->parameters()->{'query-options'})
+			) {
+				$select_keywords = array_diff(
+					$select_keywords, array('DISTINCT')
+				);
 			}
 
-			//	Loop over the WHERE statements and subsitute the other alias with the first alias
-			//	we discovered for that table.
-			$o_where = array();
-			$o_joins = null;
-
-			foreach($tables as $tbl => $info) {
-				$search = preg_replace('/\d+`\s/', '', $info['alias']);
-
-				$o_joins .= 'LEFT OUTER JOIN ' . $info['join'] . PHP_EOL;
-
-				if(is_array($where) && !empty($where)) foreach($where as $statement) {
-					if(!$statement || !$search) continue;
-
-					if(strpos($statement, $search) !== false) {
-						$o_where[] = preg_replace('/' . $search . '\d+`/', trim($info['alias']), $statement);
-					}
-				}
-			}
-			*/
 			$o_where = $where;
 			$o_joins = $joins;
-			$query = sprintf(
-				'SELECT DISTINCT SQL_CALC_FOUND_ROWS e.*
+			$o_order = $order;
+			$query = sprintf('
+				%1$s e.id, e.section, e.user_id, e.creation_date, e.modification_date
 				FROM `tbl_entries` AS `e`
-				%1$s
-				WHERE `section` = "%2$s"
-				%3$s
-				ORDER BY %4$s
-				LIMIT %5$d, %6$d',
+				%2$s
+				WHERE `section` = "%3$s"
+				%4$s
+				ORDER BY %5$s
+				LIMIT %6$d, %7$d',
 
+				implode($select_keywords, ' '),
 				$o_joins,
 				$section->handle,
 				is_array($o_where) && !empty($o_where) ? 'AND (' . implode(($filter_operation_type == self::FILTER_AND ? ' AND ' : ' OR '), $o_where) . ')' : NULL,
-				$order,
+				$o_order,
 				$pagination->{'record-start'},
 				$pagination->{'entries-per-page'}
 			);
 
-			//echo '<pre>', htmlentities($query); exit;
+			// Replace duplicate right join statements:
+			if (
+				isset($this->parameters()->{'query-options'})
+				&& in_array('reduce-right-joins', $this->parameters()->{'query-options'})
+			) {
+				$joins = array(); $changes = array();
+				$replace = function($matches) use (&$joins, &$changes) {
+					if (isset($joins[$matches[1]])) {
+						$key = '`' . $matches[2] . '`';
+						$changes[$key] = $joins[$matches[1]];
+					}
 
-			try{
+					else {
+						$joins[$matches[1]] = '`' . $matches[2] . '`';
+
+						Profiler::end();
+
+						return $matches[0];
+					}
+				};
+
+				// Find and replace duplicate join statements:
+				$query = preg_replace_callback(
+					'%RIGHT JOIN `(.+?)` AS `(.+?)` ON \(e\.id = `.+?`\.entry_id\)%',
+					$replace, $query
+				);
+
+				// Replace old table aliases:
+				$query = str_replace(
+					array_keys($changes), $changes, $query
+				);
+			}
+
+			Profiler::end();
+
+			Profiler::begin('Executing query');
+
+			try {
 				$entries = Symphony::Database()->query($query, array(
 						$section->handle,
 						$section->{'publish-order-handle'}
 					), 'DatasourceResult'
 				);
 
+				Profiler::end();
 
-				if(isset($this->parameters()->{'append-pagination'}) && $this->parameters()->{'append-pagination'} === true){
+				Profiler::begin('Formatting data');
+
+				if (
+					isset($this->parameters()->{'append-pagination'})
+					&& $this->parameters()->{'append-pagination'} === true
+				) {
+					Profiler::begin('Appended pagination element');
+
 					$pagination->{'total-entries'} = (int)Symphony::Database()->query("SELECT FOUND_ROWS() AS `total`")->current()->total;
 					$pagination->{'total-pages'} = (int)ceil($pagination->{'total-entries'} * (1 / $pagination->{'entries-per-page'}));
 
@@ -781,19 +834,34 @@
 					$root->appendChild(General::buildPaginationElement(
 						$result, $pagination->{'total-entries'}, $pagination->{'total-pages'}, $pagination->{'entries-per-page'}, $pagination->{'current-page'}
 					));
+
+					Profiler::store('total-entries', $pagination->{'total-entries'});
+					Profiler::store('entries-per-page', $pagination->{'entries-per-page'});
+					Profiler::store('current-page', $pagination->{'current-page'});
+					Profiler::end();
 				}
 
-				if(isset($this->parameters()->{'append-sorting'}) && $this->parameters()->{'append-sorting'} === true){
+				if (
+					isset($this->parameters()->{'append-sorting'})
+					&& $this->parameters()->{'append-sorting'} === true
+				) {
+					Profiler::begin('Appended sorting element');
+
 					$sorting = $result->createElement('sorting');
 					$sorting->setAttribute('field', $this->parameters()->{'sort-field'});
 					$sorting->setAttribute('order', $this->parameters()->{'sort-order'});
 					$root->appendChild($sorting);
+
+					Profiler::store('sort-field', $this->parameters()->{'sort-field'});
+					Profiler::store('sort-order', $this->parameters()->{'sort-order'});
+					Profiler::end();
 				}
 
 				// Output section details
 				$root->setAttribute('section', $section->handle);
 
 				$schema = array();
+
 				// Build Entry Records
 				if ($entries->valid()) {
 					// Do some pre-processing on the include-elements.
@@ -922,8 +990,10 @@
 
 							foreach ($output_parameters->fields as $field => $existing_values) {
 								if (!isset($e->data()->$field) or is_null($e->data()->$field)) continue;
-								
 								if (is_null($e->data()->$field)) continue;
+
+								// NOTE: Do not bind the field data to an object, doing so
+								// causes issues with fields that contain multiple values:
 
 								$o = $section->fetchFieldByHandle($field)->getParameterOutputValue(
 									(object)$e->data()->$field, $e
@@ -932,14 +1002,12 @@
 								if (is_array($o)) {
 									$output_parameters->fields[$field] = array_merge($o, $output_parameters->fields[$field]);
 								}
-								
+
 								else {
 									$output_parameters->fields[$field][] = $o;
 								}
-
 							}
 						}
-
 					}
 
 					// Add in the param output values to the parameter_output object
@@ -961,15 +1029,14 @@
 				}
 
 				// No Entries, Redirect
-				elseif($this->parameters()->{'redirect-404-on-empty'} === true){
+				else if ($this->parameters()->{'redirect-404-on-empty'} === true) {
 					throw new FrontendPageNotFoundException;
 				}
 
 				// No Entries, Show empty XML
-				else{
+				else {
 					$this->emptyXMLSet($root);
 				}
-
 			}
 			catch(DatabaseException $e){
 				$root->appendChild($result->createElement(
@@ -977,56 +1044,33 @@
 				));
 			}
 
+			Profiler::end();
+
 			return $result;
 		}
 	}
 
-	Class DatasourceResult extends DBCMySQLResult {
-		public $schema = array();
-		public $data = array();
+	class DatasourceResult extends ArrayIterator {
+		protected $schema;
+		protected $entries;
 
-		public function current(){
-			$record = parent::current();
-			$entry = new Entry;
+		public function __construct($result) {
+			$iterator = new DBCMySQLResult($result);
+			$entries = array();
 
-			foreach ($record as $key => $value) {
-				$entry->$key = $value;
-			}
+			if ($iterator->valid()) foreach ($iterator as $record) {
+				$entry = new Entry();
 
-			if(empty($this->data)) return $entry;
-
-			// 	Load the section
-			try {
-				$section = Section::loadFromHandle($entry->section);
-			}
-
-			catch (SectionException $e) {
-				throw new EntryException('Section specified, "'.$entry->section.'", in Entry object is invalid.');
-			}
-
-			catch (Exception $e) {
-				throw new EntryException('The following error occurred: ' . $e->getMessage());
-			}
-
-			//	Loop over the section fields, and in they are in the desired schema, populate an entry_data
-			//	array with the information. This doesn't respect fields allow_multiple setting though, although
-			//	I don't even think that's a problem to be honest as that validation should be taking place at the
-			//	entry creation level, not when it's being read.
-			foreach ($section->fields as $field) {
-				if(!empty($this->schema) && !in_array($field->{'element-name'}, $this->schema)) continue;
-
-				$entry_data = array();
-
-				foreach($this->data[$field->{'element-name'}] as $key => $data) {
-					if($data->{$field->fetchDataKey()} != $entry->id) continue;
-
-					$entry_data[] = $data;
+				foreach ($record as $key => $value) {
+					$entry->{$key} = $value;
 				}
 
-				$entry->data()->{$field->{'element-name'}} = (count($entry_data) == 1) ? current($entry_data) : $entry_data;
+				$entries[$record->id] = $entry;
 			}
 
-			return $entry;
+			$this->entries = $entries;
+
+			parent::__construct($this->entries);
 		}
 
 		public function setSchema(Array $schema = array()) {
@@ -1034,6 +1078,34 @@
 		}
 
 		public function setData(Array $data = array()) {
-			$this->data = $data;
+			$entry_data = array();
+
+			foreach ($this->schema as $field) {
+				foreach ($data[$field] as $record) {
+					if (isset($entry_data[$record->entry_id]) === false) {
+						$entry_data[$record->entry_id] = array();
+					}
+
+					if (isset($entry_data[$record->entry_id][$field]) === false) {
+						$entry_data[$record->entry_id][$field] = array();
+					}
+
+					$entry_data[$record->entry_id][$field][] = $record;
+				}
+			}
+
+			foreach ($entry_data as $entry_id => $data) {
+				$entry = $this->entries[$entry_id];
+
+				if ($entry == null) continue;
+
+				foreach ($data as $field => $field_data) {
+					$entry->data()->{$field} = (
+						count($field_data) == 1
+							? current($field_data)
+							: $field_data
+					);
+				}
+			}
 		}
 	}

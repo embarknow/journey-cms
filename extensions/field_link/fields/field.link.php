@@ -483,7 +483,7 @@
 
 				foreach ($data as $entry) {
 					if (is_null($entry->relation_id)) continue;
-					
+
 					$ids[] = $entry->relation_id;
 				}
 
@@ -494,7 +494,8 @@
 							FROM
 								`tbl_data_%s_%s` AS `e`
 							LEFT OUTER JOIN
-								`tbl_data_%s_%s` AS `r` ON (e.entry_id = r.relation_id)
+								`tbl_data_%s_%s` AS `r`
+								ON (e.entry_id = r.relation_id)
 							WHERE
 								e.entry_id IN (%s)
 							AND
@@ -507,18 +508,18 @@
 							implode(',', $entry_ids)
 						)
 					);
-					
+
 					foreach ($rows as $r) {
 						$r->relation_field = $related;
 						$result[] = $r;
 					}
 				}
 			}
-			
+
 			catch (DatabaseException $e) {
 				$result = array();
 			}
-			
+
 			return $result;
 		}
 
@@ -536,20 +537,13 @@
 			return self::STATUS_OK;
 		}
 
-		public function processData($data, Entry $entry=NULL){
+		public function processData($data, Entry $entry = null) {
+			$result = null;
 
-			//if(isset($entry->data()->{$this->{'element-name'}})){
-			//	$result = $entry->data()->{$this->{'element-name'}};
-			//}
-
-			//else {
-				$result = NULL;
-			//}
-
-			if (!is_null($data)){
+			if (!is_null($data)) {
 				$result = array();
 
-				if(!is_array($data)) $data = array($data);
+				if (!is_array($data)) $data = array($data);
 
 				foreach ($data as $id) {
 					if ($id instanceof StdClass) {
@@ -644,44 +638,44 @@
 		public function appendFormattedElement(DOMElement $wrapper, $data, $encode = false, $mode = null, Entry $entry = null) {
 			if (!isset($data)) return;
 			if (!is_array($data) || empty($data)) $data = array($data);
-			
+
 			$xpath = new DOMXPath($wrapper->ownerDocument);
 			$list = $wrapper->ownerDocument->createElement($this->{'element-name'});
 			$list->ownerDocument->formatOutput = true;
-			
+
 			$groups = array();
-			
+
 			foreach ($data as $item) {
 				if (!isset($item->relation_id) || is_null($item->relation_id)) continue;
-				
+
 				if (!isset($groups[$item->relation_id])) {
 					$groups[$item->relation_id] = array();
 				}
-				
+
 				$groups[$item->relation_id][] = $item;
 			}
-			
+
 			foreach ($groups as $relations) {
 				foreach ($relations as $relation) {
 					list($section_handle, $field_handle) = $relation->relation_field;
-					
+
 					$item = $xpath->query('item[@id = ' . $relation->relation_id . ']', $list)->item(0);
-					
+
 					if (is_null($item)) {
 						$section = Section::loadFromHandle($section_handle);
 						$item = $wrapper->ownerDocument->createElement('item');
 						$item->setAttribute('id', $relation->relation_id);
 						$item->setAttribute('section-handle', $section_handle);
 						$item->setAttribute('section-name', $section->name);
-						
+
 						$list->appendChild($item);
 					}
-					
+
 					$related_field = $section->fetchFieldByHandle($field_handle);
 					$related_field->appendFormattedElement($item, $relation);
 				}
 			}
-			
+
 			$wrapper->appendChild($list);
 		}
 
@@ -689,44 +683,44 @@
 			if (!is_array($data) || empty($data)) {
 				return parent::prepareTableValue(null, $link);
 			}
-			
+
 			$result = Administration::instance()->Page->createDocumentFragment();
 			$schema = array();
-			
+
 			foreach ($this->{'related-fields'} as $key => $value) {
 				list($section_handle, $field_handle) = $value;
-				
+
 				$schema[] = $field_handle;
 			}
-			
+
 			foreach ($data as $index => $d) try {
 				$entry = Entry::loadFromID($d->relation_id, $schema);
-				
+
 				if (!$entry instanceof Entry) continue;
-				
+
 				foreach ($this->{'related-fields'} as $key => $value) {
 					list($section_handle, $field_handle) = $value;
-					
+
 					if ($section_handle != $entry->meta()->section) continue;
-					
+
 					$section = Section::loadFromHandle($section_handle);
 					$field = $section->fetchFieldByHandle($field_handle);
 					$value = $field->prepareTableValue($entry->data()->{$field_handle});
-					
+
 					if ($index > 0) {
 						$result->appendChild(new DOMText(', '));
 					}
-					
+
 					if ($link instanceof DOMElement) {
 						if ($value instanceof DOMElement) {
 							$result->appendChild($value);
 						}
-						
+
 						else {
 							$result->appendChild(new DOMText($value));
 						}
 					}
-					
+
 					else {
 						$result->appendChild(Widget::anchor(
 							$value, sprintf(
@@ -735,25 +729,25 @@
 							)
 						));
 					}
-					
+
 					break;
 				}
 			}
-			
+
 			catch (Exception $e) {
-				
+				Symphony::Log()->pushExceptionToLog($e);
 			}
-			
+
 			if (!$result->hasChildNodes()) {
 				$result = parent::prepareTableValue(null, $link);
 			}
-			
-			if ($link instanceof DOMElement) {
+
+			if ($link instanceof DOMElement && $result != $link) {
 				$link->removeChildNodes();
 				$link->appendChild($result);
 				$result = $link;
 			}
-			
+
 			return $result;
 
 		}
@@ -895,4 +889,4 @@
 		}
 	}
 
-	return 'fieldLink';
+	return 'FieldLink';

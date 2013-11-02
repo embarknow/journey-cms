@@ -3,9 +3,7 @@
 	/**
 	* ExtensionsDriver class...
 	*/
-
-	Class ExtensionsDriver {
-
+	class ExtensionsDriver {
 		public $url;
 		public $view;
 
@@ -61,6 +59,13 @@
 			Extension::STATUS_REQUIRES_UPDATE => 'Requires Update',
 		);
 
+		public function prepare() {
+			ExtensionIterator::clearCachedFiles();
+			SectionIterator::clearCachedFiles();
+
+			parent::prepare();
+		}
+
 		public function view(){
 
 			$this->lists = (object)array(
@@ -95,27 +100,36 @@
 
 		## Process extensions and build lists
 
-			foreach(new ExtensionIterator as $extension){
-
-				$pathname = Extension::getPathFromClass(get_class($extension));
-				$handle = Extension::getHandleFromPath($pathname);
-				$status = Extension::status($handle);
+			foreach (new ExtensionIterator as $extension) {
+				$status = Extension::status($extension->handle);
 
 				// List of extensions
-				$this->lists->extensions[$handle] = array('object' => $extension, 'path' => $path, 'handle' => $handle, 'status' => $status);
+				$this->lists->extensions[$extension->handle] = array(
+					'object' =>		$extension,
+					'handle' =>		$extension->handle,
+					'path' =>		$path,
+					'status' =>		$status
+				);
 
 				// List of extension handles grouped by status
-				if(!is_array($this->lists->status[$status])) $this->lists->status[$status] = array();
-				$this->lists->status[$status][] = $handle;
+				if (is_array($this->lists->status[$status]) === false) {
+					$this->lists->status[$status] = array();
+				}
+
+				$this->lists->status[$status][] = $extension->handle;
 
 				// List of extension handles grouped by type
-				if(isset($extension->about()->type) && is_array($extension->about()->type) && !empty($extension->about()->type)){
-					foreach($extension->about()->type as $t){
-						if(!isset($this->lists->type[$t])){
+				if (
+					isset($extension->about()->type)
+					&& is_array($extension->about()->type)
+					&& empty($extension->about()->type) === false
+				) {
+					foreach ($extension->about()->type as $t) {
+						if (isset($this->lists->type[$t]) === false) {
 							$this->lists->type[$t] = array();
 						}
 
-						$this->lists->type[$t][] = $handle;
+						$this->lists->type[$t][] = $extension->handle;
 					}
 				}
 			}
@@ -427,8 +441,7 @@
 		}
 
 		public function action(){
-
-			if(isset($_POST['items'])){
+			if (isset($_POST['items'])) {
 				$checked = array_keys($_POST['items']);
 			}
 
@@ -442,7 +455,7 @@
 						# Delegate: {name of the action} (enable|disable|uninstall)
 						# Description: Notifies of enabling, disabling or uninstalling of an Extension. Array of selected extensions is provided.
 						#              This can be modified.
-						Extension::notify($action, getCurrentPage(), array('extensions' => &$checked));
+						Extension::notify($action, CURRENT_PATH, array('extensions' => &$checked));
 
 						foreach($checked as $handle){
 							call_user_func(array('Extension', $action), $handle);
@@ -463,7 +476,7 @@
 						# Delegate: {name of the action} (enable|disable|uninstall)
 						# Description: Notifies of enabling, disabling or uninstalling of an Extension. Extension handle is provided
 						#              This can be modified.
-						Extension::notify($action, getCurrentPage(), array('extensions' => &$handle));
+						Extension::notify($action, CURRENT_PATH, array('extensions' => &$handle));
 
 						call_user_func(array('Extension', $action), $handle);
 
@@ -505,66 +518,6 @@
 
 				return false;
 			}
-		}
-
-		/*function __viewDetail(){
-
-			$date = Administration::instance()->getDateObj();
-
-			if(!$extension_name = $this->_context[1]) redirect(ADMIN_URL . '/system/extensions/');
-
-			if(!$extension = ExtensionManager::instance()->about($extension_name)) Administration::instance()->customError(E_USER_ERROR, 'Extension not found', 'The Symphony Extension you were looking for, <code>'.$extension_name.'</code>, could not be found.', 'Please check it has been installed correctly.');
-
-			$link = $extension['author']['name'];
-
-			if(isset($extension['author']['website']))
-				$link = Widget::Anchor($extension['author']['name'], General::validateURL($extension['author']['website']));
-
-			elseif(isset($extension['author']['email']))
-				$link = Widget::Anchor($extension['author']['name'], 'mailto:' . $extension['author']['email']);
-
-			$this->setPageType('form');
-			$this->setTitle('Symphony &ndash; Extensions &ndash; ' . $extension['name']);
-			$this->appendSubheading($extension['name']);
-
-			$fieldset = new XMLElement('fieldset');
-
-			$dl = new XMLElement('dl');
-
-			$dl->appendChild(new XMLElement('dt', 'Author'));
-			$dl->appendChild(new XMLElement('dd', (is_object($link) ? $link->generate(false) : $link)));
-
-			$dl->appendChild(new XMLElement('dt', 'Version'));
-			$dl->appendChild(new XMLElement('dd', $extension['version']));
-
-			$dl->appendChild(new XMLElement('dt', 'Release Date'));
-			$dl->appendChild(new XMLElement('dd', $date->get(true, true, strtotime($extension['release-date']))));
-
-			$fieldset->appendChild($dl);
-
-			$fieldset->appendChild((is_object($extension['description']) ? $extension['description'] : new XMLElement('p', strip_tags(General::sanitize($extension['description'])))));
-
-			switch($extension['status']){
-
-				case Extension::DISABLED:
-				case Extension::ENABLED:
-					$fieldset->appendChild(new XMLElement('p', '<strong>Uninstall this Extension, which will remove anything created by it, but will leave the original files intact. To fully remove it, you will need to manually delete the files.</strong>'));
-					$fieldset->appendChild(Widget::Input('action[uninstall]', 'Uninstall Extension', 'submit'));
-					break;
-
-				case Extension::REQUIRES_UPDATE:
-					$fieldset->appendChild(new XMLElement('p', '<strong>Note: This Extension is currently disabled as it is ready for updating. Use the button below to complete the update process.</strong>'));
-					$fieldset->appendChild(Widget::Input('action[update]', 'Update Extension', 'submit'));
-					break;
-
-				case Extension::NOT_INSTALLED:
-					$fieldset->appendChild(new XMLElement('p', '<strong>Note: This Extension has not been installed. If you wish to install it, please use the button below.</strong>'));
-					$fieldset->appendChild(Widget::Input('action[install]', 'Install Extension', 'submit'));
-					break;
-
-			}
-
-			$this->Form->appendChild($fieldset);
 		}
 
 		function __actionDetail(){

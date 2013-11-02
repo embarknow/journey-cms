@@ -1,8 +1,8 @@
 <?php
 
-	Class DataSourceException extends Exception {}
+	class DataSourceException extends Exception {}
 
-	Class DataSourceFilterIterator extends FilterIterator{
+	class DataSourceFilterIterator extends FilterIterator {
 		public function __construct($path){
 			parent::__construct(new DirectoryIterator($path));
 		}
@@ -15,7 +15,7 @@
 		}
 	}
 
-	Class DataSourceIterator implements Iterator{
+	class DataSourceIterator implements Iterator {
 		private static $datasources;
 		private $position;
 
@@ -30,14 +30,15 @@
 				self::$datasources[] = $file->getPathname();
 			}
 
-			$extensions = new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED);
+			$extensions = new ExtensionQuery();
+			$extensions->setFilters(array(
+				ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+			));
 
 			foreach ($extensions as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
+				if (is_dir($extension->path . '/data-sources') === false) continue;
 
-				if (!is_dir($path . '/data-sources')) continue;
-
-				foreach (new DataSourceFilterIterator($path . '/data-sources') as $file) {
+				foreach (new DataSourceFilterIterator($extension->path . '/data-sources') as $file) {
 					self::$datasources[] = $file->getPathname();
 				}
 			}
@@ -72,11 +73,7 @@
 		}
 	}
 
-
-
-	##Interface for datasouce objects
-	Abstract Class DataSource{
-
+	abstract class DataSource {
 		const FILTER_AND = 1;
 		const FILTER_OR = 2;
 
@@ -96,30 +93,40 @@
 			return $this->_about;
 		}
 
-		public function &parameters(){
+		public function &parameters(StdClass $data = null) {
+			if (isset($this->_parameters) === false) {
+				$this->_parameters = new StdClass();
+			}
+
+			if (isset($data)) foreach ($data as $key => $value) {
+				$this->_parameters->{$key} = $value;
+			}
+
 			return $this->_parameters;
 		}
 
 		public static function load($pathname){
-			if(!is_array(self::$_loaded)){
+			if (!is_array(self::$_loaded)) {
 				self::$_loaded = array();
 			}
 
-			if(!is_file($pathname)){
+			if (!is_file($pathname)) {
 		        throw new DataSourceException(
 					__('Could not find Data Source <code>%s</code>. If the Data Source was provided by an Extension, ensure that it is installed, and enabled.', array(basename($pathname)))
 				);
 			}
 
-			if(!isset(self::$_loaded[$pathname])){
-				self::$_loaded[$pathname] = require($pathname);
+			// Compensate for symlinking:
+			$pathname = realpath($pathname);
+
+			if (!isset(self::$_loaded[$pathname])) {
+				self::$_loaded[$pathname] = require_once($pathname);
 			}
 
 			$obj = new self::$_loaded[$pathname];
 			$obj->parameters()->pathname = $pathname;
 
 			return $obj;
-
 		}
 
 		public static function loadFromHandle($name){
@@ -128,25 +135,21 @@
 
 		protected static function __find($name){
 
-		    if(is_file(DATASOURCES . "/{$name}.php")) return DATASOURCES;
-		    else{
+		    if (is_file(DATASOURCES . "/{$name}.php")) {
+		    	return DATASOURCES;
+		    }
 
-				foreach(new ExtensionIterator(ExtensionIterator::FLAG_STATUS, Extension::STATUS_ENABLED) as $extension){
-					$path = Extension::getPathFromClass(get_class($extension));
-					$handle = Extension::getHandleFromPath($path);
+		    else {
+				$extensions = new ExtensionQuery();
+				$extensions->setFilters(array(
+					ExtensionQuery::STATUS =>	Extension::STATUS_ENABLED
+				));
 
-					if(is_file(EXTENSIONS . "/{$handle}/data-sources/{$name}.php")) return EXTENSIONS . "/{$handle}/data-sources";
-				}
-
-				/*
-				$extensions = ExtensionManager::instance()->listInstalledHandles();
-
-				if(is_array($extensions) && !empty($extensions)){
-					foreach($extensions as $e){
-						if(is_file(EXTENSIONS . "/{$e}/data-sources/{$name}.php")) return EXTENSIONS . "/{$e}/data-sources";
+				foreach ($extensions as $extension) {
+					if (is_file(EXTENSIONS . "/{$extension->handle}/data-sources/{$name}.php")) {
+						return EXTENSIONS . "/{$extension->handle}/data-sources";
 					}
 				}
-				*/
 	    	}
 
 		    return false;

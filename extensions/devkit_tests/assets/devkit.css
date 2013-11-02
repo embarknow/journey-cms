@@ -1,0 +1,61 @@
+#content {
+	color: hsl(0, 0%, 50%);
+	font: 14px/18px 'inconsolata';
+}
+
+#content a {
+	color: inherit;
+	text-decoration: none;
+}
+#content a:hover {
+	color: hsl(0, 0%, 90%);
+}
+
+#content h1,
+#content h2,
+#content legend {
+	font-family: sans-serif;
+}
+#content h1 {
+	font-size: 21px;
+}
+#content h2,
+#content legend {
+	font-size: 18px;
+}
+#content h2,
+#content fieldset {
+	margin: 10px 0 0 0;
+}
+#content legend {
+	float: left;
+	padding: 0 0 10px 0;
+}
+#content legend + * {
+	clear: both;
+}
+
+#content dt,
+#content p {
+	color: hsl(0, 0%, 70%);
+	margin: 10px 0 0 0;
+}
+#content dd {
+	padding: 0 0 0 20px;
+	white-space: pre-wrap;
+}
+#content dd + dd {
+	margin: 10px 0 0 0;
+}
+#content dd.bad {
+	color: hsl(0, 40%, 60%);
+}
+#content dd.good {
+	color: hsl(100, 40%, 60%);
+}
+#content p.result {
+	color: hsl(100, 40%, 60%);
+}
+#content p.result.failed {
+	color: hsl(0, 40%, 60%);
+}

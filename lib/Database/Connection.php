@@ -111,7 +111,7 @@ class Connection {
 			$query .= ' ON DUPLICATE KEY UPDATE ' . implode(', ', $sets);
 		}
 
-		$this->query($query, $values, null, false);
+		$this->query($query, $values);
 
 		return $this->connection->lastInsertId();
 	}

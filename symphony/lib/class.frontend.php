@@ -3,7 +3,7 @@
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');
 	require_once(LIB . '/class.lang.php');
-	require_once(LIB . '/class.register.php');
+	require_once(LIB . '/class.context.php');
 
 	Class FrontendPageNotFoundException extends SymphonyErrorPage{
 		public function __construct(View $page=NULL){
@@ -113,7 +113,7 @@
 		public function display($url=NULL){
 			Profiler::begin('Render the current page');
 
-			self::$Parameters = new Register;
+			self::$Parameters = new Context();
 
 			// Default headers. Can be overwritten later
 			//self::$Headers->append('HTTP/1.0 200 OK');

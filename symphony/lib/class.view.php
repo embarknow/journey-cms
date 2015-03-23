@@ -458,10 +458,10 @@
 		    return (($a->priority() > $b->priority()) ? -1 : 1);
 		}
 
-		public function render(Register $Parameters, XMLDocument $Document = null, DocumentHeaders $Headers = null) {
+		public function render(Context $Parameters, XMLDocument $Document = null, DocumentHeaders $Headers = null) {
 			Profiler::begin('Preparing view');
 
-			$ParameterOutput = new Register;
+			$ParameterOutput = new Context;
 
 			if (!is_null($Headers)) {
 				$Headers->append('Content-Type', $this->{'content-type'});

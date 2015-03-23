@@ -4,8 +4,8 @@
 		die();
 	}
 
-	define('DOCROOT', rtrim(dirname(__DIR__), '\\/'));
-	define('DOMAIN', rtrim(rtrim($_SERVER['HTTP_HOST'], '\\/') . dirname($_SERVER['PHP_SELF']), '\\/'));
+	define('DOCROOT', rtrim(realpath('..'), '\\/'));
+	define('DOMAIN', rtrim(rtrim($_SERVER['HTTP_HOST'], '\\/') . dirname($_SERVER['REQUEST_URI']), '\\/'));
 	define('VERSION', '3.0.0beta');
 
 	set_include_path(get_include_path() . PATH_SEPARATOR . realpath('../symphony/lib/'));
@@ -24,23 +24,28 @@
 		}
 
 		protected function __construct(){
-			self::$Configuration = new Configuration;
+			self::$Configuration = new Configuration(__DIR__ . '/conf');
+			$settings = self::Configuration()->main();
 
-			DateTimeObj::setDefaultTimezone(self::Configuration()->core()->region->timezone);
+			DateTimeObj::setDefaultTimezone($settings->region->timezone);
 
-			self::$_lang = (self::Configuration()->core()->symphony->lang ? self::Configuration()->core()->symphony->lang : 'en');
+			self::$_lang = (
+				$settings->lang
+					? $settings->lang
+					: 'en'
+			);
 
-			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->core()->region->{'date-format'});
-			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->core()->region->{'time-format'});
+			define_safe('__SYM_DATE_FORMAT__', $settings->region->{'date-format'});
+			define_safe('__SYM_TIME_FORMAT__', $settings->region->{'time-format'});
 			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
-			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->core()->symphony->{'administration-path'}, '/')));
+			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim($settings->admin->path, '/')));
 
 			$this->initialiseLog();
 
 			GenericExceptionHandler::initialise(self::$Log);
 			GenericErrorHandler::initialise(self::$Log);
 
-			//$this->initialiseDatabase();
+			// $this->initialiseDatabase();
 			$this->initialiseCookie();
 
 			Extension::init();
@@ -49,6 +54,11 @@
 
 			// HACK!
 			$this->Cookie->get('blah');
+		}
+
+		public static function setDatabase($db)
+		{
+			self::$Database = $db;
 		}
 	}
 
@@ -103,269 +113,136 @@
 		return false;
 	}
 
-	$settings = array(
-	  'website-preferences' => array(
-	    'name' => 'Symphony CMS',
-	  ),
-	  'server-preferences' => array(
-	    'path' => realpath('..'),
-	    'file-permissions' => '0755',
-	    'directory-permissions' => '0755',
-	  ),
-	  'date-time' => array(
-	    'region' => date_default_timezone_get(),
-	    'date-format' => 'Y/m/d',
-	    'time-format' => 'H:i:s',
-	  ),
-	  'database' => array(
-	    'database' => NULL,
-	    'username' => NULL,
-	    'password' => NULL,
-	    'host' => 'localhost',
-	    'port' => '3306',
-	    'table-prefix' => 'sym_',
-	    'use-compatibility-mode' => 'no',
-	  ),
-	  'user' => array(
-	    'username' => NULL,
-	    'password' => NULL,
-	    'confirm-password' => NULL,
-	    'first-name' => NULL,
-	    'last-name' => NULL,
-	    'email-address' => NULL,
-	  )
-	);
+	$errors = new MessageStack();
+	$mainConf = Installer::Configuration()->main();
+	$databaseConf = Installer::Configuration()->database();
 
-	$errors = new MessageStack;
+	if (isset($_POST['action']['install'])) {
+		$data = $_POST;
 
-	if(isset($_POST['action']['install'])){
+	// Database --------------------------------------------------------------------------------------------------
 
-		$settings = $_POST;
+		$data['database'] = array_map('trim', $data['database']);
 
-		// Website Preferences -------------------------------------------------------------------------------------------
+		foreach ($data['database'] as $key => $value) {
+			$databaseConf[$key] = $value;
+		}
 
-			$settings['website-preferences'] = array_map('trim', $settings['website-preferences']);
+		if (missing(array(
+			$data['database']['host'],
+			$data['database']['port'],
+			$data['database']['user'],
+			$data['database']['password'],
+			$data['database']['database'],
+			$data['database']['table-prefix']
+		))) {
+			$errors->append('database', 'Please fill in all of the fields.');
+		}
 
-			// Missing Sitename
-			if(missing(array($settings['website-preferences']['name']))){
-				$errors->append('website-preferences', 'Name is a required field.');
+		// Test the database connection:
+		if ($errors->length() == 0) {
+			$db = new DBCMySQL($databaseConf);
+
+			try {
+				$db->connect();
 			}
 
-		// Server Preferences -------------------------------------------------------------------------------------------
-
-			// Missing root path
-			elseif(missing(array($settings['server-preferences']['path']))){
-				$errors->append('server-preferences', 'Root Path is a required field.');
+			catch (PDOException $e) {
+				$errors->append('database', 'Could not establish database connection. The following error was returned: ' . $e->getMessage());
 			}
 
-			// Root Path does not exist or is not writable
-			elseif(!is_dir($settings['server-preferences']['path']) || !is_writable($settings['server-preferences']['path'])){
-				$errors->append('server-preferences', 'Path specified does not exist, or is not writable. Please check permissions on that location.');
-			}
+			if ($errors->length() == 0) {
+			/// Create the .htaccess ------------------------------------------------------------------
 
-			// Root Path contains another install of Symphony
-			elseif(file_exists(sprintf('%s/manifest/core.xml', rtrim($settings['server-preferences']['path'], '/')))){
-				$errors->append('server-preferences', 'An installation of Symphony already exists at that location.');
-			}
+				$rewrite_base = preg_replace('/\/install$/i', NULL, dirname($_SERVER['PHP_SELF']));
 
-
-		// Database --------------------------------------------------------------------------------------------------
-
-			$settings['database'] = array_map('trim', $settings['database']);
-
-			// Missing Database
-			// Missing username
-			// Missing password
-			// Missing host
-			// Missing port
-			// Missing table prefix
-			if(missing(array(
-				$settings['database']['database'],
-				$settings['database']['username'],
-				$settings['database']['host'],
-				$settings['database']['port'],
-				$settings['database']['table-prefix']
-			))){
-				$errors->append('database', 'Database, Username, Password, Host, Port and Table Prefix are all required fields.');
-			}
-
-			// Database doesnt exist
-			// Username+Password combo invalid
-			// Invalid database host or port
-			// Prefix in use
-
-
-		// User ------------------------------------------------------------------------------------------------------
-
-			$settings['user'] = array_map('trim', $settings['user']);
-
-			// Missing username
-			// Missing password
-			// Missing first name
-			// Missing Last name
-			// Missing Email Address
-			if(missing(array(
-				$settings['user']['username'],
-				$settings['user']['password'],
-				$settings['user']['first-name'],
-				$settings['user']['last-name'],
-				$settings['user']['email-address']
-			))){
-				$errors->append('user', 'Username, Password, First Name, Last Name and Email Address are all required fields.');
-			}
-
-			// Invalid username
-			elseif(preg_match('/[\s]/i', $settings['user']['username'])){
-				$errors->append('user', 'Username is invalid.');
-			}
-
-			// Passwords do not match
-			elseif($settings['user']['password'] != $settings['user']['confirm-password']){
-				$errors->append('user', 'Passwords do not match.');
-			}
-
-			// Invalid Email address
-			elseif(!preg_match('/^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/i', $settings['user']['email-address'])){
-				$errors->append('user', 'Email Address is invalid.');
-			}
-
-		if($errors->length() == 0){
-
-			/// Create a DB connection --------------------------------------------------------------------------
-				$db = new DBCMySQL;
-
-				$db->character_encoding = 'utf8';
-				$db->character_set = 'utf8';
-				$db->force_query_caching = false;
-				$db->prefix = $settings['database']['table-prefix'];
-
-				$connection_string = sprintf(
-					'mysql://%s:%s@%s:%s/%s/',
-					$settings['database']['username'],
-					$settings['database']['password'],
-					$settings['database']['host'],
-					$settings['database']['port'],
-					$settings['database']['database']
+				$htaccess = sprintf(
+					file_get_contents('assets/template.htaccess.txt'),
+					empty($rewrite_base) ? '/' : $rewrite_base
 				);
 
-				try{
-					$db->connect($connection_string);
+				// Cannot write .htaccess:
+				if (false === General::writeFile(
+					realpath('..') . '/.htaccess',
+					$htaccess,
+					0775
+				)) {
+					throw new Exception('Could not write .htaccess file. TODO: Handle this by recording to the log and showing nicer error page.');
 				}
-				catch(DatabaseException $e){
-					$errors->append('database', 'Could not establish database connection. The following error was returned: ' . $e->getMessage());
+
+			/// Create Folder Structures ---------------------------------------------------------------
+
+				// These folders are necessary, and can be created if missing
+				$folders = [
+					'workspace',
+					'workspace/views',
+					'workspace/utilities',
+					'workspace/sections',
+					'workspace/data-sources',
+					'workspace/events',
+					'manifest',
+					'manifest/conf',
+					'manifest/logs',
+					'manifest/templates',
+					'manifest/tmp',
+					'manifest/cache'
+				];
+
+				foreach ($folders as $folder) {
+					$path = realpath('..') . "/{$folder}";
+
+					if (false === is_dir($path) && false === mkdir($path, 0775)) {
+						throw new Exception('Could not create directory ' . $path . '. TODO: Handle this by recording to the log and showing nicer error page.');
+					}
 				}
 
-			if($errors->length() == 0){
+			/// Save the config ------------------------------------------------------------------------
 
-				$permission = intval($settings['server-preferences']['directory-permissions'], 8);
-
-				/// Create the .htaccess ------------------------------------------------------------------
-					$rewrite_base = preg_replace('/\/install$/i', NULL, dirname($_SERVER['PHP_SELF']));
-
-					$htaccess = sprintf(
-						file_get_contents('assets/template.htaccess.txt'),
-						empty($rewrite_base) ? '/' : $rewrite_base
-					);
-
-					// Cannot write .htaccess
-					if(!General::writeFile(sprintf('%s/.htaccess', rtrim($settings['server-preferences']['path'], '/')), $htaccess, $settings['server-preferences']['file-permissions'])){
-						throw new Exception('Could not write .htaccess file. TODO: Handle this by recording to the log and showing nicer error page.');
-					}
-
-
-				/// Create Folder Structures ---------------------------------------------------------------
-
-					// These folders are necessary, and can be created if missing
-					$folders = array(
-						'workspace', 'workspace/views', 'workspace/utilities', 'workspace/sections', 'workspace/data-sources', 'workspace/events',
-						'manifest', 'manifest/conf', 'manifest/logs', 'manifest/templates', 'manifest/tmp', 'manifest/cache'
-					);
-
-					foreach($folders as $f){
-						$path = realpath("../") . "/{$f}";
-						if(!is_dir($path) && !mkdir($path, $permission)){
-							throw new Exception('Could not create directory '.$path.'. TODO: Handle this by recording to the log and showing nicer error page.');
-						}
-					}
-
-				/// Save the config ------------------------------------------------------------------------
-					$config_core = sprintf(
-						file_get_contents('assets/template.core.xml'),
-						VERSION,
-						$settings['website-preferences']['name'],
-						$settings['server-preferences']['file-permissions'],
-						$settings['server-preferences']['directory-permissions'],
-						$settings['date-time']['time-format'],
-						$settings['date-time']['date-format'],
-						$settings['date-time']['region']
-					);
-
-					$config_db = sprintf(
-						file_get_contents('assets/template.db.xml'),
-						$settings['database']['host'],
-						$settings['database']['port'],
-		 				$settings['database']['username'],
-						$settings['database']['password'],
-						$settings['database']['database'],
-						$settings['database']['table-prefix']
-					);
-
-					// Write the core config file
-					if(!General::writeFile(
-						sprintf('%s/manifest/conf/core.xml', rtrim($settings['server-preferences']['path'], '/')),
-						$config_core,
-						$settings['server-preferences']['file-permissions']
-					)){
-						throw new Exception('Could not write manifest/conf/core.xml file. TODO: Handle this by recording to the log and showing nicer error page.');
-					}
-
-					// Wite the core config file
-					if(!General::writeFile(
-						sprintf('%s/manifest/conf/db.xml', rtrim($settings['server-preferences']['path'], '/')),
-						$config_db,
-						$settings['server-preferences']['file-permissions']
-					)){
-						throw new Exception('Could not write manifest/conf/db.xml file. TODO: Handle this by recording to the log and showing nicer error page.');
-					}
+				$mainConf->save(realpath('..') . '/manifest/conf/main.xml');
+				$databaseConf->save(realpath('..') . '/manifest/conf/database.xml');
 			}
 
-			/// Import the Database --------------------------------------------------------------------------------
-				if($errors->length() == 0){
-					try{
+			// Import the database:
+			if ($errors->length() == 0) {
+				try {
+					$queries = require __DIR__ . '/assets/queries.php';
 
-						$queries = preg_split('/;[\\r\\n]+/', file_get_contents('assets/install.sql'), -1, PREG_SPLIT_NO_EMPTY);
-
-						if(!is_array($queries) || empty($queries) || count($queries) <= 0){
-							throw new Exception('install/assets/install.sql file contained no queries.');
-						}
-
-						foreach($queries as $sql){
-							$db->import($sql);
-						}
-
-						// Create the default user
-						$db->insert('tbl_users', array(
-							'username' => $settings['user']['username'],
-							'password' => md5($settings['user']['password']),
-							'first_name' => $settings['user']['first-name'],
-							'last_name' => $settings['user']['last-name'],
-							'email' => $settings['user']['email-address'],
-							'default_section' => 'articles',
-							'auth_token_active' => 'no',
-							'language' => 'en'
-						));
+					foreach ($queries as $query) {
+						$db->execute($query);
 					}
-					catch(Exception $e){
-						$errors->append('database', $e->getMessage());
-					}
+
+					// Create the default user
+					$db->insert('tbl_users', [
+						'username' =>			'admin',
+						'password' =>			uniqid(true),
+						'first_name' =>			'Site',
+						'last_name' =>			'Admin',
+						'email' =>				'admin@localhost',
+						'default_section' =>	'articles',
+						'auth_token_active' =>	'yes',
+						'language' =>			'en'
+					]);
+
+					Installer::setDatabase($db);
 				}
 
-			if($errors->length() == 0){
-				redirect(URL . '/symphony');
+				catch (Exception $e) {
+					$errors->append('database', $e->getMessage());
+				}
 			}
 
+			// Log the user in:
+			if ($errors->length() == 0) {
+				$user = User::load(1);
+				$token = $user->createAuthToken();
+
+				redirect(URL . '/symphony/?auth-token=' . $token);
+			}
 		}
 	}
+
+
+
 
 
 	$Document = new HTMLDocument('1.0', 'utf-8', 'html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"');
@@ -395,7 +272,9 @@
 	$layout->setAttribute('id', 'layout');
 	$form->appendChild($layout);
 
+
 	// About panel ---------------------------------------------------------------------------------------------------
+
 	$div = $Document->createElement('div');
 	$layout->appendChild($div);
 
@@ -405,112 +284,13 @@
 	$about->appendChild($Document->createElement('p', 'Version 3.0.0 alpha'));
 	$div->appendChild($about);
 
-	// Website Preferences -------------------------------------------------------------------------------------------
-	$panel = createPanel($layout, 'Your Website', 'The essential details', $errors->{'website-preferences'});
-
-	$label = Widget::Label('Website Name', NULL, array('class' => 'input'));
-	$input = Widget::Input('website-preferences[name]', $settings['website-preferences']['name']);
-	$label->appendChild($input);
-	$panel->appendChild($label);
-
-	// Server Preferences -------------------------------------------------------------------------------------------
-	$panel = createPanel($layout, 'Your Server', 'Where to install and what permissions to use', $errors->{'server-preferences'});
-
-	$label = Widget::Label('Root Path', NULL, array('class' => 'input'));
-	$input = Widget::Input('server-preferences[path]', $settings['server-preferences']['path']);
-	$label->appendChild($input);
-	$panel->appendChild($label);
-
-	$extended = $Document->createElement('div');
-	$extended->setAttribute('class', 'extended');
-	$panel->appendChild($extended);
-	$div = $Document->createElement('div');
-	$extended->appendChild($div);
-	$group = $Document->createElement('div');
-	$group->setAttribute('class', 'group');
-	$div->appendChild($group);
-
-	$label = Widget::Label('File Permissions', NULL, array('class' => 'select'));
-	$permission_options = array(
-		array('0644', $settings['server-preferences']['file-permissions'] == '0644', '0644'),
-		array('0664', $settings['server-preferences']['file-permissions'] == '0664', '0664'),
-		array('0666', $settings['server-preferences']['file-permissions'] == '0666', '0666'),
-	);
-	$input = Widget::Select('server-preferences[file-permissions]', $permission_options);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$label = Widget::Label('Directory Permissions', NULL, array('class' => 'select'));
-	$permission_options = array(
-		array('0755', $settings['server-preferences']['directory-permissions'] == '0755', '0755'),
-		array('0775', $settings['server-preferences']['directory-permissions'] == '0775', '0775'),
-		array('0777', $settings['server-preferences']['directory-permissions'] == '0777', '0777'),
-	);
-	$input = Widget::Select('server-preferences[directory-permissions]', $permission_options);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-
-	// Date and Time -------------------------------------------------------------------------------------------------
-	$panel = createPanel($layout, 'Your Locale', 'Default region and date/time format', $errors->{'date-time'});
-
-	$label = Widget::Label('Region', NULL, array('class' => 'select'));
-	$options = array();
-	foreach(DateTimeZone::listIdentifiers() as $t){
-		$options[] = array($t, ($t == $settings['date-time']['region']), $t);
-	}
-	$input = Widget::Select('date-time[region]', $options);
-	$label->appendChild($input);
-	$panel->appendChild($label);
-
-	$extended = $Document->createElement('div');
-	$extended->setAttribute('class', 'extended');
-	$panel->appendChild($extended);
-	$div = $Document->createElement('div');
-	$extended->appendChild($div);
-	$group = $Document->createElement('div');
-	$group->setAttribute('class', 'group');
-	$div->appendChild($group);
-
-	$date_formats = array(
-		'Y/m/d',
-		'm/d/Y',
-		'm/d/y',
-		'd F Y'
-	);
-
-	$label = Widget::Label('Date Format', NULL, array('class' => 'select'));
-	$options = array();
-	foreach($date_formats as $d){
-		$options[] = array($d, $d == $settings['date-time']['date-format'], DateTimeObj::get($d));
-	}
-	$input = Widget::Select('date-time[date-format]', $options);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-
-	$time_formats = array(
-		'H:i:s',
-		'H:i',
-		'g:i:s a',
-		'g:i a'
-	);
-
-	$label = Widget::Label('Time Format', NULL, array('class' => 'select'));
-	$options = array();
-	foreach($time_formats as $t){
-		$options[] = array($t, $t == $settings['date-time']['time-format'], DateTimeObj::get($t));
-	}
-	$input = Widget::Select('date-time[time-format]', $options);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
 
 	// Database Connection -------------------------------------------------------------------------------------------
-	$panel = createPanel($layout, 'Your Database', 'Access details and database preferences', $errors->{'database'});
+
+	$panel = createPanel($layout, 'Database', 'Access details and database preferences', $errors->{'database'});
 
 	$label = Widget::Label('Database', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[database]', $settings['database']['database']);
+	$input = Widget::Input('database[database]', $databaseConf['database']);
 	$label->appendChild($input);
 	$panel->appendChild($label);
 
@@ -518,12 +298,12 @@
 	$group->setAttribute('class', 'group');
 
 	$label = Widget::Label('Username', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[username]', $settings['database']['username']);
+	$input = Widget::Input('database[user]', $databaseConf['user']);
 	$label->appendChild($input);
 	$group->appendChild($label);
 
 	$label = Widget::Label('Password', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[password]', $settings['database']['password'], 'password');
+	$input = Widget::Input('database[password]', $databaseConf['password'], 'password');
 	$label->appendChild($input);
 	$group->appendChild($label);
 
@@ -539,80 +319,23 @@
 	$div->appendChild($group);
 
 	$label = Widget::Label('Host', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[host]', $settings['database']['host']);
+	$input = Widget::Input('database[host]', $databaseConf['host']);
 	$label->appendChild($input);
 	$group->appendChild($label);
 
 	$label = Widget::Label('Port', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[port]', $settings['database']['port']);
+	$input = Widget::Input('database[port]', $databaseConf['port']);
 	$label->appendChild($input);
 	$group->appendChild($label);
 
 	$label = Widget::Label('Table Prefix', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[table-prefix]', $settings['database']['table-prefix']);
+	$input = Widget::Input('database[table-prefix]', $databaseConf['table-prefix']);
 	$label->appendChild($input);
 	$group->appendChild($label);
 
-
-	$label = Widget::Label(NULL, NULL, array('class' => 'checkbox'));
-	$input = Widget::Input('database[use-compatibility-mode]', 'yes', 'checkbox');
-	if($settings['database']['use-compatibility-mode'] == 'yes'){
-		$input->setAttribute('checked', 'checked');
-	}
-	$label->appendChild($input);
-	$label->appendChild(new DOMText(' Use compatibility mode?'));
-	$div->appendChild($label);
-	$div->appendChild($Document->createElement('p', 'With compatibility mode enabled, Symphony will use the default character encoding of your database instead of overriding it with UTF-8 encoding.', array('class' => 'description')));
-
-
-	// User Information ----------------------------------------------------------------------------------------------
-	$panel = createPanel($layout, 'Your First User', 'Details for your first Symphony user', $errors->{'user'});
-
-	$label = Widget::Label('Username', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[username]', $settings['user']['username']);
-	$label->appendChild($input);
-	$panel->appendChild($label);
-
-	$group = $Document->createElement('div');
-	$group->setAttribute('class', 'group');
-
-	$label = Widget::Label('Password', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[password]', $settings['user']['password'], 'password');
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$label = Widget::Label('Confirm Password', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[confirm-password]', $settings['user']['confirm-password'], 'password');
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$panel->appendChild($group);
-
-	$extended = $Document->createElement('div');
-	$extended->setAttribute('class', 'extended');
-	$panel->appendChild($extended);
-	$div = $Document->createElement('div');
-	$extended->appendChild($div);
-	$group = $Document->createElement('div');
-	$group->setAttribute('class', 'group');
-	$div->appendChild($group);
-
-	$label = Widget::Label('First Name', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[first-name]', $settings['user']['first-name']);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$label = Widget::Label('Last Name', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[last-name]', $settings['user']['last-name']);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$label = Widget::Label('Email Address', NULL, array('class' => 'input'));
-	$input = Widget::Input('user[email-address]', $settings['user']['email-address']);
-	$label->appendChild($input);
-	$div->appendChild($label);
 
 	// Submit --------------------------------------------------------------------------------------------------------
+
 	$div = $Document->createElement('div');
 	$layout->appendChild($div);
 

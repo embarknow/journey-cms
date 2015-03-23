@@ -137,14 +137,14 @@
 		protected function __construct(){
 			self::$Configuration = new Configuration;
 
-			DateTimeObj::setDefaultTimezone(self::Configuration()->core()->region->timezone);
+			DateTimeObj::setDefaultTimezone(self::Configuration()->main()->region->timezone);
 
-			self::$_lang = (self::Configuration()->core()->symphony->lang ? self::Configuration()->core()->symphony->lang : 'en');
+			self::$_lang = (self::Configuration()->main()->lang ? self::Configuration()->main()->lang : 'en');
 
-			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->core()->region->{'date-format'});
-			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->core()->region->{'time-format'});
+			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->main()->region->{'date-format'});
+			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->main()->region->{'time-format'});
 			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
-			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->core()->symphony->{'administration-path'}, '/')));
+			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->main()->admin->path, '/')));
 
 			$this->initialiseLog();
 
@@ -162,38 +162,44 @@
 			$this->Cookie->get('blah');
 		}
 
-		public function lang(){
+		public function lang() {
 			return self::$_lang;
 		}
 
-		public function initialiseCookie(){
-			try{
+		public function initialiseCookie()
+		{
+			try {
 				$cookie_path = parse_url(URL, PHP_URL_PATH);
 				$cookie_path = '/' . trim($cookie_path, '/');
 			}
-			catch(Exception $e){
+
+			catch (Exception $e) {
 				$cookie_path = '/';
 			}
 
 			define_safe('__SYM_COOKIE_PATH__', $cookie_path);
-			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->core()->symphony->{'cookie-prefix'});
+			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->main()->session->{'cookie-prefix'});
 
 			$this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__, null, true);
 		}
 
-		public static function Configuration() {
+		public static function Configuration()
+		{
 			return self::$Configuration;
 		}
 
-		public static function Database() {
+		public static function Database()
+		{
 			return self::$Database;
 		}
 
-		public static function Log() {
+		public static function Log()
+		{
 			return self::$Log;
 		}
 
-		public static function Parent() {
+		public static function Parent()
+		{
 			if (class_exists('Administration')) {
 				return Administration::instance();
 			}
@@ -203,31 +209,13 @@
 			}
 		}
 
-		public function initialiseDatabase(){
-			$details = (object)Symphony::Configuration()->db();
+		public function initialiseDatabase()
+		{
+			$conf = (object)Symphony::Configuration()->database();
+			$database = new DBCMySQL($conf);
+			$database->connect();
 
-			//$db = new DBCMySQLProfiler;
-			$db = new DBCMySQL;
-
-			if($details->runtime_character_set_alter == 'yes'){
-				$db->character_encoding = $details->character_encoding;
-				$db->character_set = $details->character_set;
-			}
-
-			$connection_string = sprintf('mysql://%s:%s@%s:%s/%s/',
-											$details->user,
-											$details->password,
-											$details->host,
-											$details->port,
-											$details->db);
-
-			$db->connect($connection_string);
-			$db->prefix = $details->{'table-name-prefix'};
-
-			$db->force_query_caching = NULL;
-			if(!is_null($details->disable_query_caching)) $db->force_query_caching = ($details->disable_query_caching == 'yes' ? true : false);
-
-			self::$Database = $db;
+			self::$Database = $database;
 
 			return true;
 		}
@@ -235,12 +223,11 @@
 		public function initialiseLog(){
 
 			self::$Log = new Log(ACTIVITY_LOG);
-			self::$Log->setArchive((self::Configuration()->core()->log->archive == '1' ? true : false));
-			self::$Log->setMaxSize(intval(self::Configuration()->core()->log->maxsize));
+			self::$Log->setArchive((self::Configuration()->main()->logging->archive == '1' ? true : false));
+			self::$Log->setMaxSize(intval(self::Configuration()->main()->logging->maxsize));
 
 			if(self::$Log->open() == 1){
 				self::$Log->writeToLog('Symphony Log', true);
-				self::$Log->writeToLog('Version: '. self::Configuration()->core()->symphony->version, true);
 				self::$Log->writeToLog('--------------------------------------------', true);
 			}
 

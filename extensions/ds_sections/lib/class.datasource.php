@@ -1,5 +1,8 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Datasource\ResultIterator;
+
 	require_once LIB . '/class.datasource.php';
 	require_once LIB . '/class.entry.php';
 	require_once LIB . '/class.duplicator.php';
@@ -1055,7 +1058,7 @@
 		protected $entries;
 
 		public function __construct($result) {
-			$iterator = new DBCMySQLResult($result);
+			$iterator = new ResultIterator($result);
 			$entries = array();
 
 			if ($iterator->valid()) foreach ($iterator as $record) {

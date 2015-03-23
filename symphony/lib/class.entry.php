@@ -1,6 +1,9 @@
 <?php
 
-	Class EntryResult extends DBCMySQLResult {
+use Embark\CMS\Database\Connection;
+use Embark\CMS\Database\ResultIterator;
+
+	class EntryResult extends ResultIterator {
 		public $schema = array();
 
 		public function current(){
@@ -197,7 +200,7 @@
 			// Attempt the saving part
 			if ($status == Field::STATUS_OK){
 				// Update the meta row
-				Symphony::Database()->insert('tbl_entries', (array)$entry->meta(), Database::UPDATE_ON_DUPLICATE);
+				Symphony::Database()->insert('tbl_entries', (array)$entry->meta(), Connection::UPDATE_ON_DUPLICATE);
 
 				foreach ($section->fields as $field) {
 					if (!isset($entry->data()->{$field->{'element-name'}})) continue;

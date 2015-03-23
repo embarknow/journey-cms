@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+
 	Class fieldLink extends Field{
 		static protected $cacheRelations = array();
 		static protected $cacheFields = array();

@@ -141,7 +141,7 @@
 
 		// Test the database connection:
 		if ($errors->length() == 0) {
-			$db = new DBCMySQL($databaseConf);
+			$db = new Connection($databaseConf);
 
 			try {
 				$db->connect();

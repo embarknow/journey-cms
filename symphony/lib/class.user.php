@@ -1,8 +1,11 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Database\ResultIterator;
+
 	Class UserException extends Exception {}
 
-	Class UserResult extends DBCMySQLResult{
+	Class UserResult extends ResultIterator{
 		public function current(){
 			$record = parent::current();
 

@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Database\Connection;
+
 	if (!defined('__IN_SYMPHONY__')) die('<h2>Symphony Error</h2><p>You cannot directly access this file</p>');
 
 	class FieldUpload extends Field {
@@ -718,7 +720,7 @@
 				Symphony::Database()->insert(
 					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
-					Database::UPDATE_ON_DUPLICATE
+					Connection::UPDATE_ON_DUPLICATE
 				);
 
 				return self::STATUS_OK;

@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+
 	class FieldLinked_Entries extends Field {
 		public function __construct() {
 			parent::__construct();

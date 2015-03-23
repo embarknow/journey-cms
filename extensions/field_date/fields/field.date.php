@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+
 	Class fieldDate extends Field{
 
 		const SIMPLE = 0;

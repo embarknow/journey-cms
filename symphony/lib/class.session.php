@@ -1,5 +1,8 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Database\Connection;
+
 	/**
 	 * @package core
 	 */
@@ -176,7 +179,7 @@
 				'session_data' => $data
 			);
 
-			return Symphony::Database()->insert('tbl_sessions', $fields, Database::UPDATE_ON_DUPLICATE);
+			return Symphony::Database()->insert('tbl_sessions', $fields, Connection::UPDATE_ON_DUPLICATE);
 		}
 
 		/**

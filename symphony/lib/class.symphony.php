@@ -1,8 +1,10 @@
 <?php
 
+use Embark\CMS\Database\Connection;
+
 	require_once 'class.errorhandler.php';
 
-	require_once 'class.dbc.php';
+	// require_once 'class.dbc.php';
 	require_once 'class.configuration.php';
 	require_once 'class.datetimeobj.php';
 	require_once 'class.log.php';
@@ -212,7 +214,7 @@
 		public function initialiseDatabase()
 		{
 			$conf = (object)Symphony::Configuration()->database();
-			$database = new DBCMySQL($conf);
+			$database = new Connection($conf);
 			$database->connect();
 
 			self::$Database = $database;

@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+
 	Class fieldSelect extends Field {
 		function __construct(){
 			parent::__construct();

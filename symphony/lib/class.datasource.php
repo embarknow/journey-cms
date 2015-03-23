@@ -87,7 +87,7 @@
 		protected static $_loaded;
 
 		// Abstract function
-		abstract public function render(Register $ParameterOutput);
+		abstract public function render(Context $ParameterOutput);
 
 		public static function getHandleFromFilename($filename){
 			return preg_replace('/(.php$|\/.*\/)/i', NULL, $filename);
@@ -283,7 +283,7 @@
 		 	return preg_match('/\s+\+\s+/', $string) ? DataSource::FILTER_AND : DataSource::FILTER_OR;
 		}
 
-		public static function prepareFilterValue($value, Register $ParameterOutput=NULL, &$filterOperationType=DataSource::FILTER_OR){
+		public static function prepareFilterValue($value, Context $ParameterOutput=NULL, &$filterOperationType=DataSource::FILTER_OR){
 
 			if(strlen(trim($value)) == 0) return NULL;
 
@@ -357,7 +357,7 @@
 			return $string;
 		}
 
-		public static function resolveParameter($param, Register $DataSourceParameterOutput = null) {
+		public static function resolveParameter($param, Context $DataSourceParameterOutput = null) {
 			//	TODO: Allow resolveParamter to check the stack, ie: $ds-blog-tag:$ds-blog-id
 			$param = trim($param, '$');
 

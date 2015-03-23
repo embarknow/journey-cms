@@ -571,7 +571,7 @@
 
 	/*-----------------------------------------------------------------------*/
 
-		public function render(Register $parameter_output, $joins = NULL, array $where = array(), $filter_operation_type = self::FILTER_AND){
+		public function render(Context $parameter_output, $joins = NULL, array $where = array(), $filter_operation_type = self::FILTER_AND){
 			$execute = true;
 
 			Profiler::begin('Building query');

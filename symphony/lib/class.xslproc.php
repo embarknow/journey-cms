@@ -135,7 +135,7 @@
 
 			$root->appendChild($processing_errors);
 
-			if(Frontend::Parameters() instanceof Register) {
+			if(Frontend::Parameters() instanceof Context) {
 				$params = Frontend::Parameters();
 
 				$parameters = $xml->createElement('parameters');

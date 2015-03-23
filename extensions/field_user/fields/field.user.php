@@ -186,8 +186,8 @@
 			if($this->{'allow-multiple-selection'} == 'yes') $fieldname .= '[]';
 
 			$label = Widget::Label(
-				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0 
-					? $this->{'publish-label'} 
+				(isset($this->{'publish-label'}) && strlen(trim($this->{'publish-label'})) > 0
+					? $this->{'publish-label'}
 					: $this->name)
 			);
 			$label->appendChild(Widget::Select($fieldname, $options,
@@ -288,7 +288,7 @@
 		//	users on their fields in the sym_users table. Once done, this buildFilterQuery will have to be updated
 		//	to think use those columns. For now this just filters on USER_ID (which is Symphony 2.0.x behaviour)
 
-		public function buildFilterQuery($filter, &$joins, array &$where, Register $ParameterOutput=NULL){
+		public function buildFilterQuery($filter, &$joins, array &$where, Context $ParameterOutput=NULL){
 			self::$key++;
 
 			$value = DataSource::prepareFilterValue($filter['value'], $ParameterOutput, $operation_type);
@@ -330,7 +330,7 @@
 
 			return true;
 		}
-		
+
 		public function buildSortingJoin(&$joins) {
 			$table = Symphony::Database()->prepareQuery(sprintf(
 				'tbl_data_%s_%s', $this->section, $this->{'element-name'}, ++self::$key
@@ -342,7 +342,7 @@
 				"\nLEFT OUTER JOIN `%s` AS data_%s ON (e.id = data_%2\$s.entry_id)\nJOIN `tbl_users` AS users_%2\$s ON (data_%2\$s.user_id = users_%2\$s.id)",
 				$table, $handle
 			);
-			
+
 			return 'users_' . $handle;
 		}
 

@@ -301,7 +301,7 @@
 
 	/*-----------------------------------------------------------------------*/
 
-		public function render(Register $ParameterOutput){
+		public function render(Context $ParameterOutput) {
 			$result = new XMLDocument;
 			$root = $result->createElement($this->parameters()->{'root-element'});
 

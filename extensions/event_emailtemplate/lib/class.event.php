@@ -274,7 +274,7 @@
 			return true;
 		}
 
-		public function trigger(Register $ParameterOutput, array $postdata){
+		public function trigger(Context $ParameterOutput, array $postdata){
 			Extension::load('event_emailtemplate');
 			Extension_Event_EmailTemplate::$events[] = $this;
 		}

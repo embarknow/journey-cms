@@ -353,7 +353,7 @@
 			return $data;
 		}
 
-		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output = null) {
+		public function buildFilterQuery($filter, &$joins, array &$where, Context $parameter_output = null) {
 			$filter = $this->processFilter($filter);
 			$db = Symphony::Database();
 			$statements = array();

@@ -262,7 +262,7 @@
 			return true;
 		}
 
-		public function trigger(Register $ParameterOutput, array $postdata){
+		public function trigger(Context $ParameterOutput, array $postdata){
 			$result = new XMLDocument;
 			$result->appendChild($result->createElement($this->parameters()->{'root-element'}));
 

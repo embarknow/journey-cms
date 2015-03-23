@@ -590,7 +590,7 @@
 			return $filters;
 		}
 
-		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output) {
+		public function buildFilterQuery($filter, &$joins, array &$where, Context $parameter_output) {
 			$filter = $this->processFilter($filter);
 			$filter_join = DataSource::FILTER_OR;
 			$db = Symphony::Database();

@@ -1,7 +1,7 @@
 <?php
-	
+
 	require_once LIB . '/class.datasource.php';
-	
+
 	Class ViewsDataSource extends DataSource {
 		public function __construct(){
 			$this->_about = new StdClass;
@@ -19,9 +19,9 @@
 		public function getTemplate(){
 			return EXTENSIONS . '/ds_views/templates/datasource.php';
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
-		
+
 		public function prepare(array $data = null) {
 			if(!is_null($data)){
 				if(isset($data['about']['name'])) $this->about()->name = $data['about']['name'];
@@ -32,7 +32,7 @@
 
 		public function view(SymphonyDOMElement $wrapper, MessageStack $errors) {
 			$page = Administration::instance()->Page;
-			
+
 			$layout = new Layout();
 			$left = $layout->createColumn(Layout::SMALL);
 			$right = $layout->createColumn(Layout::LARGE);
@@ -160,10 +160,10 @@
 			$right->appendChild($fieldset);
 			$layout->appendTo($wrapper);
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
 
-		public function render(Register $ParameterOutput){
+		public function render(Context $ParameterOutput){
 			$result = new XMLDocument;
 			$root = $result->createElement($this->parameters()->{'root-element'});
 

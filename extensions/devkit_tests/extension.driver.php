@@ -53,7 +53,7 @@
 				$view = new $class(new View());
 
 				$context['output'] = $view->render(
-					new Register(),
+					new Context(),
 					Frontend::Document(),
 					Frontend::Headers()
 				);

@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <name>Symphony 3</name>
+  <name>Symphony</name>
   <lang>en</lang>
   <admin>
     <path>symphony/</path>
+    <pagination>17</pagination>
+    <minify-assets>no</minify-assets>
   </admin>
   <region>
     <time-format>H:i</time-format>
     <date-format>d F Y</date-format>
-    <timezone>GMT</timezone>
+    <timezone>UTC</timezone>
   </region>
   <logging>
     <archive>1</archive>

@@ -1,7 +1,7 @@
 <?php
 
 	require_once(LIB . '/class.administrationpage.php');
-	//require_once(LIB . '/class.datasourcemanager.php');
+	require_once(LIB . '/class.datasource.php');
 	//require_once(LIB . '/class.sectionmanager.php');
 	require_once(LIB . '/class.messagestack.php');
 
@@ -202,7 +202,7 @@
 				$this->type = $_REQUEST['type'];
 
 				if (is_null($this->type)){
-					$this->type = Symphony::Configuration()->core()->{'default-datasource-type'};
+					// $this->type = Symphony::Configuration()->main()->{'default-datasource-type'};
 				}
 
 				// Should the default type or the selected type no longer be valid, choose the first available one instead

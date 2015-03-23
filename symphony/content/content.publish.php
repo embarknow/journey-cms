@@ -132,8 +132,8 @@
 
 				$pagination = array(
 					'total-entries' => $entry_count,
-					'entries-per-page' => Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'},
-					'total-pages' => ceil($entry_count / Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'}),
+					'entries-per-page' => Symphony::Configuration()->main()->admin->pagination,
+					'total-pages' => ceil($entry_count / Symphony::Configuration()->main()->admin->pagination),
 					'current-page' => $current_page
 				);
 				$pagination['start'] = ($current_page != 1) ? ($current_page - 1) * $pagination['entries-per-page'] : 0;
@@ -473,7 +473,7 @@
 			$this->entry->findDefaultFieldData();
 			$this->Form->appendChild(Widget::Input(
 				'MAX_FILE_SIZE',
-				Symphony::Configuration()->core()->symphony->{'maximum-upload-size'},
+				Symphony::Configuration()->main()->system->{'maximum-upload-size'},
 				'hidden'
 			));
 

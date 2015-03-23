@@ -190,7 +190,7 @@
 				$this->type = $_REQUEST['type'];
 
 				if (is_null($this->type)){
-					$this->type = Symphony::Configuration()->core()->{'default-event-type'};
+					// $this->type = Symphony::Configuration()->main()->{'default-event-type'};
 				}
 
 				// Should the default type or the selected type no longer be valid, choose the first available one instead

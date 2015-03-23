@@ -525,7 +525,7 @@
 						break;
 
 					case UPLOAD_ERR_FORM_SIZE:
-						$size = General::formatFilesize(Symphony::Configuration()->core()->symphony->{'maximum-upload-size'});
+						$size = General::formatFilesize(Symphony::Configuration()->main()->system->{'maximum-upload-size'});
 						$errors->append(
 							null, (object)array(
 							 	'message' => __(
@@ -620,7 +620,7 @@
 		}
 
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
-			$permissions = Symphony::Configuration()->core()->symphony->{'file-write-mode'};
+			$permissions = Symphony::Configuration()->main()->system->{'file-write-mode'};
 			$data->entry_id = $entry->id;
 
 			###

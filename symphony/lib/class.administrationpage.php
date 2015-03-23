@@ -68,12 +68,12 @@
 			);
 
 			// Builds a super JS and CSS document
-			if(Symphony::Configuration()->core()->symphony->{'condense-scripts-and-stylesheets'} == 'yes'){
-
-				if(file_exists(CACHE . '/admin-styles.css')){
+			if (Symphony::Configuration()->main()->admin->{'minify-assets'} == 'yes'){
+				if (file_exists(CACHE . '/admin-styles.css')){
 					$styles = array(URL . '/manifest/cache/admin-styles.css');
 				}
-				else{
+
+				else {
 					try{
 						$this->minify(array_map(create_function('$a', 'return DOCROOT . "/symphony/assets/css/" . basename($a);'), $styles), CACHE . '/admin-styles.css');
 						$styles = array(URL . '/manifest/cache/admin-styles.css');
@@ -124,7 +124,7 @@
 			$this->Body->appendChild($this->Form);
 
 			$h1 = $this->createElement('h1');
-			$anchor = $this->createElement('a', Symphony::Configuration()->core()->symphony->sitename);
+			$anchor = $this->createElement('a', Symphony::Configuration()->main()->name);
 			$anchor->setAttribute('href', rtrim(URL, '/') . '/');
 			$h1->appendChild($anchor);
 			$this->Form->appendChild($h1);

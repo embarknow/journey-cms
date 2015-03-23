@@ -12,20 +12,20 @@
 			$element->appendChild(new DOMEntityReference('ndash'));
 			$this->Body->appendChild($element);*/
 		}
-		
+
 		public function appendTabs() {
 			$path = ADMIN_URL . '/system/settings/';
-			
+
 			$options = array(
 				__('Preferences')	=> $path,
 				__('Extensions')	=> $path . 'extensions/'
 			);
-			
+
 			// Hide Extensions tab:
 			if (Extension::delegateSubscriptionCount('AddSettingsFieldsets', '/system/settings/extensions/') == 0) {
 				unset($options[__('Extensions')]);
 			}
-			
+
 			$this->appendViewOptions($options);
 		}
 
@@ -33,8 +33,8 @@
 		public function __viewIndex() {
 			$this->appendSubheading(__('Settings'));
 			$this->appendTabs();
-			
-			if(!is_writable(CONF . '/core.xml')){
+
+			if(!is_writable(CONF . '/main.xml')){
 				$this->alerts()->append(
 					__('The core Symphony configuration file, /manifest/conf/core.xml, is not writable. You will not be able to save any changes.'), AlertStack::ERROR
 				);
@@ -68,19 +68,18 @@
 			$left = $layout->createColumn(Layout::LARGE);
 			$center = $layout->createColumn(Layout::LARGE);
 			$right = $layout->createColumn(Layout::LARGE);
-		
+
 		// SITE SETUP
-			$helptext = 'Symphony version: ' .Symphony::Configuration()->core()->symphony->version;
-			$fieldset = Widget::Fieldset(__('Site Setup'), $helptext);
+			$fieldset = Widget::Fieldset(__('Site Setup'));
 
 			$label = Widget::Label(__('Site Name'));
-			$input = Widget::Input('settings[symphony][sitename]', Symphony::Configuration()->core()->symphony->sitename);
+			$input = Widget::Input('settings[symphony][sitename]', Symphony::Configuration()->main()->name);
 			$label->appendChild($input);
-			
+
 			if(isset($this->errors->{'symphony::sitename'})) {
 				$label = Widget::wrapFormElementWithError($label, $this->errors->{'symphony::sitename'});
 			}
-			
+
 			$fieldset->appendChild($label);
 
 		    // Get available languages
@@ -94,7 +93,7 @@
 				asort($languages);
 
 				foreach($languages as $code => $name) {
-					$options[] = array($code, $code == Symphony::Configuration()->core()->symphony->lang, $name);
+					$options[] = array($code, $code == Symphony::Configuration()->core()->lang, $name);
 				}
 				$select = Widget::Select('settings[symphony][lang]', $options);
 				unset($options);
@@ -111,7 +110,7 @@
 
 			// Date and Time Settings
 			$label = Widget::Label(__('Date Format'));
-			$input = Widget::Input('settings[region][date-format]', Symphony::Configuration()->core()->region->{'date-format'});
+			$input = Widget::Input('settings[region][date-format]', Symphony::Configuration()->main()->region->{'date-format'});
 			$label->appendChild($input);
 			if(isset($this->errors->{'region::date-format'})) {
 				$label = Widget::wrapFormElementWithError($label, $this->errors->{'region::date-format'});
@@ -119,7 +118,7 @@
 			$fieldset->appendChild($label);
 
 			$label = Widget::Label(__('Time Format'));
-			$input = Widget::Input('settings[region][time-format]', Symphony::Configuration()->core()->region->{'time-format'});
+			$input = Widget::Input('settings[region][time-format]', Symphony::Configuration()->main()->region->{'time-format'});
 			$label->appendChild($input);
 			if(isset($this->errors->{'region::time-format'})) {
 				$label = Widget::wrapFormElementWithError($label, $this->errors->{'region::time-format'});
@@ -129,9 +128,11 @@
 			$label = Widget::Label(__('Timezone'));
 
 			$timezones = timezone_identifiers_list();
+
 			foreach($timezones as $timezone) {
-				$options[] = array($timezone, $timezone == Symphony::Configuration()->core()->region->timezone, $timezone);
-				}
+				$options[] = array($timezone, $timezone == Symphony::Configuration()->main()->region->timezone, $timezone);
+			}
+
 			$select = Widget::Select('settings[region][timezone]', $options);
 			unset($options);
 			$label->appendChild($select);
@@ -151,8 +152,8 @@
 				'0644'
 			);
 
-			$fileperms = Symphony::Configuration()->core()->symphony->{'file-write-mode'};
-			$dirperms = Symphony::Configuration()->core()->symphony->{'directory-write-mode'};
+			$fileperms = Symphony::Configuration()->main()->system->{'file-write-mode'};
+			$dirperms = Symphony::Configuration()->main()->system->{'directory-write-mode'};
 
 			$label = Widget::Label(__('File Permissions'));
 			foreach($permissions as $p) {
@@ -186,9 +187,9 @@
 			$div->setAttribute('class', 'actions');
 
 			$attr = array('accesskey' => 's');
-			
+
 			if(!is_writable(CONF)) $attr['disabled'] = 'disabled';
-			
+
 			$div->appendChild(
 				Widget::Submit(
 					'action[save]', __('Save Changes'),
@@ -202,14 +203,14 @@
 		public function __viewExtensions() {
 			$this->appendSubheading(__('Settings'));
 			$this->appendTabs();
-			
+
 			$path = ADMIN_URL . '/symphony/system/settings/';
-			
+
 			// No settings for extensions here
 			if(Extension::delegateSubscriptionCount('AddSettingsFieldsets', '/system/settings/extensions/') <= 0){
 				redirect($path);
 			}
-			
+
 			// Status message:
 			$callback = Administration::instance()->getPageCallback();
 
@@ -241,7 +242,7 @@
 			Extension::notify('AddSettingsFieldsets', '/system/settings/extensions/', array('fieldsets' => &$extension_fieldsets));
 
 			if(empty($extension_fieldsets)) redirect($path);
-			
+
 			$layout = new Layout();
 			$left = $layout->createColumn(Layout::LARGE);
 			$center = $layout->createColumn(Layout::LARGE);
@@ -253,9 +254,9 @@
 				elseif($index % 2 == 0) $center->appendChild($fieldset);
 				else $left->appendChild($fieldset);
 			}
-			
+
 			$layout->appendTo($this->Form);
-			
+
 			$div = $this->createElement('div');
 			$div->setAttribute('class', 'actions');
 			$div->appendChild(
@@ -269,22 +270,22 @@
 
 			$this->Form->appendChild($div);
 		}
-		
+
 		public function __actionExtensions() {
 			###
 			# Delegate: CustomSaveActions
 			# Description: This is where Extensions can hook on to custom actions they may need to provide.
 			Extension::notify('CustomSaveActions', '/system/settings/extensions/');
-			
+
 			if (isset($_POST['action']['save']) && isset($_POST['settings'])) {
 				$settings = $_POST['settings'];
-				
+
 				if ($this->errors->length() <= 0) {
 
 					if(is_array($settings) && !empty($settings)){
 						foreach($settings as $set => $values) {
 							foreach($values as $key => $val) {
-								Symphony::Configuration()->core()->set->$key = $val;
+								Symphony::Configuration()->main()->{$set}->{$key} = $val;
 							}
 						}
 					}
@@ -300,7 +301,7 @@
 		}
 
 		public function __actionIndex() {
-			
+
 			if (!is_writable(CONF)) {
 				return;
 			}
@@ -312,12 +313,12 @@
 				# Delegate: Save
 				# Description: Saving of system preferences.
 				Extension::notify('Save', '/system/settings/', array('settings' => &$settings, 'errors' => &$this->errors));
-				
+
 				// Site name
 				if(strlen(trim($settings['symphony']['sitename'])) == 0){
 					$this->errors->append('symphony::sitename', __("'%s' is a required field.", array('Site Name')));
 				}
-				
+
 				// Date format
 				// TODO: Figure out a way to check date formats to ensure they are valid
 				if(strlen(trim($settings['region']['date-format'])) == 0){
@@ -326,7 +327,7 @@
 				//elseif(!date_parse(DateTimeObj::get($settings['region']['date-format'] . 'H:m:s'))){
 				//	$this->errors->append('region::date-format', __("Invalid date format specified."));
 				//}
-				
+
 				// Time format
 				// TODO: Figure out a way to check time formats to ensure they are valid
 				if(strlen(trim($settings['region']['time-format'])) == 0){
@@ -335,13 +336,12 @@
 				//elseif(!date_parse(DateTimeObj::get('Y-m-d' . $settings['region']['time-format']))){
 				//	$this->errors->append('region::time-format', __("Invalid time format specified."));
 				//}
-				
-				if ($this->errors->length() <= 0) {
 
+				if ($this->errors->length() <= 0) {
 					if(is_array($settings) && !empty($settings)){
 						foreach($settings as $set => $values) {
 							foreach($values as $key => $val) {
-								Symphony::Configuration()->core()->$set->$key = $val;
+								Symphony::Configuration()->main()->{$set}->{$key} = $val;
 							}
 						}
 					}

@@ -223,7 +223,7 @@
 				if(General::writeFile(
 					$pathname,
 					vsprintf(file_get_contents($this->getTemplate()), $data),
-					Symphony::Configuration()->core()->symphony->{'file-write-mode'}
+					Symphony::Configuration()->main()->system->{'file-write-mode'}
 				)){
 					if($editing !== false && $editing != $this->handle) General::deleteFile(EVENTS . '/' . $editing . '.php');
 

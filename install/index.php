@@ -236,7 +236,7 @@
 				$user = User::load(1);
 				$token = $user->createAuthToken();
 
-				redirect(URL . '/symphony/?auth-token=' . $token);
+				redirect(URL . '/symphony/system/settings/?auth-token=' . $token);
 			}
 		}
 	}

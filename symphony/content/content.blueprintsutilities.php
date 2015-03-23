@@ -130,7 +130,7 @@
 							__(
 								'Utility updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/utilities/new/',
 									ADMIN_URL . '/blueprints/utilities/'
 								)
@@ -144,7 +144,7 @@
 							__(
 								'Utility created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/utilities/new/',
 									ADMIN_URL . '/blueprints/utilities/'
 								)

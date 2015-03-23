@@ -1,4 +1,8 @@
 <?php
+
+use Embark\CMS\Database\Connection;
+use Embark\CMS\Configuration\Loader as Configuration;
+
 	if(isset($_GET['info'])) {
 		phpinfo();
 		die();
@@ -10,6 +14,7 @@
 
 	set_include_path(get_include_path() . PATH_SEPARATOR . realpath('../symphony/lib/'));
 
+	require DOCROOT . '/vendor/autoload.php';
 	require DOCROOT . '/symphony/bundle.php';
 	require DOCROOT . '/symphony/lib/class.frontend.php';
 	require DOCROOT . '/symphony/lib/class.htmldocument.php';
@@ -27,7 +32,7 @@
 			self::$Configuration = new Configuration(__DIR__ . '/conf');
 			$settings = self::Configuration()->main();
 
-			DateTimeObj::setDefaultTimezone($settings->region->timezone);
+			date_default_timezone_set($settings->region->timezone);
 
 			self::$_lang = (
 				$settings->lang

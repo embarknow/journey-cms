@@ -943,13 +943,17 @@ use Embark\CMS\Datasource\ResultIterator;
 							foreach ($included_elements->system as $field) {
 								switch ($field) {
 									case 'creation-date':
+										$date = new DateTime($e->creation_date);
+										$date->setTimeZone(new DateTimeZone('UTC'));
 										$entry->appendChild(General::createXMLDateObject(
-											$result, DateTimeObj::toGMT($e->creation_date), 'creation-date'
+											$result, $date, 'creation-date'
 										));
 										break;
 									case 'modification-date':
+										$date = new DateTime($e->modification_date);
+										$date->setTimeZone(new DateTimeZone('UTC'));
 										$entry->appendChild(General::createXMLDateObject(
-											$result, DateTimeObj::toGMT($e->modification_date), 'modification-date'
+											$result, $date, 'modification-date'
 										));
 										break;
 									case 'user':
@@ -978,11 +982,15 @@ use Embark\CMS\Datasource\ResultIterator;
 										break;
 
 									case 'creation-date':
-										$output_parameters->system[$field][] = DateTimeObj::get('Y-m-d H:i:s', DateTimeObj::toGMT($e->creation_date));
+										$date = new DateTime($e->creation_date);
+										$date->setTimeZone(new DateTimeZone('UTC'));
+										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 
 									case 'modification-date':
-										$output_parameters->system[$field][] = DateTimeObj::get('Y-m-d H:i:s', DateTimeObj::toGMT($e->modification_date));
+										$date = new DateTime($e->creation_date);
+										$date->setTimeZone(new DateTimeZone('UTC'));
+										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 
 									case 'user':

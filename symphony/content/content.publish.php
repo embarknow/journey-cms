@@ -498,7 +498,7 @@
 							__(
 								'Entry updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all Entries</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/new/'.$prepopulate_filter,
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/'
 								)
@@ -512,7 +512,7 @@
 							__(
 								'Entry created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all Entries</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/new/'.$prepopulate_filter,
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/'
 								)

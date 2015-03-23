@@ -347,7 +347,9 @@ use Embark\CMS\Database\Connection;
 					);
 				}
 
-				$meta['creation'] = DateTimeObj::get('c', filemtime($file));
+				$date = new DateTime();
+				$date->setTimestamp(filemtime($file));
+				$meta['creation'] = $date->format(DateTime::W3C);
 			}
 
 			###

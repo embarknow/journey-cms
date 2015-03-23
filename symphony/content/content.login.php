@@ -204,8 +204,10 @@
 
 					if($user->valid()){
 						$user = $user->current();
+						$date = new DateTime();
+						$date->setTimeZone(new DateTimeZone('UTC'));
 
-						Symphony::Database()->delete('tbl_forgotpass', array(DateTimeObj::getGMT('c')), " `expiry` < '%s'");
+						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
 
 						$token = Symphony::Database()->query("
 							SELECT
@@ -217,17 +219,19 @@
 							AND
 								user_id = %d
 							",
-							DateTimeObj::getGMT('c'),
+							$date->format(DateTime::W3C),
 							$user->id
 						);
 
 						if($token->valid()){
 							$token = substr(md5(time() . rand(0, 200)), 0, 6);
+							$date->setTimestamp(time() + (120 * 60));
+
 							Symphony::Database()->insert('tbl_forgotpass',
 								array(
-									'user_id' => $user->id,
-									'token' => $token,
-									'expiry' => DateTimeObj::getGMT('c', time() + (120 * 60))
+									'user_id' =>	$user->id,
+									'token' =>		$token,
+									'expiry' =>		$date->format(DateTime::W3C)
 								)
 							);
 						}

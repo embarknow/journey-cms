@@ -53,7 +53,7 @@
 							__(
 								'System settings saved at %1$s.',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__)
+									General::getTimeAgo(__SYM_TIME_FORMAT__)
 								)
 							),
 							AlertStack::SUCCESS);
@@ -224,7 +224,7 @@
 							__(
 								'System settings saved at %1$s.',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__)
+									General::getTimeAgo(__SYM_TIME_FORMAT__)
 								)
 							),
 							AlertStack::SUCCESS);
@@ -324,18 +324,12 @@
 				if(strlen(trim($settings['region']['date-format'])) == 0){
 					$this->errors->append('region::date-format', __("'%s' is a required field.", array('Date Format')));
 				}
-				//elseif(!date_parse(DateTimeObj::get($settings['region']['date-format'] . 'H:m:s'))){
-				//	$this->errors->append('region::date-format', __("Invalid date format specified."));
-				//}
 
 				// Time format
 				// TODO: Figure out a way to check time formats to ensure they are valid
 				if(strlen(trim($settings['region']['time-format'])) == 0){
 					$this->errors->append('region::time-format', __("'%s' is a required field.", array('Time Format')));
 				}
-				//elseif(!date_parse(DateTimeObj::get('Y-m-d' . $settings['region']['time-format']))){
-				//	$this->errors->append('region::time-format', __("Invalid time format specified."));
-				//}
 
 				if ($this->errors->length() <= 0) {
 					if(is_array($settings) && !empty($settings)){

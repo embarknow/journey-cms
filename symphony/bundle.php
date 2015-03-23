@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\App;
+
 	/**
 	 * Utility functions specific to the Symphony boot process, namespaced
 	 * as such to prevent conflicts with existing/other functions.
@@ -43,6 +45,9 @@
 
 			$class = require_once $path;
 			$renderer = call_user_func("\\{$class}::instance");
+
+			// var_dump((new \DateTime('@12523'))->format(\DateTime::W3C));
+			// exit;
 
 			Profiler::store('class', $class, 'system/class');
 			Profiler::store('location', $path, 'system/resource action/executed');

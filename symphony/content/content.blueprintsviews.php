@@ -152,7 +152,7 @@
 					__(
 						'View updated at %s. <a href="%s">View all</a>',
 						array(
-							DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+							General::getTimeAgo(__SYM_TIME_FORMAT__),
 							ADMIN_URL . '/blueprints/views/'
 						)
 					),
@@ -174,7 +174,7 @@
 				__('Configuration')			=>	ADMIN_URL . '/blueprints/views/edit/' . $view_pathname . '/',
 				__('Template')				=>	Administration::instance()->getCurrentPageURL()
 			));
-			
+
 			$layout = new Layout();
 			$left = $layout->createColumn(Layout::LARGE);
 			$right = $layout->createColumn(Layout::SMALL);
@@ -221,7 +221,7 @@
 				$fieldset->appendChild($ul);
 				$right->appendChild($fieldset);
 			}
-			
+
 			$layout->appendTo($this->Form);
 
 			$div = $this->createElement('div');
@@ -234,7 +234,7 @@
 					)
 				)
 			);
-			
+
 			$this->Form->appendChild($div);
 		}
 
@@ -352,7 +352,7 @@
 							__(
 								'View updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/views/new/',
 									ADMIN_URL . '/blueprints/views/',
 								)
@@ -367,7 +367,7 @@
 							__(
 								'View created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/views/new/',
 									ADMIN_URL . '/blueprints/views/',
 								)
@@ -386,21 +386,21 @@
 
 			elseif($this->_context[0] == 'edit') {
 				$fields = (array)$existing->about();
-				
+
 				// Flatten the types array:
 				$fields['types'] = (
 					(isset($fields['types']) and is_array($fields['types']))
 						? implode(', ', $fields['types'])
 						: null
 				);
-				
+
 				// Flatten the url-parameters array:
 				$fields['url-parameters'] = (
 					(isset($fields['url-parameters']) and is_array($fields['url-parameters']))
 						? implode('/', $fields['url-parameters'])
 						: null
 				);
-				
+
 				$fields['parent'] = (
 					$existing->parent() instanceof View
 						? $existing->parent()->path
@@ -410,11 +410,11 @@
 			}
 
 			$title = null;
-			
+
 			if (isset($fields['title'])) {
 				$title = $fields['title'];
 			}
-			
+
 			if(strlen(trim($title)) == 0){
 				$title = ($existing instanceof View ? $existing->title : 'New View');
 			}
@@ -437,10 +437,10 @@
 					__('Configuration')		=>	Administration::instance()->getCurrentPageURL(),
 					__('Template')			=>	sprintf('%s/blueprints/views/template/%s/', ADMIN_URL, $view_pathname)
 				);
-				
+
 				$this->appendViewOptions($viewoptions);
 			}
-			
+
 			else {
 				$this->appendSubheading(($title ? $title : __('Untitled')));
 			}
@@ -566,7 +566,7 @@
 					$handle, in_array($handle, (array)$fields['events']), $event->about()->name
 				);
 			}
-			
+
 			$label->appendChild(Widget::Select('fields[events][]', $options, array('multiple' => 'multiple')));
 			$fieldset->appendChild($label);
 
@@ -583,12 +583,12 @@
 					$handle, in_array($handle, (array)$fields['data-sources']), $ds->about()->name
 				);
 			}
-			
+
 
 			$label->appendChild(Widget::Select('fields[data-sources][]', $options, array('multiple' => 'multiple')));
 			$fieldset->appendChild($label);
 			$right->appendChild($fieldset);
-			
+
 			$layout->appendTo($this->Form);
 
 		// Controls -----------------------------------------------------------
@@ -619,7 +619,7 @@
 			$this->Form->appendChild($div);
 
 		}
-		
+
 		public function __actionNew() {
 			$this->__actionEdit();
 		}
@@ -744,10 +744,10 @@
 				}
 			}
 
-			if($success == true){ 
+			if($success == true){
 				redirect($redirect);
 			}
-			
+
 			$this->alerts()->append(
 				__('An error occurred while attempting to delete selected views. <a class="more">Show trace information.</a>'),
 				AlertStack::ERROR,

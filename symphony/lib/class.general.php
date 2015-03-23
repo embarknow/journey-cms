@@ -964,14 +964,16 @@
 			return $file_size;
 		}
 
-		public static function createXMLDateObject(DOMDocument $doc, $timestamp, $element='date'){
-
-			$xDate = $doc->createElement($element, DateTimeObj::get('Y-m-d', $timestamp));
-			$xDate->setAttribute('time', DateTimeObj::get('H:i', $timestamp));
-			$xDate->setAttribute('weekday', DateTimeObj::get('N', $timestamp));
+		public static function createXMLDateObject(DOMDocument $doc, DateTime $timestamp, $element='date'){
+			$xDate = $doc->createElement($element, $timestamp->format('Y-m-d'));
+			$xDate->setAttribute('time', $timestamp->format('H:i'));
+			$xDate->setAttribute('weekday', $timestamp->format('N'));
 
 			return $xDate;
+		}
 
+		public static function getTimeAgo($format){
+			return '<abbr class="timeago" title="'.self::get('r').'">'.self::get($format).'</abbr>';
 		}
 
 		public static function buildPaginationElement(DOMDocument $doc, $total_entries=0, $total_pages=0, $entries_per_page=1, $current_page=1){

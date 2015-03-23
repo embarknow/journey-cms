@@ -1,7 +1,5 @@
 <?php
 
-	require_once LIB . '/class.datetimeobj.php';
-
 	class Log {
 		const NOTICE = E_NOTICE;
 		const WARNING = E_WARNING;
@@ -92,7 +90,7 @@
 					'message' =>	$message
 				));
 
-				$message = DateTimeObj::get('H:i:s/d') . ' > ' . $this->__defineNameString($type) . ":\n    " . $message;
+				$message = (new DateTime)->format('H:i:s/d') . ' > ' . $this->__defineNameString($type) . ":\n    " . $message;
 			}
 
 			if ($writeToLog) $this->writeToLog($message, $addbreak);
@@ -186,7 +184,7 @@
 					$mode = self::OVERWRITE;
 
 					if ($this->_archive) {
-						$handle = gzopen(LOGS . '/main.'.DateTimeObj::get('Ymdh').'.gz','w9');
+						$handle = gzopen(LOGS . '/main.' . (new DateTime)->format('Ymdh') . '.gz', 'w9');
 						gzwrite($handle, @file_get_contents($this->_log_path));
 						gzclose($handle);
 					}
@@ -197,7 +195,7 @@
 				@unlink($this->_log_path);
 
 				$this->writeToLog('============================================', true);
-				$this->writeToLog('Log Created: ' . DateTimeObj::get('c'), true);
+				$this->writeToLog('Log Created: ' . (new DateTime)->format(DateTime::W3C), true);
 				$this->writeToLog('============================================', true);
 
 				return 1;
@@ -208,7 +206,7 @@
 
 		public function close(){
 			$this->writeToLog('============================================', true);
-			$this->writeToLog('Log Closed: ' . DateTimeObj::get('c'), true);
+			$this->writeToLog('Log Closed: ' . (new DateTime)->format(DateTime::W3C), true);
 			$this->writeToLog("============================================\r\n\r\n\r\n", true);
 		}
 	}

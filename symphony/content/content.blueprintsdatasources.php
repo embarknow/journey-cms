@@ -294,7 +294,7 @@
 							__(
 								'Data source updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/datasources/new/',
 									ADMIN_URL . '/blueprints/datasources/'
 								)
@@ -308,7 +308,7 @@
 							__(
 								'Data source created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/datasources/new/',
 									ADMIN_URL . '/blueprints/datasources/'
 								)
@@ -419,9 +419,10 @@
 						break;
 
 					case 'version':
+						$date = new DateTime($about->{'release-date'});
 						$fieldset = $this->createElement('fieldset');
 						$fieldset->appendChild($this->createElement('legend', 'Version'));
-						$fieldset->appendChild($this->createElement('p', $value . ', released on ' . DateTimeObj::get(__SYM_DATE_FORMAT__, strtotime($about->{'release-date'}))));
+						$fieldset->appendChild($this->createElement('p', $value . ', released on ' . $date->format(__SYM_DATE_FORMAT__)));
 						break;
 
 					case 'description':

@@ -64,7 +64,8 @@
 					);
 
 					if($u->last_seen != NULL){
-						$td3 = Widget::TableData(DateTimeObj::get(__SYM_DATETIME_FORMAT__, strtotime($u->last_seen)));
+						$date = new DateTimeZone($u->last_seen);
+						$td3 = Widget::TableData($date->format(__SYM_DATETIME_FORMAT__));
 					}
 					else{
 						$td3 = Widget::TableData('Unknown', array('class' => 'inactive'));
@@ -150,7 +151,7 @@
 							__(
 								'User updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/system/users/new/',
 									ADMIN_URL . '/system/users/'
 								)
@@ -165,7 +166,7 @@
 							__(
 								'User created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/system/users/new/',
 									ADMIN_URL . '/system/users/'
 								)
@@ -444,8 +445,10 @@
 					}
 
 					elseif(User::save($this->user)){
+						$date = new DateTime();
+						$date->setTimeZone(new DateTimeZone('UTC'));
 
-						Symphony::Database()->delete('tbl_forgotpass', array(DateTimeObj::getGMT('c'), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
+						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
 
 						// This is the logged in user, so update their session
 						if($user_id == Administration::instance()->User->id){

@@ -57,13 +57,15 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		Utilities:
 	-------------------------------------------------------------------------*/
 
-		protected static function __isValidDateString($string){
+		protected static function __isValidDateString($string)
+		{
 			$string = trim($string);
 
-			if(empty($string)) return false;
+			if (empty($string)) return false;
 
 			$timestamp = strtotime($string);
-			if($timestamp === false) return false;
+
+			if ($timestamp === false) return false;
 
 			## Its not a valid date, so just return it as is
 			if(!$info = getdate($timestamp)) return false;
@@ -114,13 +116,14 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			// New entry:
 			if (is_null($data) && $this->{'pre-populate'} == 'yes') {
-				$value = DateTimeObj::get(__SYM_DATETIME_FORMAT__, null);
+				$value = (new DateTime)->format(__SYM_DATETIME_FORMAT__);
 			}
 
 			// Empty entry:
 			else if (isset($data->value) && !is_null($data->value)) {
-				$timestamp = DateTimeObj::toGMT($data->value);
-				$value = DateTimeObj::get(__SYM_DATETIME_FORMAT__, $timestamp);
+				$date = new DateTime($data->value);
+				$date->setTimeZone(new DateTimeZone('UTC'));
+				$value = $date->format(__SYM_DATETIME_FORMAT__);
 			}
 
 			$label = Widget::Label(
@@ -186,8 +189,9 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			}
 		}
 
-		public function processData($data, Entry $entry=NULL){
-			$timestamp = null;
+		public function processData($data, Entry $entry = null)
+		{
+			$date = null;
 
 			if (isset($entry->data()->{$this->{'element-name'}})){
 				$result = $entry->data()->{$this->{'element-name'}};
@@ -203,16 +207,18 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				$result->value = null;
 
 				if ($this->{'pre-populate'} == 'yes') {
-					$timestamp = strtotime(DateTimeObj::get('c', null));
+					$date = new DateTime();
 				}
 			}
 
 			else {
-				$timestamp = strtotime($data);
+				$date = new DateTime($data);
 			}
 
-			if (is_null($timestamp) === false && $timestamp !== false) {
-				$result->value = DateTimeObj::getGMT('Y-m-d H:i:s', $timestamp);
+			if ($date) {
+				$date->setTimeZone(new DateTimeZone('UTC'));
+				$result->value = $date->format('Y-m-d H:i:s');
+				$result->value = $date->format('Y-m-d H:i:s');
 			}
 
 			else {
@@ -272,44 +278,43 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			$value = null;
 
 			if (isset($data->value) && !is_null($data->value)) {
-				$timestamp = DateTimeObj::toGMT($data->value);
-				$value = DateTimeObj::get(__SYM_DATETIME_FORMAT__, $timestamp);
+				$date = new DateTime($data->value);
+				$date->setTimeZone(new DateTimeZone('UTC'));
+				$value = $date->format(__SYM_DATETIME_FORMAT__);
 			}
 
 			return parent::prepareTableValue((object)array('value' => $value), $link);
 		}
 
-		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry=NULL) {
+		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry = null)
+		{
 			if (isset($data->value) && !is_null($data->value)) {
-				if ($mode == 'gmt' || $mode == 'unix-timestamp-gmt') {
-					$timestamp = strtotime($data->value);
-				}
-
-				else {
-					$timestamp = DateTimeObj::toGMT($data->value);
-				}
+				$date = new DateTime($data->value);
 
 				if ($mode == 'unix-timestamp' || $mode == 'unix-timestamp-gmt') {
 					$document = $wrapper->ownerDocument;
 					$element = $document->createElement($this->{'element-name'});
-					$element->setAttribute('unix-timestamp', $timestamp);
+					$element->setAttribute('unix-timestamp', $date->getTimestamp());
 					$wrapper->appendChild($element);
 				}
 
 				else {
+					$date->setTimeZone(new DateTimeZone('UTC'));
 					$wrapper->appendChild(General::createXMLDateObject(
-						$wrapper->ownerDocument, $timestamp, $this->{'element-name'}
+						$wrapper->ownerDocument, $date, $this->{'element-name'}
 					));
 				}
 			}
 		}
 
-		public function getParameterOutputValue(StdClass $data, Entry $entry=NULL){
-			if(is_null($d->value)) return;
+		public function getParameterOutputValue(StdClass $data, Entry $entry = null)
+		{
+			if (is_null($d->value)) return;
 
-			$timestamp = DateTimeObj::toGMT($data->value);
+			$date = new DateTime($data->value);
+			$date->setTimeZone(new DateTimeZone('UTC'));
 
-     		return DateTimeObj::get('Y-m-d H:i:s', $timestamp);
+     		return $date->format('Y-m-d H:i:s');
 		}
 
 	/*-------------------------------------------------------------------------
@@ -376,19 +381,15 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			$handle = $this->join_handle;
 
-			$value = DataSource::replaceParametersInString(
+			$date = new DateTime(DataSource::replaceParametersInString(
 				trim($filter->value), $parameter_output
-			);
+			));
 
-			if ($filter->gmt == 'yes') {
-				$value = strtotime($value);
+			if ($filter->gmt !== 'yes') {
+				$date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
 			}
 
-			else {
-				$value = DateTimeObj::fromGMT($value);
-			}
-
-			$value = date('Y-m-d H:i:s', $value);
+			$value = $date->format('Y-m-d H:i:s');
 
 			$statements[] = $db->prepareQuery(
 				"'%s' {$operator} {$handle}.value",

@@ -325,7 +325,7 @@
 			);
 			$hasFreshData = false;
 			$hasCachedData = isset($cache->{$cache_id});
-			$creation = DateTimeObj::get('c');
+			$creation = (new DateTime)->format(DateTime::W3C);
 
 			if(isset($this->parameters()->timeout)){
 				$timeout = (int)max(1, $this->parameters()->timeout);

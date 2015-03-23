@@ -213,13 +213,14 @@
 			$current_url = parse_url(URL);
 			$current_url['path'] = $_SERVER['REQUEST_URI'];
 			$current_url = unparse_url($current_url);
+			$date = new DateTime();
 
 			self::$Parameters->register(array(
-				'today' =>					DateTimeObj::get('Y-m-d'),
-				'current-time' =>			DateTimeObj::get('H:i'),
-				'this-year' =>				DateTimeObj::get('Y'),
-				'this-month' =>				DateTimeObj::get('m'),
-				'this-day' =>				DateTimeObj::get('d'),
+				'today' =>					$date->format('Y-m-d'),
+				'current-time' =>			$date->format('H:i'),
+				'this-year' =>				$date->format('Y'),
+				'this-month' =>				$date->format('m'),
+				'this-day' =>				$date->format('d'),
 				'timezone' =>				date_default_timezone_get(),
 				'website-name' =>			Symphony::Configuration()->main()->name,
 				'root' =>					URL,

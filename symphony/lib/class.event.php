@@ -205,6 +205,9 @@
 				$classname = Lang::createHandle(ucwords($this->about()->name), '_', false, true, array('/[^a-zA-Z0-9_\x7f-\xff]/' => NULL), true);
 				$pathname = EVENTS . "/" . $this->handle . ".php";
 
+				$dateGMT = new DateTime();
+				$dateGMT->setTimeZone(new DateTimeZone('UTC'));
+
 				$data = array(
 					$classname,
 					// About info:
@@ -213,7 +216,7 @@
 					var_export(URL, true),
 					var_export($user->email, true),
 					var_export('1.0', true),
-					var_export(DateTimeObj::getGMT('c'), true),
+					var_export($dateGMT->format(DateTime::W3C), true),
 				);
 
 				foreach ($this->parameters() as $value) {

@@ -1,12 +1,13 @@
 <?php
 
 use Embark\CMS\Database\Connection;
+use Embark\CMS\Configuration\Loader as Configuration;
 
 	require_once 'class.errorhandler.php';
 
 	// require_once 'class.dbc.php';
-	require_once 'class.configuration.php';
-	require_once 'class.datetimeobj.php';
+	// require_once 'class.configuration.php';
+	// require_once 'class.datetimeobj.php';
 	require_once 'class.log.php';
 	require_once 'class.cookie.php';
 	require_once 'interface.singleton.php';
@@ -139,7 +140,7 @@ use Embark\CMS\Database\Connection;
 		protected function __construct(){
 			self::$Configuration = new Configuration;
 
-			DateTimeObj::setDefaultTimezone(self::Configuration()->main()->region->timezone);
+			date_default_timezone_set(self::Configuration()->main()->region->timezone);
 
 			self::$_lang = (self::Configuration()->main()->lang ? self::Configuration()->main()->lang : 'en');
 
@@ -265,7 +266,7 @@ use Embark\CMS\Database\Connection;
 
 					Symphony::Database()->update(
 						'tbl_users',
-						array('last_seen' => DateTimeObj::get('Y-m-d H:i:s')),
+						array('last_seen' => (new DateTime)->format('Y-m-d H:i:s')),
 						array($this->_user_id),
 						"`id` = '%s'"
 					);
@@ -301,7 +302,7 @@ use Embark\CMS\Database\Connection;
 				$this->Cookie->set('pass', $user->password);
 
 				$this->User = $user;
-				$user->last_seen = DateTimeObj::get('Y-m-d H:i:s');
+				$user->last_seen = (new DateTime)->format('Y-m-d H:i:s');
 				$this->reloadLangFromUserPreference();
 
 				User::save($user);
@@ -317,6 +318,9 @@ use Embark\CMS\Database\Connection;
 			if (strlen(trim($token)) == 0) return false;
 
 			if (strlen($token) == 6) {
+				$date = new DateTime();
+				$date->setTimeZone(new DateTimeZone('UTC'));
+
 				$result = Symphony::Database()->query("
 						SELECT
 							`u`.id, `u`.username, `u`.password
@@ -331,7 +335,7 @@ use Embark\CMS\Database\Connection;
 						LIMIT 1
 					",
 					array(
-						DateTimeObj::getGMT('c'),
+						$date->format(DateTime::W3C),
 						$token
 					)
 				);
@@ -363,9 +367,12 @@ use Embark\CMS\Database\Connection;
 				$this->Cookie->set('username', $row->username);
 				$this->Cookie->set('pass', $row->password);
 
+				$date = new DateTime();
+				$date->setTimeZone(new DateTimeZone('UTC'));
+
 				Symphony::Database()->update(
 					'tbl_users',
-					array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')),
+					array('last_seen' => $date->format('Y-m-d H:i:s')),
 					array($this->_user_id),
 					"`id` = '%d'"
 				);

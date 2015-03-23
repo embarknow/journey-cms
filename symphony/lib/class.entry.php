@@ -52,15 +52,19 @@ use Embark\CMS\Database\ResultIterator;
 		protected $meta;
 
 		public function __construct(){
+			$date = new DateTime();
+			$dateGMT = new DateTime();
+			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
+
 			$this->data = new StdClass;
 			$this->meta = (object)array(
-				'id' => NULL,
-				'section' => NULL,
-				'user_id' => NULL,
-				'creation_date' => DateTimeObj::get('c'),
-				'creation_date_gmt' => DateTimeObj::getGMT('c'),
-				'modification_date' => DateTimeObj::get('c'),
-				'modification_date_gmt' => DateTimeObj::getGMT('c')
+				'id' =>						null,
+				'section' =>				null,
+				'user_id' =>				null,
+				'creation_date' =>			$date->format(DateTime::W3C),
+				'creation_date_gmt' =>		$dateGMT->format(DateTime::W3C),
+				'modification_date' =>		$date->format(DateTime::W3C),
+				'modification_date_gmt' =>	$dateGMT->format(DateTime::W3C)
 			);
 		}
 
@@ -166,9 +170,13 @@ use Embark\CMS\Database\ResultIterator;
 				$entry->id = self::generateID($entry->section, $entry->user_id);
 			}
 
+			$date = new DateTime();
+			$dateGMT = new DateTime();
+			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
+
 			// Update the modification details
-			$entry->modification_date = DateTimeObj::get('c');
-			$entry->modification_date_gmt = DateTimeObj::getGMT('c');
+			$entry->modification_date = $date->format(DateTime::W3C);
+			$entry->modification_date_gmt = $dateGMT->format(DateTime::W3C);
 
 			// Load the section
 			try{
@@ -236,44 +244,6 @@ use Embark\CMS\Database\ResultIterator;
 		}
 
 		public function fetchAllAssociatedEntryCounts($associated_sections=NULL) {
-			/*
-			if(is_null($this->get('section_id'))) return NULL;
-
-			if(is_null($associated_sections)) {
-				$section = SectionManager::instance()->fetch($this->get('section_id'));
-				$associated_sections = $section->fetchAssociatedSections();
-			}
-
-			if(!is_array($associated_sections) || empty($associated_sections)) return NULL;
-
-			$counts = array();
-
-			foreach($associated_sections as $as){
-
-				$field = FieldManager::instance()->fetch($as['child_section_field_id']);
-
-				$parent_section_field_id = $as['parent_section_field_id'];
-
-				$search_value = NULL;
-
-				if(!is_null($parent_section_field_id)){
-					$search_value = $field->fetchAssociatedEntrySearchValue(
-							$this->getData($as['parent_section_field_id']),
-							$as['parent_section_field_id'],
-							$this->get('id')
-					);
-				}
-
-				else{
-					$search_value = $this->get('id');
-				}
-
-				$counts[$as['child_section_id']] = $field->fetchAssociatedEntryCount($search_value);
-
-			}
-
-			return $counts;
-			*/
 
 			return array();
 
@@ -305,20 +275,24 @@ use Embark\CMS\Database\ResultIterator;
 			return $status;
 		}
 
-		public static function generateID($section, $user_id=NULL) {
+		public static function generateID($section, $user_id = null)
+		{
+			$date = new DateTime();
+			$dateGMT = new DateTime();
+			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
 
-			if(is_null($user_id)){
+			if (is_null($user_id)) {
 				$user_id = Symphony::Database()->query("SELECT `id` FROM `tbl_users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 			}
 
-			return Symphony::Database()->insert('tbl_entries', array(
-				'section' => $section,
-				'user_id' => $user_id,
-				'creation_date' => DateTimeObj::get('c'),
-				'creation_date_gmt' => DateTimeObj::getGMT('c'),
-				'modification_date' => DateTimeObj::get('c'),
-				'modification_date_gmt' => DateTimeObj::getGMT('c')
-			));
+			return Symphony::Database()->insert('tbl_entries', [
+				'section' =>				$section,
+				'user_id' =>				$user_id,
+				'creation_date' =>			$date->format(DateTime::W3C),
+				'creation_date_gmt' =>		$dateGMT->format(DateTime::W3C),
+				'modification_date' =>		$date->format(DateTime::W3C),
+				'modification_date_gmt' =>	$dateGMT->format(DateTime::W3C)
+			]);
 		}
 
 		public function findDefaultFieldData(){

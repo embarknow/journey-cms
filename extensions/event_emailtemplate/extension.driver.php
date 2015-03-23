@@ -240,7 +240,7 @@
 			// Log the email:
 			$email['method'] = ($smtp ? "smtp" : "symphony");
 			$email['success'] = ($return ? 'yes' : 'no');
-			$email['date'] = DateTimeObj::get('c');
+			$email['date'] = (new DateTime)->format(DateTime::W3C);
 
 			//	TODO: Logging
 			return $return;

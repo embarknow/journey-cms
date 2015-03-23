@@ -217,6 +217,8 @@
 				$this->parameters()->{'root-element'} = $this->handle;
 				$classname = Lang::createHandle(ucwords($this->about()->name), '_', false, true, array('/[^a-zA-Z0-9_\x7f-\xff]/' => NULL), true);
 				$pathname = DATASOURCES . "/" . $this->handle . ".php";
+				$date = new DateTime();
+				$date->setTimeZone(new DateTimeZone('UTC'));
 
 				$data = array(
 					$classname,
@@ -226,7 +228,7 @@
 					var_export(URL, true),
 					var_export($user->email, true),
 					var_export('1.0', true),
-					var_export(DateTimeObj::getGMT('c'), true),
+					var_export($date->format(DateTime::W3C), true),
 				);
 
 				foreach ($this->parameters() as $value) {

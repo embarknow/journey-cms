@@ -178,7 +178,7 @@
 							__(
 								'Utility updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/utilities/new/',
 									ADMIN_URL . '/blueprints/utilities/'
 								)
@@ -192,7 +192,7 @@
 							__(
 								'Utility created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/utilities/new/',
 									ADMIN_URL . '/blueprints/utilities/'
 								)
@@ -329,7 +329,7 @@
 					elseif($this->_context[0] == 'new' && is_file($file)) $this->errors->name = __('A Utility with that name already exists. Please choose another.');
 
 					##Write the file
-					elseif(!$write = General::writeFile($file, $fields['template'],Symphony::Configuration()->core()->symphony->{'file-write-mode'})) {
+					elseif(!$write = General::writeFile($file, $fields['template'],Symphony::Configuration()->main()->system->{'file-write-mode'})) {
 						$this->alerts()->append(
 							__('Utility could not be written to disk. Please check permissions on <code>/workspace/utilities</code>.'),
 							AlertStack::SUCCESS

@@ -536,7 +536,7 @@
 					SELECT
 						s.xml
 					FROM
-						`tbl_sections_sync` AS s
+						`sections_sync` AS s
 					WHERE
 						s.section = "%s"
 				',
@@ -682,13 +682,13 @@
 
 			// Remove old sync data:
 			Symphony::Database()->delete(
-				'tbl_sections_sync',
+				'sections_sync',
 				array($section->guid),
 				'`section` = "%s"'
 			);
 
 			// Create new sync data:
-			Symphony::Database()->insert('tbl_sections_sync', array(
+			Symphony::Database()->insert('sections_sync', array(
 				'section'	=> $section->guid,
 				'xml'		=> (string)$section
 			));
@@ -728,14 +728,14 @@
 
 			// 	Remove sync data:
 			Symphony::Database()->delete(
-				'tbl_sections_sync',
+				'sections_sync',
 				array($section->guid),
 				'`section` = "%s"'
 			);
 
 			//	Remove entry metadata
 			Symphony::Database()->delete(
-				'tbl_entries',
+				'entries',
 				array($section->handle),
 				'`section` = "%s"'
 			);

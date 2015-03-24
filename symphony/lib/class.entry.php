@@ -1,6 +1,10 @@
 <?php
 
-	Class EntryResult extends DBCMySQLResult {
+use Embark\CMS\Database\Connection;
+use Embark\CMS\Database\ResultIterator;
+use Embark\CMS\SystemDateTime;
+
+	class EntryResult extends ResultIterator {
 		public $schema = array();
 
 		public function current(){
@@ -49,15 +53,15 @@
 		protected $meta;
 
 		public function __construct(){
+			$date = new SystemDateTime();
+
 			$this->data = new StdClass;
 			$this->meta = (object)array(
-				'id' => NULL,
-				'section' => NULL,
-				'user_id' => NULL,
-				'creation_date' => DateTimeObj::get('c'),
-				'creation_date_gmt' => DateTimeObj::getGMT('c'),
-				'modification_date' => DateTimeObj::get('c'),
-				'modification_date_gmt' => DateTimeObj::getGMT('c')
+				'id' =>						null,
+				'section' =>				null,
+				'user_id' =>				null,
+				'creation_date' =>			$date->format(DateTime::W3C),
+				'modification_date' =>		$date->format(DateTime::W3C)
 			);
 		}
 
@@ -84,7 +88,7 @@
 		}
 
 		public static function loadFromID($id, $schema = array()) {
-			$result = Symphony::Database()->query("SELECT * FROM `tbl_entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
+			$result = Symphony::Database()->query("SELECT * FROM `entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
 
 			$result->setSchema($schema);
 
@@ -136,7 +140,7 @@
 			try {
 				foreach ($section->fields as $field) {
 					Symphony::Database()->delete(
-						sprintf('tbl_data_%s_%s', $section->handle, $field->{'element-name'}),
+						sprintf('data_%s_%s', $section->handle, $field->{'element-name'}),
 						array($entry->id),
 						'`entry_id` = %d'
 					);
@@ -147,7 +151,7 @@
 				Symphony::Log()->pushExceptionToLog($e);
 			}
 
-			Symphony::Database()->delete('tbl_entries', array($entry->id), " `id` = %d LIMIT 1");
+			Symphony::Database()->delete('entries', array($entry->id), " `id` = %d LIMIT 1");
 		}
 
 		public static function save(self $entry, MessageStack &$errors){
@@ -163,8 +167,7 @@
 			}
 
 			// Update the modification details
-			$entry->modification_date = DateTimeObj::get('c');
-			$entry->modification_date_gmt = DateTimeObj::getGMT('c');
+			$entry->modification_date = (new SystemDateTime)->format(DateTime::W3C);
 
 			// Load the section
 			try{
@@ -196,7 +199,7 @@
 			// Attempt the saving part
 			if ($status == Field::STATUS_OK){
 				// Update the meta row
-				Symphony::Database()->insert('tbl_entries', (array)$entry->meta(), Database::UPDATE_ON_DUPLICATE);
+				Symphony::Database()->insert('entries', (array)$entry->meta(), Connection::UPDATE_ON_DUPLICATE);
 
 				foreach ($section->fields as $field) {
 					if (!isset($entry->data()->{$field->{'element-name'}})) continue;
@@ -213,7 +216,7 @@
 
 			// Cleanup due to failure
 			if ($status != Field::STATUS_OK && $purge_meta_on_error == true){
-				Symphony::Database()->delete('tbl_entries', array(), " `id` = {$entry->id} LIMIT 1");
+				Symphony::Database()->delete('entries', array(), " `id` = {$entry->id} LIMIT 1");
 
 				return self::STATUS_ERROR;
 			}
@@ -232,44 +235,6 @@
 		}
 
 		public function fetchAllAssociatedEntryCounts($associated_sections=NULL) {
-			/*
-			if(is_null($this->get('section_id'))) return NULL;
-
-			if(is_null($associated_sections)) {
-				$section = SectionManager::instance()->fetch($this->get('section_id'));
-				$associated_sections = $section->fetchAssociatedSections();
-			}
-
-			if(!is_array($associated_sections) || empty($associated_sections)) return NULL;
-
-			$counts = array();
-
-			foreach($associated_sections as $as){
-
-				$field = FieldManager::instance()->fetch($as['child_section_field_id']);
-
-				$parent_section_field_id = $as['parent_section_field_id'];
-
-				$search_value = NULL;
-
-				if(!is_null($parent_section_field_id)){
-					$search_value = $field->fetchAssociatedEntrySearchValue(
-							$this->getData($as['parent_section_field_id']),
-							$as['parent_section_field_id'],
-							$this->get('id')
-					);
-				}
-
-				else{
-					$search_value = $this->get('id');
-				}
-
-				$counts[$as['child_section_id']] = $field->fetchAssociatedEntryCount($search_value);
-
-			}
-
-			return $counts;
-			*/
 
 			return array();
 
@@ -301,20 +266,20 @@
 			return $status;
 		}
 
-		public static function generateID($section, $user_id=NULL) {
+		public static function generateID($section, $user_id = null)
+		{
+			$date = new SystemDateTime();
 
-			if(is_null($user_id)){
-				$user_id = Symphony::Database()->query("SELECT `id` FROM `tbl_users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+			if (is_null($user_id)) {
+				$user_id = Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 			}
 
-			return Symphony::Database()->insert('tbl_entries', array(
-				'section' => $section,
-				'user_id' => $user_id,
-				'creation_date' => DateTimeObj::get('c'),
-				'creation_date_gmt' => DateTimeObj::getGMT('c'),
-				'modification_date' => DateTimeObj::get('c'),
-				'modification_date_gmt' => DateTimeObj::getGMT('c')
-			));
+			return Symphony::Database()->insert('entries', [
+				'section' =>				$section,
+				'user_id' =>				$user_id,
+				'creation_date' =>			$date->format(DateTime::W3C),
+				'modification_date' =>		$date->format(DateTime::W3C)
+			]);
 		}
 
 		public function findDefaultFieldData(){

@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	Class EventException extends Exception {}
 
 	Class EventFilterIterator extends FilterIterator{
@@ -85,7 +87,7 @@
 		protected static $_loaded;
 
 		abstract public function canTrigger(array $data);
-		abstract public function trigger(Register $ParameterOutput, array $data);
+		abstract public function trigger(Context $ParameterOutput, array $data);
 
 		protected $_about;
 		protected $_parameters;
@@ -194,7 +196,7 @@
 
 			// Save type:
 			if ($errors->length() <= 0) {
-				$user = Administration::instance()->User;
+				$user = Symphony::User();
 
 				if (!file_exists($this->getTemplate())) {
 					$errors->append('write', __("Unable to find Event Type template '%s'.", array($this->getTemplate())));
@@ -213,7 +215,7 @@
 					var_export(URL, true),
 					var_export($user->email, true),
 					var_export('1.0', true),
-					var_export(DateTimeObj::getGMT('c'), true),
+					var_export((new SystemDateTime)->format(DateTime::W3C), true),
 				);
 
 				foreach ($this->parameters() as $value) {
@@ -223,7 +225,7 @@
 				if(General::writeFile(
 					$pathname,
 					vsprintf(file_get_contents($this->getTemplate()), $data),
-					Symphony::Configuration()->core()->symphony->{'file-write-mode'}
+					Symphony::Configuration()->main()->system->{'file-write-mode'}
 				)){
 					if($editing !== false && $editing != $this->handle) General::deleteFile(EVENTS . '/' . $editing . '.php');
 

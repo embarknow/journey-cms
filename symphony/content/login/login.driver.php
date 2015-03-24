@@ -3,6 +3,9 @@
 	/**
 	* LoginDriver class...
 	*/
+use Embark\CMS\SystemDateTime;
+
+	require_once(LIB . '/class.administrationpage.php');
 
 	Class LoginDriver {
 
@@ -255,11 +258,7 @@
 						$this->missing_username = true;
 					}
 
-<<<<<<< HEAD:symphony/content/login/login.driver.php
-					if(!isset($_POST['password']) || strlen(trim($_POST['password'])) == 0){
-=======
 					if (!isset($_POST['password']) || strlen(trim($_POST['password'])) == 0){
->>>>>>> stable:symphony/content/content.login.php
 						$this->invalid_credentials = true;
 						$this->missing_password = true;
 					}
@@ -277,34 +276,37 @@
 				##Reset of password requested
 				elseif($action == 'reset'):
 
-					$user = Symphony::Database()->query("SELECT id, email, first_name FROM `tbl_users` WHERE `email` = '%s'", array($_POST['email']));
+					$user = Symphony::Database()->query("SELECT id, email, first_name FROM `users` WHERE `email` = '%s'", array($_POST['email']));
 
 					if($user->valid()){
 						$user = $user->current();
+						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('tbl_forgotpass', array(DateTimeObj::getGMT('c')), " `expiry` < '%s'");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
 
 						$token = Symphony::Database()->query("
 							SELECT
 								token
 							FROM
-								`tbl_forgotpass`
+								`forgotpass`
 							WHERE
 								expiry > '%s'
 							AND
 								user_id = %d
 							",
-							DateTimeObj::getGMT('c'),
+							$date->format(DateTime::W3C),
 							$user->id
 						);
 
 						if($token->valid()){
 							$token = substr(md5(time() . rand(0, 200)), 0, 6);
-							Symphony::Database()->insert('tbl_forgotpass',
+							$date->setTimestamp(time() + (120 * 60));
+
+							Symphony::Database()->insert('forgotpass',
 								array(
-									'user_id' => $user->id,
-									'token' => $token,
-									'expiry' => DateTimeObj::getGMT('c', time() + (120 * 60))
+									'user_id' =>	$user->id,
+									'token' =>		$token,
+									'expiry' =>		$date->format(DateTime::W3C)
 								)
 							);
 						}
@@ -333,7 +335,7 @@
 					}
 
 					else {
-						$user_id = Administration::instance()->User->id;
+						$user_id = Symphony::User()->id;
 
 						$user = User::load($user_id);
 
@@ -357,7 +359,7 @@
 						SELECT
 							u.id, u.email, u.first_name
 						FROM
-							`tbl_users` as u, `tbl_forgotpass` as t2
+							`users` as u, `forgotpass` as t2
 						WHERE
 							t2.`token` = '%s'
 						AND
@@ -381,16 +383,12 @@
 								'Best Regards,' . PHP_EOL .
 								'The Symphony Team');
 
-					Symphony::Database()->update('tbl_users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
-					Symphony::Database()->delete('tbl_forgotpass', array($user->id), " `user_id` = '%d'");
+					Symphony::Database()->update('users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
+					Symphony::Database()->delete('forgotpass', array($user->id), " `user_id` = '%d'");
 
 					$this->_alert = 'Password reset. Check your email';
 				}
 			}
 		}
-<<<<<<< HEAD:symphony/content/login/login.driver.php
 
 	}*/
-=======
-	}
->>>>>>> stable:symphony/content/content.login.php

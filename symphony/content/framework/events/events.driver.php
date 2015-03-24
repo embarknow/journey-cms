@@ -48,7 +48,10 @@
 		}
 	}
 
-	/*require_once(LIB . '/class.administrationpage.php');
+	/*
+use Embark\CMS\SystemDateTime;
+
+	require_once(LIB . '/class.administrationpage.php');
 	require_once(LIB . '/class.event.php');
 
 	Class contentBlueprintsEvents extends AdministrationPage{
@@ -74,13 +77,6 @@
 			$this->event = $this->handle = $this->status = $this->type = NULL;
 			$this->types = array();
 
-<<<<<<< HEAD:symphony/content/framework/events/events.driver.php
-			foreach (new ExtensionIterator(ExtensionIterator::FLAG_TYPE, array('Event')) as $extension) {
-				$path = Extension::getPathFromClass(get_class($extension));
-				$handle = Extension::getHandleFromPath($path);
-
-				if (Extension::status($handle) != Extension::STATUS_ENABLED) continue;
-=======
 			$extensions = new ExtensionQuery();
 			$extensions->setFilters(array(
 				ExtensionQuery::TYPE =>		'Event',
@@ -88,7 +84,6 @@
 			));
 
 			foreach ($extensions as $extension) {
->>>>>>> stable:symphony/content/content.blueprintsevents.php
 				if (!method_exists($extension, 'getEventTypes')) continue;
 
 				foreach ($extension->getEventTypes() as $type) {
@@ -246,7 +241,7 @@
 				$this->type = $_REQUEST['type'];
 
 				if (is_null($this->type)){
-					$this->type = Symphony::Configuration()->core()->{'default-event-type'};
+					// $this->type = Symphony::Configuration()->main()->{'default-event-type'};
 				}
 
 				// Should the default type or the selected type no longer be valid, choose the first available one instead
@@ -315,7 +310,7 @@
 
 				// TODO: Delete reference from View XML
 
-				/*$sql = "SELECT * FROM `tbl_pages` WHERE `data_sources` REGEXP '[[:<:]]".$ds."[[:>:]]' ";
+				/*$sql = "SELECT * FROM `pages` WHERE `data_sources` REGEXP '[[:<:]]".$ds."[[:>:]]' ";
 				$pages = Symphony::Database()->fetch($sql);
 
 				if(is_array($pages) && !empty($pages)){
@@ -323,7 +318,7 @@
 
 						$page['data_sources'] = preg_replace('/\b'.$ds.'\b/i', '', $page['data_sources']);
 
-						Symphony::Database()->update($page, 'tbl_pages', "`id` = '".$page['id']."'");
+						Symphony::Database()->update($page, 'pages', "`id` = '".$page['id']."'");
 					}
 				}*
 			}
@@ -378,7 +373,7 @@
 							__(
 								'Event updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/events/new/',
 									ADMIN_URL . '/blueprints/events/'
 								)
@@ -392,7 +387,7 @@
 							__(
 								'Event created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/events/new/',
 									ADMIN_URL . '/blueprints/events/'
 								)
@@ -503,9 +498,10 @@
 						break;
 
 					case 'version':
+						$date = new DateTime($about->{'release-date'});
 						$fieldset = $this->createElement('fieldset');
 						$fieldset->appendChild($this->createElement('legend', 'Version'));
-						$fieldset->appendChild($this->createElement('p', $value . ', released on ' . DateTimeObj::get(__SYM_DATE_FORMAT__, strtotime($about->{'release-date'}))));
+						$fieldset->appendChild($this->createElement('p', $value . ', released on ' . $date->format(__SYM_DATE_FORMAT__)));
 						break;
 
 					case 'description':

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<configuration>
+    <host>localhost</host>
+    <port>3306</port>
+    <user></user>
+    <password></password>
+    <database>symphony</database>
+</configuration>

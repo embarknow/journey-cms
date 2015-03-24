@@ -1,5 +1,8 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Database\Connection;
+
 	/**
 	 * @package core
 	 */
@@ -149,7 +152,7 @@
 		}
 
 		/**
-		 * Given an ID, and some data, save it into `tbl_sessions`. This uses
+		 * Given an ID, and some data, save it into `sessions`. This uses
 		 * the ID as a unique key, and will override any existing data. If the
 		 * `$data` is deemed to be empty, no row will be saved in the database
 		 * unless there is an existing row.
@@ -176,11 +179,11 @@
 				'session_data' => $data
 			);
 
-			return Symphony::Database()->insert('tbl_sessions', $fields, Database::UPDATE_ON_DUPLICATE);
+			return Symphony::Database()->insert('sessions', $fields, Connection::UPDATE_ON_DUPLICATE);
 		}
 
 		/**
-		 * Given a session's ID, return it's row from `tbl_sessions`
+		 * Given a session's ID, return it's row from `sessions`
 		 *
 		 * @param string $id
 		 *  The identifier for the Session to fetch
@@ -193,7 +196,7 @@
 						SELECT
 							`session_data`
 						FROM
-							`tbl_sessions`
+							`sessions`
 						WHERE
 							`session` = '%s'
 						LIMIT
@@ -215,7 +218,7 @@
 		}
 
 		/**
-		 * Given a session's ID, remove it's row from `tbl_sessions`
+		 * Given a session's ID, remove it's row from `sessions`
 		 *
 		 * @param string $id
 		 *  The identifier for the Session to destroy
@@ -223,7 +226,7 @@
 		 *  True if the Session was deleted successfully, false otherwise
 		 */
 		public static function destroy($id) {
-			return Symphony::Database()->delete('tbl_sessions', array($id), "`session` = '%s'");
+			return Symphony::Database()->delete('sessions', array($id), "`session` = '%s'");
 		}
 
 		/**
@@ -237,6 +240,6 @@
 		 *  True on Session deletion, false if an error occurs
 		 */
 		public static function gc($max) {
-			return Symphony::Database()->delete('tbl_sessions', array(time() - $max), "`session_expires` <= '%s'");
+			return Symphony::Database()->delete('sessions', array(time() - $max), "`session_expires` <= '%s'");
 		}
 	}

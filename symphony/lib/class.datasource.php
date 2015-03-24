@@ -1,6 +1,8 @@
 <?php
 
-	class DataSourceException extends Exception {}
+use Embark\CMS\SystemDateTime;
+
+	Class DataSourceException extends Exception {}
 
 	class DataSourceFilterIterator extends FilterIterator {
 		public function __construct($path){
@@ -83,7 +85,7 @@
 		protected static $_loaded;
 
 		// Abstract function
-		abstract public function render(Register $ParameterOutput);
+		abstract public function render(Context $ParameterOutput);
 
 		public static function getHandleFromFilename($filename){
 			return preg_replace('/(.php$|\/.*\/)/i', NULL, $filename);
@@ -203,7 +205,7 @@
 
 			// Save type:
 			if ($errors->length() <= 0) {
-				$user = Administration::instance()->User;
+				$user = Symphony::User();
 
 				if (!file_exists($this->getTemplate())) {
 					$errors->append('write', __("Unable to find Data Source Type template '%s'.", array($this->getTemplate())));
@@ -213,6 +215,7 @@
 				$this->parameters()->{'root-element'} = $this->handle;
 				$classname = Lang::createHandle(ucwords($this->about()->name), '_', false, true, array('/[^a-zA-Z0-9_\x7f-\xff]/' => NULL), true);
 				$pathname = DATASOURCES . "/" . $this->handle . ".php";
+				$date = new SystemDateTime();
 
 				$data = array(
 					$classname,
@@ -222,7 +225,7 @@
 					var_export(URL, true),
 					var_export($user->email, true),
 					var_export('1.0', true),
-					var_export(DateTimeObj::getGMT('c'), true),
+					var_export($date->format(DateTime::W3C), true),
 				);
 
 				foreach ($this->parameters() as $value) {
@@ -232,7 +235,7 @@
 				if(General::writeFile(
 					$pathname,
 					vsprintf(file_get_contents($this->getTemplate()), $data),
-					Symphony::Configuration()->core()->symphony->{'file-write-mode'}
+					Symphony::Configuration()->main()->system->{'file-write-mode'}
 				)){
 					if($editing !== false && $editing != $this->handle) General::deleteFile(DATASOURCES . '/' . $editing . '.php');
 
@@ -279,7 +282,7 @@
 		 	return preg_match('/\s+\+\s+/', $string) ? DataSource::FILTER_AND : DataSource::FILTER_OR;
 		}
 
-		public static function prepareFilterValue($value, Register $ParameterOutput=NULL, &$filterOperationType=DataSource::FILTER_OR){
+		public static function prepareFilterValue($value, Context $ParameterOutput=NULL, &$filterOperationType=DataSource::FILTER_OR){
 
 			if(strlen(trim($value)) == 0) return NULL;
 
@@ -316,7 +319,7 @@
 		**	This checks both the Frontend Parameters and Datasource
 		**	Registers.
 		*/
-		public static function replaceParametersInString($string, Register $DataSourceParameterOutput = null) {
+		public static function replaceParametersInString($string, Context $DataSourceParameterOutput = null) {
 			if(strlen(trim($string)) == 0) return null;
 
 			if(preg_match_all('@{([^}]+)}@i', $string, $matches, PREG_SET_ORDER)){
@@ -353,7 +356,7 @@
 			return $string;
 		}
 
-		public static function resolveParameter($param, Register $DataSourceParameterOutput = null) {
+		public static function resolveParameter($param, Context $DataSourceParameterOutput = null) {
 			//	TODO: Allow resolveParamter to check the stack, ie: $ds-blog-tag:$ds-blog-id
 			$param = trim($param, '$');
 

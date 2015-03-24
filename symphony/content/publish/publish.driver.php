@@ -213,13 +213,13 @@
 			*
 			try {
 				$entry_count = Symphony::Database()->query(
-					"SELECT COUNT(id) as `count` FROM `tbl_entries` WHERE `section` = '%s'", array($section->handle)
+					"SELECT COUNT(id) as `count` FROM `entries` WHERE `section` = '%s'", array($section->handle)
 				)->current()->count;
 
 				$pagination = array(
 					'total-entries' => $entry_count,
-					'entries-per-page' => Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'},
-					'total-pages' => ceil($entry_count / Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'}),
+					'entries-per-page' => Symphony::Configuration()->main()->admin->pagination,
+					'total-pages' => ceil($entry_count / Symphony::Configuration()->main()->admin->pagination),
 					'current-page' => $current_page
 				);
 				$pagination['start'] = ($current_page != 1) ? ($current_page - 1) * $pagination['entries-per-page'] : 0;
@@ -232,7 +232,7 @@
 			//	If there's no sorting, just order by ID, otherwise applying column sorting
 			if(!isset($section->{'publish-order-handle'}) || strlen($section->{'publish-order-handle'}) == 0) {
 				$entries = Symphony::Database()->query(
-					"SELECT * FROM `tbl_entries` WHERE `section` = '%s' ORDER BY `id` ASC LIMIT %d, %d ",
+					"SELECT * FROM `entries` WHERE `section` = '%s' ORDER BY `id` ASC LIMIT %d, %d ",
 					array(
 						$section->handle,
 						$pagination['start'],
@@ -252,7 +252,7 @@
 
 				$query = sprintf("
 					SELECT e.*
-					FROM `tbl_entries` AS e
+					FROM `entries` AS e
 					%s
 					WHERE e.section = '%s'
 					ORDER BY %s
@@ -559,7 +559,7 @@
 			$this->entry->findDefaultFieldData();
 			$this->Form->appendChild(Widget::Input(
 				'MAX_FILE_SIZE',
-				Symphony::Configuration()->core()->symphony->{'maximum-upload-size'},
+				Symphony::Configuration()->main()->system->{'maximum-upload-size'},
 				'hidden'
 			));
 
@@ -584,7 +584,7 @@
 							__(
 								'Entry updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all Entries</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/new/'.$prepopulate_filter,
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/'
 								)
@@ -598,7 +598,7 @@
 							__(
 								'Entry created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all Entries</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/new/'.$prepopulate_filter,
 									ADMIN_URL . '/publish/'.$callback['context']['section_handle'].'/'
 								)
@@ -742,7 +742,7 @@
 
 				$entry = new Entry;
 				$entry->section = $callback['context']['section_handle'];
-				$entry->user_id = Administration::instance()->User->id;
+				$entry->user_id = Symphony::User()->id;
 
 				$post = General::getPostData();
 				if(isset($post['fields']) && is_array($post['fields']) && !empty($post['fields'])){

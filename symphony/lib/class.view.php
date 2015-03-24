@@ -45,7 +45,8 @@
 			$this->headers->append('Last-Modified', gmdate('D, d M Y H:i:s') . ' GMT');
 			$this->headers->append('Cache-Control', 'no-cache, must-revalidate, max-age=0');
 			$this->headers->append('Pragma', 'no-cache');
-		}	}
+		}
+	}
 
 	/**
 	* Considering the above, I decided to add SymphonyView as a class of
@@ -135,8 +136,113 @@
 					}
 					$element->appendChild($p);
 				}
-				else{
-					$element->appendChild($this->document->createElement($key, (string)$item));
+			}
+
+			if(strlen(trim($view->template)) == 0){
+				$messages->append('template', 'Template is required, and cannot be empty.');
+			}
+			elseif(!General::validateXML($view->template, $errors)) {
+
+				$fragment = Administration::instance()->Page->createDocumentFragment();
+
+				$fragment->appendChild(new DOMText(
+					__('This document is not well formed. The following error was returned: ')
+				));
+				$fragment->appendChild(Administration::instance()->Page->createElement('code', $errors->current()->message));
+
+				$messages->append('template', $fragment);
+
+			}
+
+			if($messages->length() > 0){
+				throw new ViewException(__('View could not be saved. Validation failed.'), self::ERROR_MISSING_OR_INVALID_FIELDS);
+			}
+
+			if($simulate != true){
+				if(!is_dir(dirname($pathname)) && !mkdir(dirname($pathname), intval(Symphony::Configuration()->main()->system->{'directory-write-mode'}, 8), true)){
+					throw new ViewException(
+						__('Could not create view directory. Please check permissions on <code>%s</code>.', $view->path),
+						self::ERROR_FAILED_TO_WRITE
+					);
+				}
+
+				// Save the config
+				if(!General::writeFile($pathname, (string)$view,Symphony::Configuration()->main()->system->{'file-write-mode'})){
+					throw new ViewException(
+						__('View configuration XML could not be written to disk. Please check permissions on <code>%s</code>.', $view->path),
+						self::ERROR_FAILED_TO_WRITE
+					);
+				}
+
+				// Save the template file
+				$result = General::writeFile(
+					sprintf('%s/%s/%s.xsl', VIEWS, $view->path, $view->handle),
+					$view->template,
+					Symphony::Configuration()->main()->system->{'file-write-mode'}
+				);
+
+				if(!$result){
+					throw new ViewException(
+						__('Template could not be written to disk. Please check permissions on <code>%s</code>.', $view->path),
+						self::ERROR_FAILED_TO_WRITE
+					);
+				}
+			}
+
+			return true;
+		}
+
+		public function __toString() {
+			$doc = new DOMDocument('1.0', 'UTF-8');
+			$doc->formatOutput = true;
+
+			$root = $doc->createElement('view');
+			$doc->appendChild($root);
+
+			if (!isset($this->guid) || is_null($this->guid)) {
+				$this->guid = uniqid();
+			}
+
+			$root->setAttribute('guid', $this->guid);
+
+			$root->appendChild($doc->createElement('title', General::sanitize($this->title)));
+			$root->appendChild($doc->createElement('content-type', $this->{'content-type'}));
+
+			if (is_array($this->{'url-parameters'}) && count($this->{'url-parameters'}) > 0) {
+				$url_parameters = $doc->createElement('url-parameters');
+
+				foreach ($this->{'url-parameters'} as $p) {
+					$url_parameters->appendChild($doc->createElement('item', General::sanitize($p)));
+				}
+
+				$root->appendChild($url_parameters);
+			}
+
+			if (is_array($this->events) && count($this->events) > 0) {
+				$events = $doc->createElement('events');
+
+				foreach ($this->events as $p) {
+					$events->appendChild($doc->createElement('item', General::sanitize($p)));
+				}
+
+				$root->appendChild($events);
+			}
+
+			if (is_array($this->{'data-sources'}) && count($this->{'data-sources'}) > 0) {
+				$data_sources = $doc->createElement('data-sources');
+
+				foreach ($this->{'data-sources'} as $p) {
+					$data_sources->appendChild($doc->createElement('item', General::sanitize($p)));
+				}
+
+				$root->appendChild($data_sources);
+			}
+
+			if (is_array($this->types) && count($this->types) > 0) {
+				$types = $doc->createElement('types');
+
+				foreach ($this->types as $t) {
+					$types->appendChild($doc->createElement('item', General::sanitize($t)));
 				}
 			}
 		}

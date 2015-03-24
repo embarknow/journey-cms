@@ -45,10 +45,10 @@
 		}
 
 		public function buildDataXML($data) {
-		
+
 			// Container element for form fields
 			$fields_xml = $this->document->createElement('fields');
-			
+
 			$fields = array(
 				'site-name'			=> array(
 					'type'			=> 'input'
@@ -63,7 +63,7 @@
 					'type'			=> 'select'
 				),
 			);
-			
+
 			$data->appendChild($fields_xml);
 		}
 	}
@@ -92,7 +92,7 @@
 			$this->appendSubheading(__('Settings'));
 			$this->appendTabs();
 
-			if(!is_writable(CONF . '/core.xml')){
+			if(!is_writable(CONF . '/main.xml')){
 				$this->alerts()->append(
 					__('The core Symphony configuration file, /manifest/conf/core.xml, is not writable. You will not be able to save any changes.'), AlertStack::ERROR
 				);
@@ -111,7 +111,7 @@
 							__(
 								'System settings saved at %1$s.',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__)
+									General::getTimeAgo(__SYM_TIME_FORMAT__)
 								)
 							),
 							AlertStack::SUCCESS);
@@ -128,11 +128,10 @@
 			$right = $layout->createColumn(Layout::LARGE);
 
 		// SITE SETUP
-			$helptext = 'Symphony version: ' .Symphony::Configuration()->core()->symphony->version;
-			$fieldset = Widget::Fieldset(__('Site Setup'), $helptext);
+			$fieldset = Widget::Fieldset(__('Site Setup'));
 
 			$label = Widget::Label(__('Site Name'));
-			$input = Widget::Input('settings[symphony][sitename]', Symphony::Configuration()->core()->symphony->sitename);
+			$input = Widget::Input('settings[symphony][sitename]', Symphony::Configuration()->main()->name);
 			$label->appendChild($input);
 
 			if(isset($this->errors->{'symphony::sitename'})) {
@@ -152,7 +151,7 @@
 				asort($languages);
 
 				foreach($languages as $code => $name) {
-					$options[] = array($code, $code == Symphony::Configuration()->core()->symphony->lang, $name);
+					$options[] = array($code, $code == Symphony::Configuration()->core()->lang, $name);
 				}
 				$select = Widget::Select('settings[symphony][lang]', $options);
 				unset($options);
@@ -169,7 +168,7 @@
 
 			// Date and Time Settings
 			$label = Widget::Label(__('Date Format'));
-			$input = Widget::Input('settings[region][date-format]', Symphony::Configuration()->core()->region->{'date-format'});
+			$input = Widget::Input('settings[region][date-format]', Symphony::Configuration()->main()->region->{'date-format'});
 			$label->appendChild($input);
 			if(isset($this->errors->{'region::date-format'})) {
 				$label = Widget::wrapFormElementWithError($label, $this->errors->{'region::date-format'});
@@ -177,7 +176,7 @@
 			$fieldset->appendChild($label);
 
 			$label = Widget::Label(__('Time Format'));
-			$input = Widget::Input('settings[region][time-format]', Symphony::Configuration()->core()->region->{'time-format'});
+			$input = Widget::Input('settings[region][time-format]', Symphony::Configuration()->main()->region->{'time-format'});
 			$label->appendChild($input);
 			if(isset($this->errors->{'region::time-format'})) {
 				$label = Widget::wrapFormElementWithError($label, $this->errors->{'region::time-format'});
@@ -187,9 +186,11 @@
 			$label = Widget::Label(__('Timezone'));
 
 			$timezones = timezone_identifiers_list();
+
 			foreach($timezones as $timezone) {
-				$options[] = array($timezone, $timezone == Symphony::Configuration()->core()->region->timezone, $timezone);
-				}
+				$options[] = array($timezone, $timezone == Symphony::Configuration()->main()->region->timezone, $timezone);
+			}
+
 			$select = Widget::Select('settings[region][timezone]', $options);
 			unset($options);
 			$label->appendChild($select);
@@ -209,8 +210,8 @@
 				'0644'
 			);
 
-			$fileperms = Symphony::Configuration()->core()->symphony->{'file-write-mode'};
-			$dirperms = Symphony::Configuration()->core()->symphony->{'directory-write-mode'};
+			$fileperms = Symphony::Configuration()->main()->system->{'file-write-mode'};
+			$dirperms = Symphony::Configuration()->main()->system->{'directory-write-mode'};
 
 			$label = Widget::Label(__('File Permissions'));
 			foreach($permissions as $p) {
@@ -247,7 +248,6 @@
 				'accesskey'	=> 's',
 				'class'		=> 'constructive'
 			);
-			
 
 			if(!is_writable(CONF)) $attr['disabled'] = 'disabled';
 
@@ -285,7 +285,7 @@
 							__(
 								'System settings saved at %1$s.',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__)
+									General::getTimeAgo(__SYM_TIME_FORMAT__)
 								)
 							),
 							AlertStack::SUCCESS);
@@ -347,7 +347,7 @@
 					if(is_array($settings) && !empty($settings)){
 						foreach($settings as $set => $values) {
 							foreach($values as $key => $val) {
-								Symphony::Configuration()->core()->set->$key = $val;
+								Symphony::Configuration()->main()->{$set}->{$key} = $val;
 							}
 						}
 					}
@@ -401,10 +401,11 @@
 
 				if ($this->errors->length() <= 0) {
 
+				if ($this->errors->length() <= 0) {
 					if(is_array($settings) && !empty($settings)){
 						foreach($settings as $set => $values) {
 							foreach($values as $key => $val) {
-								Symphony::Configuration()->core()->$set->$key = $val;
+								Symphony::Configuration()->main()->{$set}->{$key} = $val;
 							}
 						}
 					}

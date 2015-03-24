@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <name>Symphony</name>
+  <lang>en</lang>
+  <admin>
+    <path>symphony/</path>
+    <pagination>17</pagination>
+    <minify-assets>no</minify-assets>
+  </admin>
+  <region>
+    <time-format>H:i</time-format>
+    <date-format>d F Y</date-format>
+    <timezone>UTC</timezone>
+  </region>
+  <logging>
+    <archive>1</archive>
+    <maxsize>102400</maxsize>
+  </logging>
+  <session>
+    <cookie-prefix>sym-</cookie-prefix>
+  </session>
+  <system>
+    <maximum-upload-size>5242880</maximum-upload-size>
+    <file-write-mode>0775</file-write-mode>
+    <directory-write-mode>0775</directory-write-mode>
+  </system>
+</configuration>

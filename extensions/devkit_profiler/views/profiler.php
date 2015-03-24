@@ -97,7 +97,7 @@
 			}
 		}
 
-		public function render(Register &$parameters, XMLDocument &$document = null) {
+		public function render(Context $parameters, XMLDocument $document = null) {
 			$this->template = $this->view->template;
 
 			try {

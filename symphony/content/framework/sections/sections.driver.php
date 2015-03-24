@@ -186,7 +186,7 @@
 						SELECT
 							count(*) AS `count`
 						FROM
-							`tbl_entries` AS e
+							`entries` AS e
 						WHERE
 							e.section = '%s'
 					",
@@ -395,7 +395,7 @@
 					case 'delete-entries':
 						$entries = Symphony::Database()->query(
 							sprintf(
-								"SELECT `id` FROM `tbl_entries` WHERE `section` IN ('%s')",
+								"SELECT `id` FROM `entries` WHERE `section` IN ('%s')",
 								implode("', '", $checked)
 							)
 						);
@@ -777,7 +777,7 @@
 							__(
 								'Section updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/sections/new/',
 									ADMIN_URL . '/blueprints/sections/',
 								)
@@ -910,7 +910,7 @@
 							__(
 								'Section updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/sections/new/',
 									ADMIN_URL . '/blueprints/sections/',
 								)
@@ -923,7 +923,7 @@
 							__(
 								'Section created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/sections/new/',
 									ADMIN_URL . '/blueprints/sections/',
 								)

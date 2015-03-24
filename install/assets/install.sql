@@ -1,9 +1,9 @@
 
 --
--- Table structure for table `tbl_cache`
+-- Table structure for table `cache`
 --
 
-CREATE TABLE `tbl_cache` (
+CREATE TABLE `cache` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `hash` varchar(32) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `creation` int(14) NOT NULL DEFAULT '0',
@@ -17,10 +17,10 @@ CREATE TABLE `tbl_cache` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_entries`
+-- Table structure for table `entries`
 --
 
-CREATE TABLE `tbl_entries` (
+CREATE TABLE `entries` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `section` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `user_id` int(11) unsigned NOT NULL,
@@ -38,10 +38,10 @@ CREATE TABLE `tbl_entries` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_forgotpass`
+-- Table structure for table `forgotpass`
 --
 
-CREATE TABLE `tbl_forgotpass` (
+CREATE TABLE `forgotpass` (
   `user_id` int(11) NOT NULL DEFAULT '0',
   `token` varchar(6) COLLATE utf8_unicode_ci NOT NULL,
   `expiry` varchar(25) COLLATE utf8_unicode_ci NOT NULL,
@@ -51,10 +51,10 @@ CREATE TABLE `tbl_forgotpass` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_sections_sync`
+-- Table structure for table `sections_sync`
 --
 
-CREATE TABLE `tbl_sections_sync` (
+CREATE TABLE `sections_sync` (
   `section` varchar(32) NOT NULL DEFAULT '',
   `xml` text,
   PRIMARY KEY (`section`)
@@ -63,10 +63,10 @@ CREATE TABLE `tbl_sections_sync` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_sessions`
+-- Table structure for table `sessions`
 --
 
-CREATE TABLE `tbl_sessions` (
+CREATE TABLE `sessions` (
   `session` varchar(255) CHARACTER SET utf8 NOT NULL,
   `session_expires` int(10) unsigned NOT NULL DEFAULT '0',
   `session_data` text CHARACTER SET utf8,
@@ -76,10 +76,10 @@ CREATE TABLE `tbl_sessions` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_users`
+-- Table structure for table `users`
 --
 
-CREATE TABLE `tbl_users` (
+CREATE TABLE `users` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(20) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
   `password` varchar(32) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',

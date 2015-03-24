@@ -162,7 +162,7 @@
 
 			$root->appendChild($trace);
 
-			if (class_exists('Frontend') && Frontend::Parameters() instanceof Register) {
+			if (class_exists('Frontend') && Frontend::Parameters() instanceof Context) {
 				$params = Frontend::Parameters();
 				$parameters = $xml->createElement('parameters');
 

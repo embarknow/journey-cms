@@ -1,5 +1,8 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Database\Connection;
+
 	require_once(LIB . '/class.textformatter.php');
 
 	Class FieldException extends Exception {}
@@ -202,7 +205,7 @@
 		public function create(){
 			return Symphony::Database()->query(
 				'
-					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`handle` varchar(255) default NULL,
@@ -221,7 +224,7 @@
 				Symphony::Database()->query(
 					'
 						DROP TABLE
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 					',
 					array($this->section, $this->{'element-name'})
 				);
@@ -239,9 +242,9 @@
 				Symphony::Database()->query(
 					'
 						ALTER TABLE
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 						RENAME TO
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 					',
 					array(
 						$old->section,
@@ -382,7 +385,7 @@
 						SELECT
 							f.*
 						FROM
-							`tbl_fields` AS f
+							`fields` AS f
 						WHERE
 							f.element_name = '%s'
 							%s
@@ -541,7 +544,6 @@
 	-------------------------------------------------------------------------*/
 
 		public function prepareTableValue(StdClass $data=NULL, DOMElement $link=NULL, Entry $entry=NULL) {
-			$max_length = Symphony::Configuration()->core()->symphony->{'cell-truncation-length'};
 			$max_length = ($max_length ? $max_length : 75);
 
 			$value = (!is_null($data) ? strip_tags($data->value) : NULL);
@@ -577,7 +579,7 @@
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false){
 			try{
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
 					array(
 						$entry->section,
 						$this->{'element-name'},
@@ -602,7 +604,7 @@
 		public function loadDataFromDatabaseEntries($section, $entry_ids){
 			try{
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
 					array(
 						$section,
 						$this->{'element-name'},
@@ -677,9 +679,9 @@
 
 			try {
 				Symphony::Database()->insert(
-					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+					sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
-					Database::UPDATE_ON_DUPLICATE
+					Connection::UPDATE_ON_DUPLICATE
 				);
 				return self::STATUS_OK;
 			}
@@ -802,7 +804,7 @@
 			$db = Symphony::Database();
 
 			$table = $db->prepareQuery(sprintf(
-				'`tbl_data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
+				'`data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
 			));
 			$handle = sprintf(
 				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key
@@ -819,7 +821,7 @@
 			return $this->buildJoinQuery($joins);
 		}
 
-		public function buildFilterQuery($filter, &$joins, array &$where, Register $parameter_output) {
+		public function buildFilterQuery($filter, &$joins, array &$where, Context $parameter_output) {
 			$filter = $this->processFilter($filter);
 			$filter_join = DataSource::FILTER_OR;
 			$db = Symphony::Database();

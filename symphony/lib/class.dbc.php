@@ -98,7 +98,7 @@
 
 		abstract public function close();
 		abstract public function escape($string);
-		abstract public function connect($string);
+		abstract public function connect();
 		abstract public function insert($table, array $fields, $flag = null);
 		abstract public function update($table, array $fields, array $values=NULL, $where = null);
 		abstract public function delete($table, array $values=NULL, $where = null);
@@ -222,12 +222,55 @@
 
 	class DBCMySQL extends Database {
 		protected $log;
-		protected $query_caching = false;
+		protected $conf;
+		protected $queryCaching;
 		protected $lastException;
 		protected $lastQuery;
+		protected $prefix;
+		protected $string;
+
+		public function __construct($conf)
+		{
+			$this->conf = $conf;
+			$this->queryCaching = true;
+			$this->prefix = $conf->{'table-prefix'};
+			$this->string = sprintf(
+				'mysql:host=%s;port=%s;dbname=%s',
+				$conf->host,
+				$conf->port,
+				$conf->database
+			);
+		}
+
+		public function connect() {
+			// Already connected:
+			if (isset($this->connection)) {
+				return true;
+			}
+
+			// Establish new connection:
+			$this->connection = new PDO($this->string, $this->conf->user, $this->conf->password, array(
+				PDO::ATTR_ERRMODE =>					PDO::ERRMODE_EXCEPTION,
+				PDO::ATTR_DEFAULT_FETCH_MODE =>			PDO::FETCH_OBJ,
+				PDO::ATTR_PERSISTENT =>					false,
+				// PDO::MYSQL_ATTR_INIT_COMMAND =>			'SET NAMES utf8; SET time_zone = '+00:00'; SET storage_engine=MYISAM;',
+				PDO::MYSQL_ATTR_USE_BUFFERED_QUERY =>	true,
+				PDO::ATTR_EMULATE_PREPARES =>			false
+			));
+
+			$this->execute('SET NAMES utf8');
+			$this->execute('SET time_zone = "+00:00"');
+			$this->execute('SET storage_engine = "MYISAM"');
+
+			return true;
+		}
 
 		public function connected() {
 			return $this->connection instanceof PDO;
+		}
+
+		public function execute($statement) {
+			return $this->connection->exec($statement);
 		}
 
 		public function prepare($statement, array $driver_options = array()) {
@@ -235,8 +278,8 @@
 		}
 
 		public function prepareQuery($query, array $values = null) {
-			if ($this->prefix != 'tbl_') {
-				$query = preg_replace('/tbl_([^\b`]+)/i', $this->prefix . '\\1', $query);
+			if ($this->prefix != '') {
+				$query = preg_replace('/([^\b`]+)/i', $this->prefix . '\\1', $query);
 			}
 
 			if (is_array($values) && empty($values) === false) {
@@ -247,50 +290,11 @@
 				$query = vsprintf(trim($query), $values);
 			}
 
-			if (isset($this->query_caching)) {
-				$query = preg_replace('/^SELECT\s+/i', 'SELECT SQL_'.(!$this->query_caching ? 'NO_' : NULL).'CACHE ', $query);
+			if (isset($this->queryCaching)) {
+				$query = preg_replace('/^SELECT\s+/i', 'SELECT SQL_'.(!$this->queryCaching ? 'NO_' : NULL).'CACHE ', $query);
 			}
 
 			return $query;
-		}
-
-		public function connect($string) {
-			$details = (object)parse_url($string);
-			$details->path = trim($details->path, '/');
-			$conf = Symphony::Configuration()->{'db'}();
-
-			$string = sprintf(
-				'mysql:host=%s;port=%s;dbname=%s',
-				$details->host,
-				$details->port,
-				$details->path
-			);
-
-			// Already connected:
-			if (isset($this->connection)) {
-				return true;
-			}
-
-			// Establish new connection:
-			try {
-				$this->connection = new PDO($string, $details->user, $details->pass, array(
-					PDO::ATTR_ERRMODE =>					PDO::ERRMODE_EXCEPTION,
-					PDO::ATTR_DEFAULT_FETCH_MODE =>			PDO::FETCH_OBJ,
-					PDO::ATTR_PERSISTENT =>					false,
-					PDO::MYSQL_ATTR_INIT_COMMAND =>			"SET NAMES utf8; SET time_zone = '+00:00'",
-					PDO::MYSQL_ATTR_USE_BUFFERED_QUERY =>	true
-				));
-
-				if ($conf->{'disable-query-caching'} == "no") {
-					$this->query_caching = true;
-				}
-			}
-
-			catch (PDOException $e) {
-				throw new DatabaseException('There was a problem whilst attempting to establish a database connection. Please check all connection information is correct.');
-			}
-
-			return true;
 		}
 
 		public function close() {
@@ -370,14 +374,6 @@
 			$query = $this->prepareQuery($query, $values);
 			$this->lastException = null;
 			$this->lastQuery = $query;
-
-			if ($buffer) {
-				$this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
-			}
-
-			else {
-				$this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-			}
 
 			try {
 				Profiler::begin('Executing database query');

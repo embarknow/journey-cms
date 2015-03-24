@@ -1,5 +1,8 @@
 <?php
 
+use Embark\CMS\Database\Connection;
+use Embark\CMS\SystemDateTime;
+
 	if (!defined('__IN_SYMPHONY__')) die('<h2>Symphony Error</h2><p>You cannot directly access this file</p>');
 
 	class FieldUpload extends Field {
@@ -32,7 +35,7 @@
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 						`entry_id` int(11) unsigned NOT NULL,
 						`name` text DEFAULT NULL,
@@ -345,7 +348,9 @@
 					);
 				}
 
-				$meta['creation'] = DateTimeObj::get('c', filemtime($file));
+				$date = new SystemDateTime();
+				$date->setTimestamp(filemtime($file));
+				$meta['creation'] = $date->format(DateTime::W3C);
 			}
 
 			###
@@ -525,7 +530,7 @@
 						break;
 
 					case UPLOAD_ERR_FORM_SIZE:
-						$size = General::formatFilesize(Symphony::Configuration()->core()->symphony->{'maximum-upload-size'});
+						$size = General::formatFilesize(Symphony::Configuration()->main()->system->{'maximum-upload-size'});
 						$errors->append(
 							null, (object)array(
 							 	'message' => __(
@@ -620,7 +625,7 @@
 		}
 
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
-			$permissions = Symphony::Configuration()->core()->symphony->{'file-write-mode'};
+			$permissions = Symphony::Configuration()->main()->system->{'file-write-mode'};
 			$data->entry_id = $entry->id;
 
 			###
@@ -716,9 +721,9 @@
 				$data->meta = serialize($data->meta);
 
 				Symphony::Database()->insert(
-					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+					sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
-					Database::UPDATE_ON_DUPLICATE
+					Connection::UPDATE_ON_DUPLICATE
 				);
 
 				return self::STATUS_OK;

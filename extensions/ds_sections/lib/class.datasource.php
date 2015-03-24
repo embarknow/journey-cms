@@ -1,10 +1,14 @@
 <?php
 
+use Embark\CMS\Database\Exception as DatabaseException;
+use Embark\CMS\Database\ResultIterator;
+use Embark\CMS\SystemDateTime;
+
 	require_once LIB . '/class.datasource.php';
 	require_once LIB . '/class.entry.php';
 	require_once LIB . '/class.duplicator.php';
 
-	Class SectionsDataSource extends DataSource {
+	class SectionsDataSource extends DataSource {
 		public function __construct(){
 			// Set Default Values
 			$this->_about = new StdClass;
@@ -571,7 +575,7 @@
 
 	/*-----------------------------------------------------------------------*/
 
-		public function render(Register $parameter_output, $joins = NULL, array $where = array(), $filter_operation_type = self::FILTER_AND){
+		public function render(Context $parameter_output, $joins = NULL, array $where = array(), $filter_operation_type = self::FILTER_AND){
 			$execute = true;
 
 			Profiler::begin('Building query');
@@ -757,7 +761,7 @@
 			$o_order = $order;
 			$query = sprintf('
 				%1$s e.id, e.section, e.user_id, e.creation_date, e.modification_date
-				FROM `tbl_entries` AS `e`
+				FROM `entries` AS `e`
 				%2$s
 				WHERE `section` = "%3$s"
 				%4$s
@@ -940,15 +944,19 @@
 							foreach ($included_elements->system as $field) {
 								switch ($field) {
 									case 'creation-date':
+										$date = new SystemDateTime($e->creation_date);
 										$entry->appendChild(General::createXMLDateObject(
-											$result, DateTimeObj::toGMT($e->creation_date), 'creation-date'
+											$result, $date, 'creation-date'
 										));
 										break;
+
 									case 'modification-date':
+										$date = new SystemDateTime($e->modification_date);
 										$entry->appendChild(General::createXMLDateObject(
-											$result, DateTimeObj::toGMT($e->modification_date), 'modification-date'
+											$result, $date, 'modification-date'
 										));
 										break;
+
 									case 'user':
 										$obj = User::load($e->user_id);
 										$user = $result->createElement('user', $obj->getFullName());
@@ -975,11 +983,13 @@
 										break;
 
 									case 'creation-date':
-										$output_parameters->system[$field][] = DateTimeObj::get('Y-m-d H:i:s', DateTimeObj::toGMT($e->creation_date));
+										$date = new SystemDateTime($e->creation_date);
+										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 
 									case 'modification-date':
-										$output_parameters->system[$field][] = DateTimeObj::get('Y-m-d H:i:s', DateTimeObj::toGMT($e->modification_date));
+										$date = new SystemDateTime($e->creation_date);
+										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 
 									case 'user':
@@ -1055,7 +1065,7 @@
 		protected $entries;
 
 		public function __construct($result) {
-			$iterator = new DBCMySQLResult($result);
+			$iterator = new ResultIterator($result);
 			$entries = array();
 
 			if ($iterator->valid()) foreach ($iterator as $record) {

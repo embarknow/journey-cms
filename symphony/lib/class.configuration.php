@@ -1,6 +1,6 @@
 <?php
 
-	class ConfigurationElement {
+	class ConfigurationElement implements ArrayAccess {
 		protected $doc;
 		protected $path;
 		protected $properties;
@@ -67,24 +67,56 @@
 			return $this->properties;
 		}
 
+		public function __isset($name)
+		{
+			return $this->offsetExists($name);
+		}
+
+		public function offsetExists($name)
+		{
+			return isset($this->properties->$name);
+		}
+
 		public function __get($name) {
+			return $this->offsetGet($name);
+		}
+
+		public function offsetGet($name)
+		{
 			if (isset($this->properties->$name) === false) return null;
 
 			return $this->properties->$name;
 		}
 
-		public function __set($name, $value) {
-			$this->properties->$name = $value;
+		public function __set($name, $value)
+		{
+			return $this->offsetSet($name, $value);
 		}
 
-		public function __unset($name) {
+		public function offsetSet($name, $value)
+		{
+			return $this->properties->$name = $value;
+		}
+
+		public function __unset($name)
+		{
+			$this->offsetUnset($name);
+		}
+
+		public function offsetUnset($name)
+		{
 			unset($this->properties->$name);
 		}
 
-		public function save($sleep = 0) {
+		public function save($path = null) {
 			try {
 				$doc = new DOMDocument('1.0', 'UTF-8');
 				$doc->formatOutput = true;
+				$path = (
+					isset($path)
+						? $path
+						: $this->path
+				);
 
 				$root = $doc->createElement('configuration');
 				$doc->appendChild($root);
@@ -92,11 +124,11 @@
 				self::__generateXML($this->properties, $root);
 
 				// Wait for a few seconds if file is locked:
-				while (!Mutex::acquire($this->path, 2)) usleep(500000);
+				while (!Mutex::acquire($path, 2)) usleep(500000);
 
-				file_put_contents($this->path, $doc->saveXML());
+				file_put_contents($path, $doc->saveXML());
 
-				Mutex::release($this->path);
+				Mutex::release($path);
 			}
 
 			catch (Exception $e) {

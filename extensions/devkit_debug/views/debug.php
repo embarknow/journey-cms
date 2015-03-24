@@ -97,7 +97,7 @@
 		}
 
 
-		public function render(Register $parameters, XMLDocument $document, $output) {
+		public function render(Context $parameters, XMLDocument $document, $output) {
 			$this->template = $this->view->template;
 
 			$this->output = $output;
@@ -274,7 +274,7 @@
 			$container->setAttribute('id', 'params');
 			$table = $this->document->createElement('table');
 
-			if ($this->params instanceof Register) foreach ($this->params as $key => $value) {
+			if ($this->params instanceof Context) foreach ($this->params as $key => $value) {
 				$row = $this->document->createElement('tr');
 
 				$cell = $this->document->createElement('th');

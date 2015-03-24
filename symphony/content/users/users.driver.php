@@ -84,7 +84,7 @@
 				$checked = array_keys($_POST['items']);
 
 				foreach($checked as $user_id){
-					if(Administration::instance()->User->id == $user_id) continue;
+					if(Symphony::User()->id == $user_id) continue;
 					User::delete($user_id);
 				}
 
@@ -131,7 +131,7 @@
 							__(
 								'User updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/system/users/new/',
 									ADMIN_URL . '/system/users/'
 								)
@@ -146,7 +146,7 @@
 							__(
 								'User created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/system/users/new/',
 									ADMIN_URL . '/system/users/'
 								)
@@ -176,7 +176,7 @@
 
 
 
-			if($this->_context[0] == 'edit' && $this->user->id == Administration::instance()->User->id) $isOwner = true;
+			if($this->_context[0] == 'edit' && $this->user->id == Symphony::User()->id) $isOwner = true;
 
 			$this->setTitle(__(($this->_context[0] == 'new' ? '%1$s &ndash; %2$s &ndash; Untitled' : '%1$s &ndash; %2$s &ndash; %3$s'), array(__('Symphony'), __('Users'), $this->user->getFullName())));
 			$this->appendSubheading(($this->_context[0] == 'new' ? __('New User') : $this->user->getFullName()));
@@ -426,11 +426,12 @@
 					}
 
 					elseif(User::save($this->user)){
+						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('tbl_forgotpass', array(DateTimeObj::getGMT('c'), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
 
 						// This is the logged in user, so update their session
-						if($user_id == Administration::instance()->User->id){
+						if($user_id == Symphony::User()->id){
 							Administration::instance()->login($this->user->username, $this->user->password, true);
 						}
 

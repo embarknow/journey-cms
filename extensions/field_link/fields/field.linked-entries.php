@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Datasource\Exception as DatabaseException;
+
 	class FieldLinked_Entries extends Field {
 		public function __construct() {
 			parent::__construct();
@@ -92,7 +94,7 @@
 			$bits = explode('::', $this->{'related-field'}, 2);
 
 			$result = Symphony::Database()->query(
-				'SELECT `entry_id` AS `id` FROM `tbl_data_%s_%s` WHERE `relation_id` = %d',
+				'SELECT `entry_id` AS `id` FROM `data_%s_%s` WHERE `relation_id` = %d',
 				array(
 					$bits[0], $bits[1], $entry->id
 				)
@@ -113,7 +115,7 @@
 			try {
 				$result = array();
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `relation_id` IN (%s)",
+					"SELECT * FROM `data_%s_%s` WHERE `relation_id` IN (%s)",
 					array(
 						$bits[0], $bits[1],	implode(',', $entry_ids)
 					)

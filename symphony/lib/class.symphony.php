@@ -1,10 +1,14 @@
 <?php
 
+use Embark\CMS\Database\Connection;
+use Embark\CMS\Configuration\Loader as Configuration;
+use Embark\CMS\SystemDateTime;
+
 	require_once 'class.errorhandler.php';
 
-	require_once 'class.dbc.php';
-	require_once 'class.configuration.php';
-	require_once 'class.datetimeobj.php';
+	// require_once 'class.dbc.php';
+	// require_once 'class.configuration.php';
+	// require_once 'class.datetimeobj.php';
 	require_once 'class.log.php';
 	require_once 'class.cookie.php';
 	require_once 'interface.singleton.php';
@@ -121,287 +125,189 @@
 	}
 
 	Abstract Class Symphony implements Singleton{
-
 		public static $Log;
 
 		protected static $Configuration;
+		protected static $Cookie;
 		protected static $Database;
+		protected static $User;
 
 		protected static $_lang;
-
-		public $Cookie;
-		public $User;
-
 		protected static $_instance;
 
-		protected function __construct(){
-			self::$Configuration = new Configuration;
-
-			DateTimeObj::setDefaultTimezone(self::Configuration()->core()->region->timezone);
-
-			self::$_lang = (self::Configuration()->core()->symphony->lang ? self::Configuration()->core()->symphony->lang : 'en');
-
-			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->core()->region->{'date-format'});
-			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->core()->region->{'time-format'});
-			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
-			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->core()->symphony->{'administration-path'}, '/')));
-
+		protected function __construct()
+		{
+			$this->initialiseConfiguration();
 			$this->initialiseLog();
-
-			GenericExceptionHandler::initialise(self::$Log);
-			GenericErrorHandler::initialise(self::$Log);
-
 			$this->initialiseDatabase();
 			$this->initialiseCookie();
-
-			Extension::init();
-
-			Lang::loadAll(true);
-
-			// HACK!
-			$this->Cookie->get('blah');
+			$this->initialiseExtensions();
+			$this->initialiseLanguage();
+			$this->initialiseUser();
 		}
 
-		public function lang(){
+		public function lang() {
 			return self::$_lang;
 		}
 
-		public function initialiseCookie(){
-			try{
+		public function initialiseConfiguration($path = CONF)
+		{
+			self::$Configuration = new Configuration($path);
+
+			date_default_timezone_set(self::Configuration()->main()->region->timezone);
+
+			self::$_lang = (self::Configuration()->main()->lang ? self::Configuration()->main()->lang : 'en');
+
+			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->main()->region->{'date-format'});
+			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->main()->region->{'time-format'});
+			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
+			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->main()->admin->path, '/')));
+		}
+
+		public static function Configuration()
+		{
+			return self::$Configuration;
+		}
+
+		public function initialiseCookie()
+		{
+			try {
 				$cookie_path = parse_url(URL, PHP_URL_PATH);
 				$cookie_path = '/' . trim($cookie_path, '/');
 			}
-			catch(Exception $e){
+
+			catch (Exception $e) {
 				$cookie_path = '/';
 			}
 
 			define_safe('__SYM_COOKIE_PATH__', $cookie_path);
-			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->core()->symphony->{'cookie-prefix'});
+			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->main()->session->{'cookie-prefix'});
 
-			$this->Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__, null, true);
+			self::$Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__, null, true);
 		}
 
-		public static function Configuration() {
-			return self::$Configuration;
+		public static function Cookie()
+		{
+			return self::$Cookie;
 		}
 
-		public static function Database() {
-			return self::$Database;
-		}
+		public function initialiseDatabase()
+		{
+			$conf = (object)Symphony::Configuration()->database();
+			$database = new Connection($conf);
+			$database->connect();
 
-		public static function Log() {
-			return self::$Log;
-		}
-
-		public static function Parent() {
-			if (class_exists('Administration')) {
-				return Administration::instance();
-			}
-
-			else {
-				return Frontend::instance();
-			}
-		}
-
-		public function initialiseDatabase(){
-			$details = (object)Symphony::Configuration()->db();
-
-			//$db = new DBCMySQLProfiler;
-			$db = new DBCMySQL;
-
-			if($details->runtime_character_set_alter == 'yes'){
-				$db->character_encoding = $details->character_encoding;
-				$db->character_set = $details->character_set;
-			}
-
-			$connection_string = sprintf('mysql://%s:%s@%s:%s/%s/',
-											$details->user,
-											$details->password,
-											$details->host,
-											$details->port,
-											$details->db);
-
-			$db->connect($connection_string);
-			$db->prefix = $details->{'table-name-prefix'};
-
-			$db->force_query_caching = NULL;
-			if(!is_null($details->disable_query_caching)) $db->force_query_caching = ($details->disable_query_caching == 'yes' ? true : false);
-
-			self::$Database = $db;
+			self::$Database = $database;
 
 			return true;
 		}
 
-		public function initialiseLog(){
+		public static function Database()
+		{
+			return self::$Database;
+		}
 
+		public function initialiseExtensions()
+		{
+			Extension::init();
+		}
+
+		public function initialiseLanguage()
+		{
+			Lang::loadAll(true);
+		}
+
+		public function initialiseLog()
+		{
 			self::$Log = new Log(ACTIVITY_LOG);
-			self::$Log->setArchive((self::Configuration()->core()->log->archive == '1' ? true : false));
-			self::$Log->setMaxSize(intval(self::Configuration()->core()->log->maxsize));
+			Symphony::Log()->setArchive((self::Configuration()->main()->logging->archive == '1' ? true : false));
+			Symphony::Log()->setMaxSize(intval(self::Configuration()->main()->logging->maxsize));
 
-			if(self::$Log->open() == 1){
-				self::$Log->writeToLog('Symphony Log', true);
-				self::$Log->writeToLog('Version: '. self::Configuration()->core()->symphony->version, true);
-				self::$Log->writeToLog('--------------------------------------------', true);
+			if (Symphony::Log()->open() == 1) {
+				Symphony::Log()->writeToLog('Symphony Log', true);
+				Symphony::Log()->writeToLog('--------------------------------------------', true);
 			}
 
+			GenericExceptionHandler::initialise(Symphony::Log());
+			GenericErrorHandler::initialise(Symphony::Log());
+		}
+
+		public static function Log()
+		{
+			return self::$Log;
+		}
+
+		public function initialiseUser()
+		{
+			if (isset($_REQUEST['auth-token']) && $_REQUEST['auth-token'] && strlen($_REQUEST['auth-token']) == 8) {
+				$user = User::loadFromAuthToken($token);
+			}
+
+			$username = Symphony::Cookie()->get('username');
+			$password = Symphony::Cookie()->get('pass');
+			$user = User::loadFromCredentials($username, $password, true);
+
+			if ($user instanceof User) {
+				if ($user->login()) {
+					self::$User = $user;
+				}
+			}
+
+			// The credentials were invalid, remove them:
+			else {
+				Symphony::Cookie()->expire();
+			}
+		}
+
+		public static function User()
+		{
+			return self::$User;
 		}
 
 		public function isLoggedIn() {
-			if ($this->User) return true;
-
-			if (isset($_REQUEST['auth-token']) && $_REQUEST['auth-token'] && strlen($_REQUEST['auth-token']) == 8) {
-				return $this->loginFromToken($_REQUEST['auth-token']);
-			}
-
-			$username = $this->Cookie->get('username');
-			$password = $this->Cookie->get('pass');
-
-			if (strlen(trim($username)) > 0 && strlen(trim($password)) > 0) {
-				$result = Symphony::Database()->query(
-					"
-						SELECT
-							u.id
-						FROM
-							tbl_users AS u
-						WHERE
-							u.username = '%s'
-							AND u.password = '%s'
-						LIMIT 1
-					",
-					array($username, $password)
-				);
-
-				if ($result->valid()) {
-					$this->_user_id = $result->current()->id;
-
-					Symphony::Database()->update(
-						'tbl_users',
-						array('last_seen' => DateTimeObj::get('Y-m-d H:i:s')),
-						array($this->_user_id),
-						"`id` = '%s'"
-					);
-
-					$this->User = User::load($this->_user_id);
-					$this->reloadLangFromUserPreference();
-
-					return true;
-				}
-			}
-
-			$this->Cookie->expire();
-
-			return false;
+			return Symphony::User() instanceof User;
 		}
 
 		public function logout() {
-			$this->Cookie->expire();
+			Symphony::Cookie()->expire();
 		}
 
-		// TODO: Most of this logic is duplicated with the isLoggedIn function.
 		public function login($username, $password, $isHash = false) {
-			if (strlen(trim($username)) <= 0 || strlen(trim($password)) <= 0) return false;
+			$user = User::loadFromCredentials($username, $password, $isHash);
 
-			$user = User::loadUserFromUsername($username);
+			if ($user instanceof User) {
+				if ($user->login()) {
+					self::$User = $user;
 
-			if ($user instanceof User && Cryptography::compare($password, $user->password, $isHash)) {
-				if (Cryptography::requiresMigration($user->password)) {
-					$user->password = Cryptography::hash($password);
+					return true;
 				}
-
-				$this->Cookie->set('username', $username);
-				$this->Cookie->set('pass', $user->password);
-
-				$this->User = $user;
-				$user->last_seen = DateTimeObj::get('Y-m-d H:i:s');
-				$this->reloadLangFromUserPreference();
-
-				User::save($user);
-				return true;
 			}
 
 			return false;
 		}
 
 		public function loginFromToken($token) {
-			$token = Symphony::Database()->escape($token);
+			$user = User::loadFromAuthToken($token);
 
-			if (strlen(trim($token)) == 0) return false;
+			if ($user instanceof User) {
+				if ($user->login()) {
+					self::$User = $user;
 
-			if (strlen($token) == 6) {
-				$result = Symphony::Database()->query("
-						SELECT
-							`u`.id, `u`.username, `u`.password
-						FROM
-							`tbl_users` AS u, `tbl_forgotpass` AS f
-						WHERE
-							`u`.id = `f`.user_id
-						AND
-							`f`.expiry > '%s'
-						AND
-							`f`.token = '%s'
-						LIMIT 1
-					",
-					array(
-						DateTimeObj::getGMT('c'),
-						$token
-					)
-				);
-
-				Symphony::Database()->delete('tbl_forgotpass', array($token), "`token` = '%s'");
-			}
-
-			else {
-				$result = Symphony::Database()->query("
-						SELECT
-							id, username, password
-						FROM
-							`tbl_users`
-						WHERE
-							SUBSTR(MD5(CONCAT(`username`, `password`)), 1, 8) = '%s'
-						AND
-							auth_token_active = 'yes'
-						LIMIT 1
-					",
-					array($token)
-				);
-			}
-
-			if ($result->valid()) {
-				$row = $result->current();
-				$this->_user_id = $row->id;
-
-				$this->User = User::load($this->_user_id);
-				$this->Cookie->set('username', $row->username);
-				$this->Cookie->set('pass', $row->password);
-
-				Symphony::Database()->update(
-					'tbl_users',
-					array('last_seen' => DateTimeObj::getGMT('Y-m-d H:i:s')),
-					array($this->_user_id),
-					"`id` = '%d'"
-				);
-
-				$this->reloadLangFromUserPreference();
-
-				return true;
+					return true;
+				}
 			}
 
 			return false;
-
 		}
 
-		public function reloadLangFromUserPreference() {
-			$lang = $this->User->language;
+		public static function Parent()
+		{
+			if (class_exists('Administration')) {
+				return Administration::instance();
+			}
 
-			if($lang && $lang != self::lang()){
-				self::$_lang = $lang;
-				if($lang != 'en') {
-					Lang::loadAll();
-				}
-				else {
-					// As there is no English dictionary the default dictionary needs to be cleared
-					Lang::clear();
-				}
+			else {
+				return Frontend::instance();
 			}
 		}
 	}

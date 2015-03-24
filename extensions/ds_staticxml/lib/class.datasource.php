@@ -1,7 +1,7 @@
 <?php
-	
+
 	require_once LIB . '/class.datasource.php';
-	
+
 	Class StaticXMLDataSource extends DataSource {
 		public function __construct(){
 			$this->_about = new StdClass;
@@ -18,22 +18,22 @@
 		public function getTemplate(){
 			return EXTENSIONS . '/ds_staticxml/templates/datasource.php';
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
-		
+
 		public function prepare(array $data = null) {
 			if(!is_null($data)){
 				if(isset($data['about']['name'])) $this->about()->name = stripslashes($data['about']['name']);
 				if(isset($data['xml'])) $this->parameters()->{'xml'} = stripslashes($data['xml']);
 			}
 		}
-		
+
 		public function view(SymphonyDOMElement $wrapper, MessageStack $errors) {
-		
+
 			$layout = new Layout();
 			$left = $layout->createColumn(Layout::SMALL);
 			$right = $layout->createColumn(Layout::LARGE);
-			
+
 			//	Essentials --------------------------------------------------------
 
 				$fieldset = Widget::Fieldset(__('Essentials'));
@@ -49,9 +49,9 @@
 
 				$fieldset->appendChild($label);
 				$left->appendChild($fieldset);
-				
+
 				$fieldset = Widget::Fieldset(__('Content'));
-			
+
 				$label = Widget::Label(__('Source XML'));
 				$input = Widget::Textarea('fields[xml]', $this->parameters()->{'xml'}, array(
 					'rows' => '24',
@@ -59,14 +59,14 @@
 					'class' => 'code'
 				));
 				$label->appendChild($input);
-			
+
 				if (isset($errors->{'xml'})) {
 					$label = Widget::wrapFormElementWithError($label, $errors->{'xml'});
 				}
-			
+
 				$fieldset->appendChild($label);
 				$right->appendChild($fieldset);
-				
+
 				$layout->appendTo($wrapper);
 		}
 
@@ -89,10 +89,10 @@
 
 			return parent::save($errors);
 		}
-		
+
 	/*-----------------------------------------------------------------------*/
 
-		public function render(Register $ParameterOutput){
+		public function render(Context $ParameterOutput){
 
 			$doc = new XMLDocument;
 			$root = $doc->createElement($this->parameters()->{'root-element'});

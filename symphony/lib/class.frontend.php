@@ -1,9 +1,11 @@
 <?php
 
+use Embark\CMS\UserDateTime;
+
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');
 	require_once(LIB . '/class.lang.php');
-	require_once(LIB . '/class.register.php');
+	require_once(LIB . '/class.context.php');
 
 	class FrontendPageNotFoundException extends SymphonyErrorPage{
 		public function __construct(View $page=NULL){
@@ -113,7 +115,7 @@
 		public function display($url=NULL){
 			Profiler::begin('Render the current page');
 
-			self::$Parameters = new Register;
+			self::$Parameters = new Context();
 
 			// Default headers. Can be overwritten later
 			//self::$Headers->append('HTTP/1.0 200 OK');
@@ -213,16 +215,16 @@
 			$current_url = parse_url(URL);
 			$current_url['path'] = $_SERVER['REQUEST_URI'];
 			$current_url = unparse_url($current_url);
+			$date = new UserDateTime();
 
 			self::$Parameters->register(array(
-				'today' =>					DateTimeObj::get('Y-m-d'),
-				'current-time' =>			DateTimeObj::get('H:i'),
-				'this-year' =>				DateTimeObj::get('Y'),
-				'this-month' =>				DateTimeObj::get('m'),
-				'this-day' =>				DateTimeObj::get('d'),
+				'today' =>					$date->format('Y-m-d'),
+				'current-time' =>			$date->format('H:i'),
+				'this-year' =>				$date->format('Y'),
+				'this-month' =>				$date->format('m'),
+				'this-day' =>				$date->format('d'),
 				'timezone' =>				date_default_timezone_get(),
-				'website-name' =>			Symphony::Configuration()->core()->symphony->sitename,
-				'symphony-version' =>		Symphony::Configuration()->core()->symphony->version,
+				'website-name' =>			Symphony::Configuration()->main()->name,
 				'root' =>					URL,
 				'relative-root' =>			ROOT_PATH,
 				'workspace' =>				URL . '/workspace',

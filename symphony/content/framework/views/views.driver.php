@@ -147,7 +147,7 @@
 					__(
 						'View updated at %s. <a href="%s">View all</a>',
 						array(
-							DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+							General::getTimeAgo(__SYM_TIME_FORMAT__),
 							ADMIN_URL . '/blueprints/views/'
 						)
 					),
@@ -348,7 +348,7 @@
 							__(
 								'View updated at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/views/new/',
 									ADMIN_URL . '/blueprints/views/',
 								)
@@ -363,7 +363,7 @@
 							__(
 								'View created at %1$s. <a href="%2$s">Create another?</a> <a href="%3$s">View all</a>',
 								array(
-									DateTimeObj::getTimeAgo(__SYM_TIME_FORMAT__),
+									General::getTimeAgo(__SYM_TIME_FORMAT__),
 									ADMIN_URL . '/blueprints/views/new/',
 									ADMIN_URL . '/blueprints/views/',
 								)

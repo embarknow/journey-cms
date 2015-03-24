@@ -50,8 +50,8 @@
 			if (!is_null($data)) {
 				$this->about()->name = $data['name'];
 
-				$this->about()->author->name = Administration::instance()->User->getFullName();
-				$this->about()->author->email = Administration::instance()->User->email;
+				$this->about()->author->name = Symphony::User()->getFullName();
+				$this->about()->author->email = Symphony::User()->email;
 
 				$this->parameters()->section = $data['section'];
 
@@ -262,7 +262,7 @@
 			return true;
 		}
 
-		public function trigger(Register $ParameterOutput, array $postdata){
+		public function trigger(Context $ParameterOutput, array $postdata){
 			$result = new XMLDocument;
 			$result->appendChild($result->createElement($this->parameters()->{'root-element'}));
 
@@ -302,12 +302,15 @@
 			else{
 				$entry = new Entry;
 				$entry->section = $this->parameters()->{'section'};
-				if(isset(Frontend::instance()->User) && Frontend::instance()->User instanceof User){
-					$entry->user_id = Frontend::instance()->User->id;
+
+				if (Symphony::User() instanceof User) {
+					$entry->user_id = Symphony::User()->id;
 				}
-				else{
-					$entry->user_id = (int)Symphony::Database()->query("SELECT `id` FROM `tbl_users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+
+				else {
+					$entry->user_id = (int)Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 				}
+
 				$type = 'create';
 			}
 

@@ -205,7 +205,11 @@
 			$doc->ownerDocument->preserveWhiteSpace = false;
 			$doc->ownerDocument->formatOutput = true;
 
-			General::writeFile($pathname, $doc->ownerDocument->saveXML(), Symphony::Configuration()->core()->symphony->{'file-write-mode'});
+			General::writeFile(
+				$pathname,
+				$doc->ownerDocument->saveXML(),
+				Symphony::Configuration()->main()->system->{'file-write-mode'}
+			);
 		}
 
 		public static function rebuildConfiguration($config_pathname = null) {

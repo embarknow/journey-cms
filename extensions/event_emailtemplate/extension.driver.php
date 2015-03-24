@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	class Extension_Event_EmailTemplate implements ExtensionInterface, ExtensionWithIncludesInterface {
 		public static $document = null;
 		public static $events = array();
@@ -240,7 +242,7 @@
 			// Log the email:
 			$email['method'] = ($smtp ? "smtp" : "symphony");
 			$email['success'] = ($return ? 'yes' : 'no');
-			$email['date'] = (new DateTime)->format(DateTime::W3C);
+			$email['date'] = (new SystemDateTime)->format(DateTime::W3C);
 
 			//	TODO: Logging
 			return $return;

@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	require_once LIB . '/class.cache.php';
 	require_once LIB . '/class.xslproc.php';
 	require_once LIB . '/class.datasource.php';
@@ -325,7 +327,7 @@
 			);
 			$hasFreshData = false;
 			$hasCachedData = isset($cache->{$cache_id});
-			$creation = (new DateTime)->format(DateTime::W3C);
+			$creation = (new SystemDateTime)->format(DateTime::W3C);
 
 			if(isset($this->parameters()->timeout)){
 				$timeout = (int)max(1, $this->parameters()->timeout);

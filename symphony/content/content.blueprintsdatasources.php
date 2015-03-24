@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	require_once(LIB . '/class.administrationpage.php');
 	require_once(LIB . '/class.datasource.php');
 	//require_once(LIB . '/class.sectionmanager.php');
@@ -419,7 +421,7 @@
 						break;
 
 					case 'version':
-						$date = new DateTime($about->{'release-date'});
+						$date = new SystemDateTime($about->{'release-date'});
 						$fieldset = $this->createElement('fieldset');
 						$fieldset->appendChild($this->createElement('legend', 'Version'));
 						$fieldset->appendChild($this->createElement('p', $value . ', released on ' . $date->format(__SYM_DATE_FORMAT__)));

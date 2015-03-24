@@ -1,6 +1,7 @@
 <?php
 
 use Embark\CMS\Database\Connection;
+use Embark\CMS\SystemDateTime;
 
 	if (!defined('__IN_SYMPHONY__')) die('<h2>Symphony Error</h2><p>You cannot directly access this file</p>');
 
@@ -347,7 +348,7 @@ use Embark\CMS\Database\Connection;
 					);
 				}
 
-				$date = new DateTime();
+				$date = new SystemDateTime();
 				$date->setTimestamp(filemtime($file));
 				$meta['creation'] = $date->format(DateTime::W3C);
 			}

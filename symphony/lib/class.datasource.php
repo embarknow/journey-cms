@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	Class DataSourceException extends Exception {}
 
 	Class DataSourceFilterIterator extends FilterIterator{
@@ -217,8 +219,7 @@
 				$this->parameters()->{'root-element'} = $this->handle;
 				$classname = Lang::createHandle(ucwords($this->about()->name), '_', false, true, array('/[^a-zA-Z0-9_\x7f-\xff]/' => NULL), true);
 				$pathname = DATASOURCES . "/" . $this->handle . ".php";
-				$date = new DateTime();
-				$date->setTimeZone(new DateTimeZone('UTC'));
+				$date = new SystemDateTime();
 
 				$data = array(
 					$classname,

@@ -2,6 +2,7 @@
 
 use Embark\CMS\Database\Connection;
 use Embark\CMS\Database\ResultIterator;
+use Embark\CMS\SystemDateTime;
 
 	class EntryResult extends ResultIterator {
 		public $schema = array();
@@ -52,9 +53,7 @@ use Embark\CMS\Database\ResultIterator;
 		protected $meta;
 
 		public function __construct(){
-			$date = new DateTime();
-			$dateGMT = new DateTime();
-			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
+			$date = new SystemDateTime();
 
 			$this->data = new StdClass;
 			$this->meta = (object)array(
@@ -62,9 +61,7 @@ use Embark\CMS\Database\ResultIterator;
 				'section' =>				null,
 				'user_id' =>				null,
 				'creation_date' =>			$date->format(DateTime::W3C),
-				'creation_date_gmt' =>		$dateGMT->format(DateTime::W3C),
-				'modification_date' =>		$date->format(DateTime::W3C),
-				'modification_date_gmt' =>	$dateGMT->format(DateTime::W3C)
+				'modification_date' =>		$date->format(DateTime::W3C)
 			);
 		}
 
@@ -170,13 +167,8 @@ use Embark\CMS\Database\ResultIterator;
 				$entry->id = self::generateID($entry->section, $entry->user_id);
 			}
 
-			$date = new DateTime();
-			$dateGMT = new DateTime();
-			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
-
 			// Update the modification details
-			$entry->modification_date = $date->format(DateTime::W3C);
-			$entry->modification_date_gmt = $dateGMT->format(DateTime::W3C);
+			$entry->modification_date = (new SystemDateTime)->format(DateTime::W3C);
 
 			// Load the section
 			try{
@@ -277,9 +269,7 @@ use Embark\CMS\Database\ResultIterator;
 
 		public static function generateID($section, $user_id = null)
 		{
-			$date = new DateTime();
-			$dateGMT = new DateTime();
-			$dateGMT->setTimeZone(new DateTimeZone('UTC'));
+			$date = new SystemDateTime();
 
 			if (is_null($user_id)) {
 				$user_id = Symphony::Database()->query("SELECT `id` FROM `tbl_users` ORDER BY `id` ASC LIMIT 1")->current()->id;
@@ -289,9 +279,7 @@ use Embark\CMS\Database\ResultIterator;
 				'section' =>				$section,
 				'user_id' =>				$user_id,
 				'creation_date' =>			$date->format(DateTime::W3C),
-				'creation_date_gmt' =>		$dateGMT->format(DateTime::W3C),
-				'modification_date' =>		$date->format(DateTime::W3C),
-				'modification_date_gmt' =>	$dateGMT->format(DateTime::W3C)
+				'modification_date' =>		$date->format(DateTime::W3C)
 			]);
 		}
 

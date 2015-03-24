@@ -2,6 +2,7 @@
 
 use Embark\CMS\Datasource\Exception as DatabaseException;
 use Embark\CMS\Datasource\ResultIterator;
+use Embark\CMS\SystemDateTime;
 
 	require_once LIB . '/class.datasource.php';
 	require_once LIB . '/class.entry.php';
@@ -943,19 +944,19 @@ use Embark\CMS\Datasource\ResultIterator;
 							foreach ($included_elements->system as $field) {
 								switch ($field) {
 									case 'creation-date':
-										$date = new DateTime($e->creation_date);
-										$date->setTimeZone(new DateTimeZone('UTC'));
+										$date = new SystemDateTime($e->creation_date);
 										$entry->appendChild(General::createXMLDateObject(
 											$result, $date, 'creation-date'
 										));
 										break;
+
 									case 'modification-date':
-										$date = new DateTime($e->modification_date);
-										$date->setTimeZone(new DateTimeZone('UTC'));
+										$date = new SystemDateTime($e->modification_date);
 										$entry->appendChild(General::createXMLDateObject(
 											$result, $date, 'modification-date'
 										));
 										break;
+
 									case 'user':
 										$obj = User::load($e->user_id);
 										$user = $result->createElement('user', $obj->getFullName());
@@ -982,14 +983,12 @@ use Embark\CMS\Datasource\ResultIterator;
 										break;
 
 									case 'creation-date':
-										$date = new DateTime($e->creation_date);
-										$date->setTimeZone(new DateTimeZone('UTC'));
+										$date = new SystemDateTime($e->creation_date);
 										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 
 									case 'modification-date':
-										$date = new DateTime($e->creation_date);
-										$date->setTimeZone(new DateTimeZone('UTC'));
+										$date = new SystemDateTime($e->creation_date);
 										$output_parameters->system[$field][] = $date->format('Y-m-d H:i:s');
 										break;
 

@@ -2,6 +2,7 @@
 
 use Embark\CMS\Database\Connection;
 use Embark\CMS\Configuration\Loader as Configuration;
+use Embark\CMS\SystemDateTime;
 
 	require_once 'class.errorhandler.php';
 
@@ -223,17 +224,16 @@ use Embark\CMS\Configuration\Loader as Configuration;
 			return true;
 		}
 
-		public function initialiseLog(){
-
+		public function initialiseLog()
+		{
 			self::$Log = new Log(ACTIVITY_LOG);
 			self::$Log->setArchive((self::Configuration()->main()->logging->archive == '1' ? true : false));
 			self::$Log->setMaxSize(intval(self::Configuration()->main()->logging->maxsize));
 
-			if(self::$Log->open() == 1){
+			if (self::$Log->open() == 1) {
 				self::$Log->writeToLog('Symphony Log', true);
 				self::$Log->writeToLog('--------------------------------------------', true);
 			}
-
 		}
 
 		public function isLoggedIn() {
@@ -266,7 +266,7 @@ use Embark\CMS\Configuration\Loader as Configuration;
 
 					Symphony::Database()->update(
 						'tbl_users',
-						array('last_seen' => (new DateTime)->format('Y-m-d H:i:s')),
+						array('last_seen' => (new SystemDateTime)->format('Y-m-d H:i:s')),
 						array($this->_user_id),
 						"`id` = '%s'"
 					);
@@ -302,7 +302,7 @@ use Embark\CMS\Configuration\Loader as Configuration;
 				$this->Cookie->set('pass', $user->password);
 
 				$this->User = $user;
-				$user->last_seen = (new DateTime)->format('Y-m-d H:i:s');
+				$user->last_seen = (new SystemDateTime)->format('Y-m-d H:i:s');
 				$this->reloadLangFromUserPreference();
 
 				User::save($user);
@@ -318,9 +318,6 @@ use Embark\CMS\Configuration\Loader as Configuration;
 			if (strlen(trim($token)) == 0) return false;
 
 			if (strlen($token) == 6) {
-				$date = new DateTime();
-				$date->setTimeZone(new DateTimeZone('UTC'));
-
 				$result = Symphony::Database()->query("
 						SELECT
 							`u`.id, `u`.username, `u`.password
@@ -334,10 +331,10 @@ use Embark\CMS\Configuration\Loader as Configuration;
 							`f`.token = '%s'
 						LIMIT 1
 					",
-					array(
-						$date->format(DateTime::W3C),
+					[
+						(new SystemDateTime)->format(DateTime::W3C),
 						$token
-					)
+					]
 				);
 
 				Symphony::Database()->delete('tbl_forgotpass', array($token), "`token` = '%s'");
@@ -367,12 +364,9 @@ use Embark\CMS\Configuration\Loader as Configuration;
 				$this->Cookie->set('username', $row->username);
 				$this->Cookie->set('pass', $row->password);
 
-				$date = new DateTime();
-				$date->setTimeZone(new DateTimeZone('UTC'));
-
 				Symphony::Database()->update(
 					'tbl_users',
-					array('last_seen' => $date->format('Y-m-d H:i:s')),
+					array('last_seen' => (new SystemDateTime)->format('Y-m-d H:i:s')),
 					array($this->_user_id),
 					"`id` = '%d'"
 				);

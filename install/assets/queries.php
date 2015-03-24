@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `tbl_cache` (
   PRIMARY KEY (`id`),
   KEY `creation` (`creation`),
   KEY `hash` (`hash`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SQL;
 
 $queries[] = <<<SQL
@@ -21,15 +21,13 @@ CREATE TABLE IF NOT EXISTS `tbl_entries` (
   `section` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `user_id` int(11) unsigned NOT NULL,
   `creation_date` datetime NOT NULL,
-  `creation_date_gmt` datetime NOT NULL,
   `modification_date` datetime NOT NULL,
-  `modification_date_gmt` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `section_id` (`section`),
   KEY `author_id` (`user_id`),
   KEY `creation_date` (`creation_date`),
-  KEY `creation_date_gmt` (`creation_date_gmt`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  KEY `modification_date` (`modification_date`),
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SQL;
 
 $queries[] = <<<SQL

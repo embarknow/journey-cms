@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	require_once(LIB . '/class.administrationpage.php');
 	require_once(LIB . '/class.event.php');
 

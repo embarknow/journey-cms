@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	require_once(LIB . '/class.administrationpage.php');
  	//require_once(LIB . '/class.sectionmanager.php');
 
@@ -64,7 +66,8 @@
 					);
 
 					if($u->last_seen != NULL){
-						$date = new DateTimeZone($u->last_seen);
+						$date = new SystemDateTime($u->last_seen);
+						$date = $date->toUserDateTime();
 						$td3 = Widget::TableData($date->format(__SYM_DATETIME_FORMAT__));
 					}
 					else{
@@ -445,8 +448,7 @@
 					}
 
 					elseif(User::save($this->user)){
-						$date = new DateTime();
-						$date->setTimeZone(new DateTimeZone('UTC'));
+						$date = new SystemDateTime();
 
 						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
 

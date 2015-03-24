@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	Class General{
 
 		/***
@@ -974,7 +976,7 @@
 
 		public static function getTimeAgo($format)
 		{
-			$date = new DateTime();
+			$date = new SystemDateTime();
 
 			return '<abbr class="timeago" title="' . $date->format('r') . '">' . $date->format($format) . '</abbr>';
 		}

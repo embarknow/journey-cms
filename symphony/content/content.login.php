@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\SystemDateTime;
+
 	require_once(LIB . '/class.administrationpage.php');
 
 	Class contentLogin extends AdministrationPage{
@@ -204,8 +206,7 @@
 
 					if($user->valid()){
 						$user = $user->current();
-						$date = new DateTime();
-						$date->setTimeZone(new DateTimeZone('UTC'));
+						$date = new SystemDateTime();
 
 						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
 

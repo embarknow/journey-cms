@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\UserDateTime;
+
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');
 	require_once(LIB . '/class.lang.php');
@@ -213,7 +215,7 @@
 			$current_url = parse_url(URL);
 			$current_url['path'] = $_SERVER['REQUEST_URI'];
 			$current_url = unparse_url($current_url);
-			$date = new DateTime();
+			$date = new UserDateTime();
 
 			self::$Parameters->register(array(
 				'today' =>					$date->format('Y-m-d'),

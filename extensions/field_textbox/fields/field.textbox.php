@@ -154,11 +154,11 @@
 			));
 		}
 
-		protected function repairEntities($value) {
+		public function repairEntities($value) {
 			return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
 		}
 
-		protected function repairMarkup($value) {
+		public function repairMarkup($value) {
 			$tidy = new Tidy();
 			$tidy->parseString(
 				$value, array(

@@ -864,7 +864,9 @@ use Embark\CMS\SystemDateTime;
 		}
 
 		public function getParameterOutputValue(StdClass $data, Entry $entry = null) {
-			return rtrim($data->path, '/') . '/' . $data->file;
+			if (isset($data->file)) {
+				return rtrim($data->path, '/') . '/' . $data->file;
+			}
 		}
 	}
 

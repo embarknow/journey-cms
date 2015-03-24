@@ -1,19 +1,22 @@
 <?php
 
 use Embark\CMS\SystemDateTime;
+use Embark\CMS\Actors\Controller as ActorController;
 
 	Class DataSourceException extends Exception {}
 
 	Class DataSourceFilterIterator extends FilterIterator{
-		public function __construct($path){
+		public function __construct($path)
+		{
 			parent::__construct(new DirectoryIterator($path));
 		}
 
-		public function accept(){
-			if($this->isDir() == false && preg_match('/^.+\.php$/i', $this->getFilename())){
-				return true;
-			}
-			return false;
+		public function accept()
+		{
+			return (
+				false === $this->isDir()
+				&& preg_match('/^.+\.xml$/i', $this->getFilename())
+			);
 		}
 	}
 
@@ -92,7 +95,7 @@ use Embark\CMS\SystemDateTime;
 		abstract public function render(Context $ParameterOutput);
 
 		public static function getHandleFromFilename($filename){
-			return preg_replace('/(.php$|\/.*\/)/i', NULL, $filename);
+			return preg_replace('/(.(php|xml)$|\/.*\/)/i', NULL, $filename);
 		}
 
 		public function &about(){
@@ -111,7 +114,8 @@ use Embark\CMS\SystemDateTime;
 			return $this->_parameters;
 		}
 
-		public static function load($pathname){
+		public static function load($pathname)
+		{
 			if (!is_array(self::$_loaded)) {
 				self::$_loaded = array();
 			}
@@ -126,22 +130,24 @@ use Embark\CMS\SystemDateTime;
 			$pathname = realpath($pathname);
 
 			if (!isset(self::$_loaded[$pathname])) {
-				self::$_loaded[$pathname] = require_once($pathname);
+				$data = new DOMDocument();
+				$data->load($pathname);
+
+				self::$_loaded[$pathname] = ActorController::fromXML($data);
 			}
 
-			$obj = new self::$_loaded[$pathname];
-			$obj->parameters()->pathname = $pathname;
+			$obj = self::$_loaded[$pathname];
 
 			return $obj;
 		}
 
 		public static function loadFromHandle($name){
-			return self::load(self::__find($name) . "/{$name}.php");
+			return self::load(self::__find($name) . "/{$name}.xml");
 		}
 
 		protected static function __find($name){
 
-		    if (is_file(DATASOURCES . "/{$name}.php")) {
+		    if (is_file(DATASOURCES . "/{$name}.xml")) {
 		    	return DATASOURCES;
 		    }
 
@@ -152,7 +158,7 @@ use Embark\CMS\SystemDateTime;
 				));
 
 				foreach ($extensions as $extension) {
-					if (is_file(EXTENSIONS . "/{$extension->handle}/data-sources/{$name}.php")) {
+					if (is_file(EXTENSIONS . "/{$extension->handle}/data-sources/{$name}.xml")) {
 						return EXTENSIONS . "/{$extension->handle}/data-sources";
 					}
 				}

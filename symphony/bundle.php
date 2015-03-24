@@ -46,9 +46,6 @@ use Embark\CMS\App;
 			$class = require_once $path;
 			$renderer = call_user_func("\\{$class}::instance");
 
-			// var_dump((new \DateTime('@12523'))->format(\DateTime::W3C));
-			// exit;
-
 			Profiler::store('class', $class, 'system/class');
 			Profiler::store('location', $path, 'system/resource action/executed');
 
@@ -76,7 +73,20 @@ use Embark\CMS\App;
 	 * Prepare the environment for Symphony, allow it to be booted by calling render.
 	 */
 	namespace {
+		use Embark\CMS\Actors\Controller as ActorController;
+
 		function render() {
+			// $input = new DOMDocument();
+			// $input->load(WORKSPACE . '/data-sources/articles.xml');
+
+			// $ds = ActorController::fromXML($input);
+
+			// $output = ActorController::toXML($ds);
+			// $output->formatOutput = true;
+
+			// var_dump($output->saveXML($output->documentElement));
+			// exit;
+
 			// Begin profiling:
 			if (isset($_GET['profiler'])) Profiler::enable();
 

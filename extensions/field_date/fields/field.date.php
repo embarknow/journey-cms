@@ -322,7 +322,7 @@ use Embark\CMS\SystemDateTime;
 
 		public function getParameterOutputValue(StdClass $data, Entry $entry = null)
 		{
-			if (is_null($d->value)) return;
+			if (is_null($data->value)) return;
 
 			$date = new SystemDateTime($data->value);
 

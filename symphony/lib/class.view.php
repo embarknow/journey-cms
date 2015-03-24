@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Actors\DatasourceInterface;
+
 	require_once(LIB . '/class.event.php');
 	require_once(LIB . '/class.documentheaders.php');
 
@@ -461,7 +463,7 @@
 		public function render(Context $Parameters, XMLDocument $Document = null, DocumentHeaders $Headers = null) {
 			Profiler::begin('Preparing view');
 
-			$ParameterOutput = new Context;
+			$outputParameters = new Context;
 
 			if (!is_null($Headers)) {
 				$Headers->append('Content-Type', $this->{'content-type'});
@@ -530,7 +532,7 @@
 					Profiler::store('class', get_class($event), 'system/class');
 					Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
 
-					$fragment = $event->trigger($ParameterOutput, $postdata);
+					$fragment = $event->trigger($outputParameters, $postdata);
 
 					if ($fragment instanceof DOMDocument && !is_null($fragment->documentElement)) {
 						$node = $Document->importNode($fragment->documentElement, true);
@@ -561,19 +563,12 @@
 			$all_dependencies = array();
 
 			foreach ($datasources as $handle) {
-				if ($handle instanceof DataSource) {
-					$datasource = $handle;
-					$handle = $datasource->handle;
-
-					$datasource_pool[$handle] = $datasource;
-					$dependency_list[$handle] = $datasource->parameters()->dependencies;
-				}
-
-				else {
-					$datasource_pool[$handle] = Datasource::loadFromHandle($handle);
-					$dependency_list[$handle] = $datasource_pool[$handle]->parameters()->dependencies;
-					$datasources_loaded[] = $handle;
-				}
+				$datasource_pool[$handle] = Datasource::loadFromHandle($handle);
+				$dependency_list[$handle] = (
+					isset($datasource_pool[$handle]['dependencies'])
+						? $datasource_pool[$handle]['dependencies']
+						: []
+				);
 			}
 
 			$datasources_ordered = General::dependenciesSort($dependency_list);
@@ -589,7 +584,9 @@
 						Profiler::store('class', get_class($datasource), 'system/class');
 						Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
 
-						$fragment = $datasource->render($ParameterOutput);
+						if ($datasource->canExecute()) {
+							$fragment = $datasource->execute($outputParameters);
+						}
 
 						Profiler::end();
 					}
@@ -613,8 +610,8 @@
 				}
 			}
 
-			if ($ParameterOutput->length() > 0) {
-				foreach ($ParameterOutput as $p) {
+			if ($outputParameters->length() > 0) {
+				foreach ($outputParameters as $p) {
 					$Parameters->{$p->key} = $p->value;
 				}
 			}

@@ -1,9 +1,11 @@
 <?php
 
 use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\UserDateTime;
+use Embark\CMS\SystemDateTime;
 
-	Class fieldDate extends Field{
-
+	class FieldDate extends Field
+	{
 		const SIMPLE = 0;
 		const REGEXP = 1;
 		const RANGE = 3;
@@ -11,12 +13,15 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 		protected $join_handle;
 
-		function __construct(){
+		function __construct()
+		{
 			parent::__construct();
+
 			$this->_name = __('Date');
 		}
 
-		public function create(){
+		public function create()
+		{
 			return Symphony::Database()->query(
 				sprintf(
 					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
@@ -33,23 +38,28 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			);
 		}
 
-		function allowDatasourceOutputGrouping(){
+		public function allowDatasourceOutputGrouping()
+		{
 			return true;
 		}
 
-		function allowDatasourceParamOutput(){
+		public function allowDatasourceParamOutput()
+		{
 			return true;
 		}
 
-		function canFilter(){
+		public function canFilter()
+		{
 			return true;
 		}
 
-		public function canImport(){
+		public function canImport()
+		{
 			return true;
 		}
 
-		function isSortable(){
+		function isSortable()
+		{
 			return true;
 		}
 
@@ -116,13 +126,13 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			// New entry:
 			if (is_null($data) && $this->{'pre-populate'} == 'yes') {
-				$value = (new DateTime)->format(__SYM_DATETIME_FORMAT__);
+				$value = (new SystemDateTime)->format(__SYM_DATETIME_FORMAT__);
 			}
 
 			// Empty entry:
 			else if (isset($data->value) && !is_null($data->value)) {
-				$date = new DateTime($data->value);
-				$date->setTimeZone(new DateTimeZone('UTC'));
+				$date = new SystemDateTime($data->value);
+				$date = $date->toUserDateTime();
 				$value = $date->format(__SYM_DATETIME_FORMAT__);
 			}
 
@@ -149,11 +159,11 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			try {
 				$rows = Symphony::Database()->query(
 					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` = %s AND `value` IS NOT NULL ORDER BY `id` ASC",
-					array(
+					[
 						$entry->section,
 						$this->{'element-name'},
 						$entry->id
-					)
+					]
 				);
 
 				return $rows->current();
@@ -207,23 +217,26 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				$result->value = null;
 
 				if ($this->{'pre-populate'} == 'yes') {
-					$date = new DateTime();
+					$date = new SystemDateTime();
 				}
 			}
 
 			else {
-				$date = new DateTime($data);
+				$date = new UserDateTime($data);
+				$date = $date->toSystemDateTime();
 			}
 
 			if ($date) {
-				$date->setTimeZone(new DateTimeZone('UTC'));
-				$result->value = $date->format('Y-m-d H:i:s');
 				$result->value = $date->format('Y-m-d H:i:s');
 			}
 
 			else {
 				$result->value = $data;
 			}
+
+			// Display:	23 March 2015 10:15
+			// System:	23 March 2015 23:45
+			// var_dump($result, $date->getTimeZone()); exit;
 
 			return $result;
 		}
@@ -278,8 +291,8 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			$value = null;
 
 			if (isset($data->value) && !is_null($data->value)) {
-				$date = new DateTime($data->value);
-				$date->setTimeZone(new DateTimeZone('UTC'));
+				$date = new SystemDateTime($data->value);
+				$date = $date->toUserDateTime();
 				$value = $date->format(__SYM_DATETIME_FORMAT__);
 			}
 
@@ -289,7 +302,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		public function appendFormattedElement(DOMElement $wrapper, $data, $encode=false, $mode=NULL, Entry $entry = null)
 		{
 			if (isset($data->value) && !is_null($data->value)) {
-				$date = new DateTime($data->value);
+				$date = new SystemDateTime($data->value);
 
 				if ($mode == 'unix-timestamp' || $mode == 'unix-timestamp-gmt') {
 					$document = $wrapper->ownerDocument;
@@ -299,7 +312,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				}
 
 				else {
-					$date->setTimeZone(new DateTimeZone('UTC'));
+					$date = $date->toUserDateTime();
 					$wrapper->appendChild(General::createXMLDateObject(
 						$wrapper->ownerDocument, $date, $this->{'element-name'}
 					));
@@ -311,8 +324,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		{
 			if (is_null($d->value)) return;
 
-			$date = new DateTime($data->value);
-			$date->setTimeZone(new DateTimeZone('UTC'));
+			$date = new SystemDateTime($data->value);
 
      		return $date->format('Y-m-d H:i:s');
 		}
@@ -381,12 +393,12 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			$handle = $this->join_handle;
 
-			$date = new DateTime(DataSource::replaceParametersInString(
+			$date = new SystemDateTime(DataSource::replaceParametersInString(
 				trim($filter->value), $parameter_output
 			));
 
 			if ($filter->gmt !== 'yes') {
-				$date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+				$date = $date->toUserDateTime();
 			}
 
 			$value = $date->format('Y-m-d H:i:s');

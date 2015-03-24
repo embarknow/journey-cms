@@ -972,8 +972,11 @@
 			return $xDate;
 		}
 
-		public static function getTimeAgo($format){
-			return '<abbr class="timeago" title="'.self::get('r').'">'.self::get($format).'</abbr>';
+		public static function getTimeAgo($format)
+		{
+			$date = new DateTime();
+
+			return '<abbr class="timeago" title="' . $date->format('r') . '">' . $date->format($format) . '</abbr>';
 		}
 
 		public static function buildPaginationElement(DOMDocument $doc, $total_entries=0, $total_pages=0, $entries_per_page=1, $current_page=1){

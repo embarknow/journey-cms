@@ -6,7 +6,7 @@ use Embark\CMS\Database\ResultIterator;
 use ArrayIterator;
 use Entry;
 
-class SectionDatasourceResult extends ArrayIterator
+class SectionDatasourceResultIterator extends ArrayIterator
 {
 	protected $schema;
 	protected $entries;

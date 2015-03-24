@@ -1,24 +1,29 @@
 <?php
 
-namespace Embark\CMS\Fields\Link;
+namespace Embark\CMS\Fields;
 
+use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\SystemDateTime;
-use DOMDocument;
+use DOMElement;
 use DOMXPath;
 use Entry;
 use Field;
 use General;
 use Section;
 
-class Element implements MetadataInterface
+class LinkElement implements MetadataInterface
 {
 	use MetadataTrait;
 
-	public function createElement(DOMDocument $document, Field $field, Entry $entry)
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
 	{
-		$element = $document->createElement($this['field']);
+		$field = $section->fetchFieldByHandle($this['field']);
+
+		if (!($field instanceof Field)) return;
+
+		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};
 
 		if (isset($data)) {
@@ -26,6 +31,8 @@ class Element implements MetadataInterface
 				$data = [$data];
 			}
 
+			$element = $document->createElement($this['field']);
+			$wrapper->appendChild($element);
 			$xpath = new DOMXPath($document);
 			$groups = array();
 
@@ -50,8 +57,7 @@ class Element implements MetadataInterface
 
 						$item = $document->createElement('item');
 						$item->setAttribute('id', $relation->relation_id);
-						$item->setAttribute('section-handle', $section_handle);
-						$item->setAttribute('section-name', $section->name);
+						$item->setAttribute('section', $section_handle);
 
 						$element->appendChild($item);
 					}
@@ -61,7 +67,5 @@ class Element implements MetadataInterface
 				}
 			}
 		}
-
-		return $element;
 	}
 }

@@ -12,7 +12,7 @@ use Section;
 class Parameter implements MetadataInterface {
 	use MetadataTrait;
 
-	public function appendTo(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendParameter(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
 	{
 		$field = $section->fetchFieldByHandle($this['field']);
 		$key = sprintf('ds-%s.%s', $datasource['handle'], $this['field']);

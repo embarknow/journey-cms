@@ -13,7 +13,7 @@ use Section;
 class ModificationDateParameter implements MetadataInterface {
 	use MetadataTrait;
 
-	public function appendTo(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendParameter(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
 	{
 		$key = sprintf('ds-%s.system.%s', $datasource['handle'], 'modification-date');
 

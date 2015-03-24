@@ -1,22 +1,22 @@
 <?php
 
-namespace Embark\CMS\Fields\Text;
+namespace Embark\CMS\Fields;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use DOMDocument;
 use DOMElement;
 use Entry;
 use Exception;
 use Field;
 
-class FormattedElement implements MetadataInterface
+class TextFormattedElement implements MetadataInterface
 {
 	use MetadataTrait;
-	use ElementTrait;
+	use TextElementTrait;
 
-	public function appendValue(DOMDocument $document, DOMElement $element, Field $field, $data)
+	public function appendValue(DOMElement $element, Field $field, $data)
 	{
+		$document = $element->ownerDocument;
 		$fragment = $document->createDocumentFragment();
 		$element->setAttribute('mode', 'formatted');
 		$value = $field->repairEntities($data->value_formatted);

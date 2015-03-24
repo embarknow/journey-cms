@@ -1,31 +1,40 @@
 <?php
 
-namespace Embark\CMS\Fields\Upload;
+namespace Embark\CMS\Fields;
 
+use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use DOMDocument;
+use DOMElement;
 use Entry;
 use Field;
 use General;
+use Section;
 
-class Element implements MetadataInterface
+class UploadElement implements MetadataInterface
 {
 	use MetadataTrait;
 
-	public function createElement(DOMDocument $document, Field $field, Entry $entry)
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
 	{
-		$element = $document->createElement($this['field']);
+		$field = $section->fetchFieldByHandle($this['field']);
+
+		if (!($field instanceof Field)) return;
+
+		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};
 
 		if (isset($data->name)) {
+			$element = $document->createElement($this['field']);
 			$element->appendChild($document->createElement('file', $data->name, [
 				'path'		=> trim($data->path, '/'),
 				'name'		=> $data->file
 			]));
+			$wrapper->appendChild($element);
 
 			$meta = unserialize($data->meta);
 			$metaXml = $document->createElement('meta');
+			$element->appendChild($metaXml);
 
 			if (false === is_array($meta)) {
 				$meta = [];
@@ -65,10 +74,6 @@ class Element implements MetadataInterface
 					));
 				}
 			}
-
-			$element->appendChild($metaXml);
 		}
-
-		return $element;
 	}
 }

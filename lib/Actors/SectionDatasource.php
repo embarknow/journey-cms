@@ -6,8 +6,6 @@ use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
-use Embark\CMS\Structures\OutputElements;
-use Embark\CMS\Structures\OutputParameters;
 use Embark\CMS\Structures\Sorting;
 use Embark\CMS\SystemDateTime;
 use Context;
@@ -254,7 +252,7 @@ class SectionDatasource implements DatasourceInterface
 			$entries = Symphony::Database()->query($query, array(
 					$section->handle,
 					$section->{'publish-order-handle'}
-				), __NAMESPACE__ . '\\SectionDatasourceResult'
+				), __NAMESPACE__ . '\\SectionDatasourceResultIterator'
 			);
 
 			Profiler::end();
@@ -287,7 +285,7 @@ class SectionDatasource implements DatasourceInterface
 			// Output section details
 			$root->setAttribute('section', $section->handle);
 
-			$schema = array();
+			$schema = [];
 
 			// Build Entry Records
 			if ($entries->valid()) {
@@ -299,29 +297,15 @@ class SectionDatasource implements DatasourceInterface
 				}
 
 				// Figure out what fields to fetch, so we don't have to fetch them all:
-				if ($this['elements'] instanceof OutputElements) {
-					foreach ($this['elements']->getIterator() as $element) {
-						$field = $section->fetchFieldByHandle($element['field']);
-
-						if (!$field instanceof Field) continue;
-
-						$schema[$element['field']] = $field;
-					}
+				if ($this['elements'] instanceof SectionDatasourceOutputElements) {
+					$this['elements']->appendSchema($schema, $section);
 				}
 
-				if ($this['parameters'] instanceof OutputParameters) {
-					foreach ($this['parameters']->getIterator() as $parameter) {
-						$field = $section->fetchFieldByHandle($parameter['field']);
-
-						if (!$field instanceof Field) continue;
-
-						$schema[$parameter['field']] = $field;
-					}
+				if ($this['parameters'] instanceof SectionDatasourceOutputParameters) {
+					$this['parameters']->appendSchema($schema, $section);
 				}
 
 				// Load entry data:
-				$schema = array_unique($schema);
-
 				foreach ($schema as $field => $instance) {
 					$data[$field] = $instance->loadDataFromDatabaseEntries($section->handle, $ids);
 				}
@@ -331,51 +315,17 @@ class SectionDatasource implements DatasourceInterface
 				$parameters = [];
 
 				foreach ($entries as $entry) {
+					$wrapper = $result->createElement('entry');
+					$wrapper->setAttribute('id', $entry->id);
+					$root->appendChild($wrapper);
+
 					// If there are included elements, need an entry element.
-					if ($this['elements'] instanceof OutputElements) {
-						$entryXml = $result->createElement('entry');
-						$entryXml->setAttribute('id', $entry->id);
-						$root->appendChild($entryXml);
-
-						foreach ($this['elements']->getIterator() as $element) {
-							switch ($element['field']) {
-								case 'system:creation-date':
-									$date = new SystemDateTime($entry->creation_date);
-									$entryXml->appendChild(General::createXMLDateObject(
-										$result, $date, 'creation-date'
-									));
-									break;
-
-								case 'system:modification-date':
-									$date = new SystemDateTime($entry->modification_date);
-									$entryXml->appendChild(General::createXMLDateObject(
-										$result, $date, 'modification-date'
-									));
-									break;
-
-								case 'system:user':
-									$user = User::load($entry->user_id);
-									$userXml = $result->createElement('user', $user->getFullName());
-									$userXml->setAttribute('id', $entry->user_id);
-									$userXml->setAttribute('username', $user->username);
-									$userXml->setAttribute('email-address', $user->email);
-									$entryXml->appendChild($user);
-									break;
-
-								default:
-									$field = $section->fetchFieldByHandle($element['field']);
-
-									$entryXml->appendChild(
-										$element->createElement($result, $field, $entry)
-									);
-							}
-						}
+					if ($this['elements'] instanceof SectionDatasourceOutputElements) {
+						$this['elements']->appendElements($wrapper, $this, $section, $entry);
 					}
 
-					if ($this['parameters'] instanceof OutputParameters) {
-						foreach ($this['parameters']->getIterator() as $parameter) {
-							$parameter->appendTo($parameters, $this, $section, $entry);
-						}
+					if ($this['parameters'] instanceof SectionDatasourceOutputParameters) {
+						$this['parameters']->appendParameters($parameters, $this, $section, $entry);
 					}
 				}
 

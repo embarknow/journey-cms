@@ -107,7 +107,7 @@ use Embark\CMS\SystemDateTime;
 				$checked = array_keys($_POST['items']);
 
 				foreach($checked as $user_id){
-					if(Administration::instance()->User->id == $user_id) continue;
+					if(Symphony::User()->id == $user_id) continue;
 					User::delete($user_id);
 				}
 
@@ -199,7 +199,7 @@ use Embark\CMS\SystemDateTime;
 
 
 
-			if($this->_context[0] == 'edit' && $this->user->id == Administration::instance()->User->id) $isOwner = true;
+			if($this->_context[0] == 'edit' && $this->user->id == Symphony::User()->id) $isOwner = true;
 
 			$this->setTitle(__(($this->_context[0] == 'new' ? '%1$s &ndash; %2$s &ndash; Untitled' : '%1$s &ndash; %2$s &ndash; %3$s'), array(__('Symphony'), __('Users'), $this->user->getFullName())));
 			$this->appendSubheading(($this->_context[0] == 'new' ? __('New User') : $this->user->getFullName()));
@@ -450,10 +450,10 @@ use Embark\CMS\SystemDateTime;
 					elseif(User::save($this->user)){
 						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
 
 						// This is the logged in user, so update their session
-						if($user_id == Administration::instance()->User->id){
+						if($user_id == Symphony::User()->id){
 							Administration::instance()->login($this->user->username, $this->user->password, true);
 						}
 

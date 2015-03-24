@@ -261,7 +261,7 @@ use Embark\CMS\SystemDateTime;
 
 				// TODO: Delete reference from View XML
 
-				/*$sql = "SELECT * FROM `tbl_pages` WHERE `data_sources` REGEXP '[[:<:]]".$ds."[[:>:]]' ";
+				/*$sql = "SELECT * FROM `pages` WHERE `data_sources` REGEXP '[[:<:]]".$ds."[[:>:]]' ";
 				$pages = Symphony::Database()->fetch($sql);
 
 				if(is_array($pages) && !empty($pages)){
@@ -269,7 +269,7 @@ use Embark\CMS\SystemDateTime;
 
 						$page['data_sources'] = preg_replace('/\b'.$ds.'\b/i', '', $page['data_sources']);
 
-						Symphony::Database()->update($page, 'tbl_pages', "`id` = '".$page['id']."'");
+						Symphony::Database()->update($page, 'pages', "`id` = '".$page['id']."'");
 					}
 				}*/
 			}

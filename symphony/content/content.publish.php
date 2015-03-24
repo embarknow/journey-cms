@@ -127,7 +127,7 @@
 			*/
 			try {
 				$entry_count = Symphony::Database()->query(
-					"SELECT COUNT(id) as `count` FROM `tbl_entries` WHERE `section` = '%s'", array($section->handle)
+					"SELECT COUNT(id) as `count` FROM `entries` WHERE `section` = '%s'", array($section->handle)
 				)->current()->count;
 
 				$pagination = array(
@@ -146,7 +146,7 @@
 			//	If there's no sorting, just order by ID, otherwise applying column sorting
 			if(!isset($section->{'publish-order-handle'}) || strlen($section->{'publish-order-handle'}) == 0) {
 				$entries = Symphony::Database()->query(
-					"SELECT * FROM `tbl_entries` WHERE `section` = '%s' ORDER BY `id` ASC LIMIT %d, %d ",
+					"SELECT * FROM `entries` WHERE `section` = '%s' ORDER BY `id` ASC LIMIT %d, %d ",
 					array(
 						$section->handle,
 						$pagination['start'],
@@ -166,7 +166,7 @@
 
 				$query = sprintf("
 					SELECT e.*
-					FROM `tbl_entries` AS e
+					FROM `entries` AS e
 					%s
 					WHERE e.section = '%s'
 					ORDER BY %s
@@ -655,7 +655,7 @@
 
 				$entry = new Entry;
 				$entry->section = $callback['context']['section_handle'];
-				$entry->user_id = Administration::instance()->User->id;
+				$entry->user_id = Symphony::User()->id;
 
 				$post = General::getPostData();
 				if(isset($post['fields']) && is_array($post['fields']) && !empty($post['fields'])){

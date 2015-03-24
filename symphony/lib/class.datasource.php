@@ -209,7 +209,7 @@ use Embark\CMS\SystemDateTime;
 
 			// Save type:
 			if ($errors->length() <= 0) {
-				$user = Administration::instance()->User;
+				$user = Symphony::User();
 
 				if (!file_exists($this->getTemplate())) {
 					$errors->append('write', __("Unable to find Data Source Type template '%s'.", array($this->getTemplate())));
@@ -323,7 +323,7 @@ use Embark\CMS\SystemDateTime;
 		**	This checks both the Frontend Parameters and Datasource
 		**	Registers.
 		*/
-		public static function replaceParametersInString($string, Register $DataSourceParameterOutput = null) {
+		public static function replaceParametersInString($string, Context $DataSourceParameterOutput = null) {
 			if(strlen(trim($string)) == 0) return null;
 
 			if(preg_match_all('@{([^}]+)}@i', $string, $matches, PREG_SET_ORDER)){

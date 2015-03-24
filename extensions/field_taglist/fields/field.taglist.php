@@ -15,7 +15,7 @@
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`handle` varchar(255) default NULL,
@@ -100,7 +100,7 @@
 							SELECT
 								`value`
 							FROM
-								`tbl_data_%s_%s`
+								`data_%s_%s`
 							WHERE
 								`value` REGEXP '%s'
 							GROUP BY
@@ -394,7 +394,7 @@
 			// Since we are dealing with multiple
 			// values, must purge the existing data first
 			Symphony::Database()->delete(
-				sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+				sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 				array($entry->id),
 				"`entry_id` = %s"
 			);

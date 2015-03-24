@@ -196,7 +196,7 @@ use Embark\CMS\SystemDateTime;
 
 			// Save type:
 			if ($errors->length() <= 0) {
-				$user = Administration::instance()->User;
+				$user = Symphony::User();
 
 				if (!file_exists($this->getTemplate())) {
 					$errors->append('write', __("Unable to find Event Type template '%s'.", array($this->getTemplate())));

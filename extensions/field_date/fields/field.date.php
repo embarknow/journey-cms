@@ -24,7 +24,7 @@ use Embark\CMS\SystemDateTime;
 		{
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`value` DATETIME default NULL,
@@ -158,7 +158,7 @@ use Embark\CMS\SystemDateTime;
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false) {
 			try {
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` = %s AND `value` IS NOT NULL ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` = %s AND `value` IS NOT NULL ORDER BY `id` ASC",
 					[
 						$entry->section,
 						$this->{'element-name'},
@@ -179,7 +179,7 @@ use Embark\CMS\SystemDateTime;
 
 			try {
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` IN (%s) AND `value` IS NOT NULL ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) AND `value` IS NOT NULL ORDER BY `id` ASC",
 					array(
 						$section,
 						$this->{'element-name'},

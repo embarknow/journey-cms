@@ -88,7 +88,7 @@ use Embark\CMS\SystemDateTime;
 		}
 
 		public static function loadFromID($id, $schema = array()) {
-			$result = Symphony::Database()->query("SELECT * FROM `tbl_entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
+			$result = Symphony::Database()->query("SELECT * FROM `entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
 
 			$result->setSchema($schema);
 
@@ -140,7 +140,7 @@ use Embark\CMS\SystemDateTime;
 			try {
 				foreach($section->fields as $field){
 					Symphony::Database()->delete(
-						sprintf('tbl_data_%s_%s', $section->handle, $field->{'element-name'}),
+						sprintf('data_%s_%s', $section->handle, $field->{'element-name'}),
 						array($entry->id),
 						'`entry_id` = %d'
 					);
@@ -151,7 +151,7 @@ use Embark\CMS\SystemDateTime;
 				// TODO: Do something about fields that don't implement this correctly.
 			}
 
-			Symphony::Database()->delete('tbl_entries', array($entry->id), " `id` = %d LIMIT 1");
+			Symphony::Database()->delete('entries', array($entry->id), " `id` = %d LIMIT 1");
 		}
 
 		public static function save(self $entry, MessageStack &$errors){
@@ -200,7 +200,7 @@ use Embark\CMS\SystemDateTime;
 			// Attempt the saving part
 			if ($status == Field::STATUS_OK){
 				// Update the meta row
-				Symphony::Database()->insert('tbl_entries', (array)$entry->meta(), Connection::UPDATE_ON_DUPLICATE);
+				Symphony::Database()->insert('entries', (array)$entry->meta(), Connection::UPDATE_ON_DUPLICATE);
 
 				foreach ($section->fields as $field) {
 					if (!isset($entry->data()->{$field->{'element-name'}})) continue;
@@ -217,7 +217,7 @@ use Embark\CMS\SystemDateTime;
 
 			// Cleanup due to failure
 			if ($status != Field::STATUS_OK && $purge_meta_on_error == true){
-				Symphony::Database()->delete('tbl_entries', array(), " `id` = {$entry->id} LIMIT 1");
+				Symphony::Database()->delete('entries', array(), " `id` = {$entry->id} LIMIT 1");
 
 				return self::STATUS_ERROR;
 			}
@@ -272,10 +272,10 @@ use Embark\CMS\SystemDateTime;
 			$date = new SystemDateTime();
 
 			if (is_null($user_id)) {
-				$user_id = Symphony::Database()->query("SELECT `id` FROM `tbl_users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+				$user_id = Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 			}
 
-			return Symphony::Database()->insert('tbl_entries', [
+			return Symphony::Database()->insert('entries', [
 				'section' =>				$section,
 				'user_id' =>				$user_id,
 				'creation_date' =>			$date->format(DateTime::W3C),

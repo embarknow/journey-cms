@@ -202,7 +202,7 @@ use Embark\CMS\Database\Connection;
 		public function create(){
 			return Symphony::Database()->query(
 				'
-					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`handle` varchar(255) default NULL,
@@ -221,7 +221,7 @@ use Embark\CMS\Database\Connection;
 				Symphony::Database()->query(
 					'
 						DROP TABLE
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 					',
 					array($this->section, $this->{'element-name'})
 				);
@@ -239,9 +239,9 @@ use Embark\CMS\Database\Connection;
 				Symphony::Database()->query(
 					'
 						ALTER TABLE
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 						RENAME TO
-							`tbl_data_%s_%s`
+							`data_%s_%s`
 					',
 					array(
 						$old->section,
@@ -382,7 +382,7 @@ use Embark\CMS\Database\Connection;
 						SELECT
 							f.*
 						FROM
-							`tbl_fields` AS f
+							`fields` AS f
 						WHERE
 							f.element_name = '%s'
 							%s
@@ -576,7 +576,7 @@ use Embark\CMS\Database\Connection;
 		public function loadDataFromDatabase(Entry $entry, $expect_multiple = false){
 			try{
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
 					array(
 						$entry->section,
 						$this->{'element-name'},
@@ -601,7 +601,7 @@ use Embark\CMS\Database\Connection;
 		public function loadDataFromDatabaseEntries($section, $entry_ids){
 			try{
 				$rows = Symphony::Database()->query(
-					"SELECT * FROM `tbl_data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+					"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
 					array(
 						$section,
 						$this->{'element-name'},
@@ -676,7 +676,7 @@ use Embark\CMS\Database\Connection;
 
 			try {
 				Symphony::Database()->insert(
-					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+					sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
 					Connection::UPDATE_ON_DUPLICATE
 				);
@@ -800,7 +800,7 @@ use Embark\CMS\Database\Connection;
 			$db = Symphony::Database();
 
 			$table = $db->prepareQuery(sprintf(
-				'`tbl_data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
+				'`data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
 			));
 			$handle = sprintf(
 				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key

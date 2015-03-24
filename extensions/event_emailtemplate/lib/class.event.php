@@ -39,8 +39,10 @@
 			if (!is_null($data)) {
 				$this->about()->name = $data['name'];
 
-				$this->about()->author->name = Administration::instance()->User->getFullName();
-				$this->about()->author->email = Administration::instance()->User->email;
+				$this->about()->author = (object)[
+					"name" =>	Symphony::User()->getFullName(),
+					"email" =>	Symphony::User()->email
+				];
 
 				$this->parameters()->trigger = $data['trigger'];
 				$this->parameters()->subject = $data['subject'];
@@ -270,14 +272,21 @@
 		**	Email Event always triggers, it's up to the Delegate in the
 		**	extension driver to determine whether it runs though
 		*/
-		public function canTrigger(array $data) {
+		public function canTrigger(array $data)
+		{
 			return true;
 		}
 
-		public function trigger(Context $ParameterOutput, array $postdata){
+		public function trigger(Context $ParameterOutput, array $postdata)
+		{
+			$result = new XMLDocument;
+			$result->appendChild($result->createElement($this->parameters()->{'root-element'}));
+			$root = $result->documentElement;
+			$root->setAttribute('sent', 'no');
+
 			Extension::load('event_emailtemplate');
 			Extension_Event_EmailTemplate::$events[] = $this;
+
+			return $result;
 		}
 	}
-
-?>

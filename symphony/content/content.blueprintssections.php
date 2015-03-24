@@ -81,7 +81,7 @@
 						SELECT
 							count(*) AS `count`
 						FROM
-							`tbl_entries` AS e
+							`entries` AS e
 						WHERE
 							e.section = '%s'
 					",
@@ -290,7 +290,7 @@
 					case 'delete-entries':
 						$entries = Symphony::Database()->query(
 							sprintf(
-								"SELECT `id` FROM `tbl_entries` WHERE `section` IN ('%s')",
+								"SELECT `id` FROM `entries` WHERE `section` IN ('%s')",
 								implode("', '", $checked)
 							)
 						);

@@ -35,7 +35,7 @@ use Embark\CMS\SystemDateTime;
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 						`entry_id` int(11) unsigned NOT NULL,
 						`name` text DEFAULT NULL,
@@ -721,7 +721,7 @@ use Embark\CMS\SystemDateTime;
 				$data->meta = serialize($data->meta);
 
 				Symphony::Database()->insert(
-					sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+					sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 					(array)$data,
 					Connection::UPDATE_ON_DUPLICATE
 				);

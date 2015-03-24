@@ -11,7 +11,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`handle` varchar(255) default NULL,
@@ -84,7 +84,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				SELECT
 					DISTINCT `value`
 				FROM
-					`tbl_data_%s_%s`
+					`data_%s_%s`
 				", array($section, $field_handle)
 			);
 
@@ -297,7 +297,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		}
 
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
-			$table = sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'});
+			$table = sprintf('data_%s_%s', $entry->section, $this->{'element-name'});
 
 			// Purge existing values:
 			Symphony::Database()->delete($table, array($entry->id), "`entry_id` = %s");
@@ -431,7 +431,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				SELECT
 					`entry_id`
 				FROM
-					`tbl_entries_data_%d`
+					`entries_data_%d`
 				WHERE
 					`value` = '%s
 				",
@@ -447,7 +447,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 				SELECT
 					count(*) AS `count`
 				FROM
-					`tbl_entries_data_%d`
+					`entries_data_%d`
 				WHERE
 					`value` = '%s
 				",

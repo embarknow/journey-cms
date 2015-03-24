@@ -12,14 +12,12 @@ class Connection {
 	protected $queryCaching;
 	protected $lastException;
 	protected $lastQuery;
-	protected $prefix;
 	protected $string;
 
 	public function __construct($conf)
 	{
 		$this->conf = $conf;
 		$this->queryCaching = true;
-		$this->prefix = $conf->{'table-prefix'};
 		$this->string = sprintf(
 			'mysql:host=%s;port=%s;dbname=%s',
 			$conf->host,
@@ -64,10 +62,6 @@ class Connection {
 	}
 
 	public function prepareQuery($query, array $values = null) {
-		if ($this->prefix != 'tbl_') {
-			$query = preg_replace('/tbl_([^\b`]+)/i', $this->prefix . '\\1', $query);
-		}
-
 		if (is_array($values) && empty($values) === false) {
 			// Sanitise values:
 			$values = array_map(array($this, 'escape'), $values);

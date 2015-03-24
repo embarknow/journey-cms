@@ -21,7 +21,7 @@
 
 				case self::kREORDER_SECTIONS:
 					foreach($items as $id => $position) {
-						if(!Symphony::Database()->update('tbl_sections', array('sortorder' => $postion), array($id), "`id` = %d LIMIT 1")){
+						if(!Symphony::Database()->update('sections', array('sortorder' => $postion), array($id), "`id` = %d LIMIT 1")){
 							$this->_status = self::STATUS_ERROR;
 							$this->_Result->setValue(__('A database error occurred while attempting to reorder.'));
 							break;

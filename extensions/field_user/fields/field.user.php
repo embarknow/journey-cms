@@ -9,7 +9,7 @@
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					'CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`user_id` int(11) unsigned NOT NULL,
@@ -167,7 +167,7 @@
 			//$callback = Administration::instance()->getPageCallback();
 
 			if ($this->{'default-to-current-user'} == 'yes' && is_null($data)) {
-				$selected[] = Administration::instance()->User->id;
+				$selected[] = Symphony::User()->id;
 			}
 
 		    $users = new UserIterator;
@@ -238,7 +238,7 @@
 			// Since we are dealing with multiple
 			// values, must purge the existing data first
 			Symphony::Database()->delete(
-				sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'}),
+				sprintf('data_%s_%s', $entry->section, $this->{'element-name'}),
 				array($entry->id),
 				"`entry_id` = %s"
 			);
@@ -294,7 +294,7 @@
 			$value = DataSource::prepareFilterValue($filter['value'], $ParameterOutput, $operation_type);
 
 			$joins .= sprintf('
-				LEFT OUTER JOIN `tbl_data_%2$s_%3$s` AS t%1$s ON (e.id = t%1$s.entry_id)
+				LEFT OUTER JOIN `data_%2$s_%3$s` AS t%1$s ON (e.id = t%1$s.entry_id)
 			', self::$key, $this->section, $this->{'element-name'});
 
 			if ($filter['type'] == 'regex') {
@@ -333,13 +333,13 @@
 
 		public function buildSortingJoin(&$joins) {
 			$table = Symphony::Database()->prepareQuery(sprintf(
-				'tbl_data_%s_%s', $this->section, $this->{'element-name'}, ++self::$key
+				'data_%s_%s', $this->section, $this->{'element-name'}, ++self::$key
 			));
 			$handle = sprintf(
 				'%s_%s_%s', $this->section, $this->{'element-name'}, self::$key
 			);
 			$joins .= sprintf(
-				"\nLEFT OUTER JOIN `%s` AS data_%s ON (e.id = data_%2\$s.entry_id)\nJOIN `tbl_users` AS users_%2\$s ON (data_%2\$s.user_id = users_%2\$s.id)",
+				"\nLEFT OUTER JOIN `%s` AS data_%s ON (e.id = data_%2\$s.entry_id)\nJOIN `users` AS users_%2\$s ON (data_%2\$s.user_id = users_%2\$s.id)",
 				$table, $handle
 			);
 

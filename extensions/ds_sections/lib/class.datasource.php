@@ -1,14 +1,14 @@
 <?php
 
-use Embark\CMS\Datasource\Exception as DatabaseException;
-use Embark\CMS\Datasource\ResultIterator;
+use Embark\CMS\Database\Exception as DatabaseException;
+use Embark\CMS\Database\ResultIterator;
 use Embark\CMS\SystemDateTime;
 
 	require_once LIB . '/class.datasource.php';
 	require_once LIB . '/class.entry.php';
 	require_once LIB . '/class.duplicator.php';
 
-	Class SectionsDataSource extends DataSource {
+	class SectionsDataSource extends DataSource {
 		public function __construct(){
 			// Set Default Values
 			$this->_about = new StdClass;
@@ -761,7 +761,7 @@ use Embark\CMS\SystemDateTime;
 			$o_order = $order;
 			$query = sprintf('
 				%1$s e.id, e.section, e.user_id, e.creation_date, e.modification_date
-				FROM `tbl_entries` AS `e`
+				FROM `entries` AS `e`
 				%2$s
 				WHERE `section` = "%3$s"
 				%4$s

@@ -196,7 +196,7 @@
 
 			$li = $this->createElement('li');
 			$li->appendChild(
-				Widget::Anchor(Administration::instance()->User->getFullName(), ADMIN_URL . '/system/users/edit/' . Administration::instance()->User->id . '/')
+				Widget::Anchor(Symphony::User()->getFullName(), ADMIN_URL . '/system/users/edit/' . Symphony::User()->id . '/')
 			);
 			$ul->appendChild($li);
 

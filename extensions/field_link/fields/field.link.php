@@ -22,7 +22,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		public function create(){
 			return Symphony::Database()->query(sprintf(
 				"
-					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`relation_id` int(11) unsigned DEFAULT NULL,
@@ -103,7 +103,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 				$query = sprintf("
 					SELECT e.*
-					FROM `tbl_entries` AS e
+					FROM `entries` AS e
 					%s
 					WHERE e.section = '%s'
 					ORDER BY %s
@@ -146,13 +146,13 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			try{
 				## Figure out the section
-				$section_id = Symphony::Database()->fetchVar('section_id', 0, "SELECT `section_id` FROM `tbl_entries` WHERE `id` = '{$id}' LIMIT 1");
+				$section_id = Symphony::Database()->fetchVar('section_id', 0, "SELECT `section_id` FROM `entries` WHERE `id` = '{$id}' LIMIT 1");
 
 
 				## Figure out which related-field-id is from that section
 				$field_id = Symphony::Database()->fetchVar('field_id', 0, "SELECT f.`id` AS `field_id`
-					FROM `tbl_fields` AS `f`
-					LEFT JOIN `tbl_sections` AS `s` ON f.parent_section = s.id
+					FROM `fields` AS `f`
+					LEFT JOIN `sections` AS `s` ON f.parent_section = s.id
 					WHERE `s`.id = {$section_id} AND f.id IN ('".@implode("', '", $this->{'related-field-id'})."') LIMIT 1");
 			}
 			catch(Exception $e){
@@ -174,9 +174,9 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 						s.name AS `section_name`,
 						s.handle AS `section_handle`
 					 FROM
-					 	`tbl_fields` AS f
+					 	`fields` AS f
 					 INNER JOIN
-					 	`tbl_sections` AS s
+					 	`sections` AS s
 					 	ON s.id = f.parent_section
 					 WHERE
 					 	f.id = '{$field_id}'
@@ -195,7 +195,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			if (!isset(self::$cacheValues[$entry_id])) {
 				self::$cacheValues[$entry_id] = Symphony::Database()->fetchRow(0,
 					"SELECT *
-					 FROM `tbl_entries_data_{$field_id}`
+					 FROM `entries_data_{$field_id}`
 					 WHERE `entry_id` = '{$entry_id}' ORDER BY `id` DESC LIMIT 1"
 				);
 			}
@@ -305,15 +305,15 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			$fields['limit'] = max(1, (int)$this->{'limit'});
 			$fields['related-field-id'] = implode(',', $this->{'related-field-id'});
 
-			Symphony::Database()->query("DELETE FROM `tbl_fields_".$this->handle()."` WHERE `field_id` = '$id'");
+			Symphony::Database()->query("DELETE FROM `fields_".$this->handle()."` WHERE `field_id` = '$id'");
 
-			if(!Symphony::Database()->insert($fields, 'tbl_fields_' . $this->handle())) return false;
+			if(!Symphony::Database()->insert($fields, 'fields_' . $this->handle())) return false;
 
 			//$sections = $this->{'related-field-id'};
 
 			$this->removeSectionAssociation($id);
 
-			//$section_id = Symphony::Database()->fetchVar('parent_section', 0, "SELECT `parent_section` FROM `tbl_fields` WHERE `id` = '".$fields['related-field-id']."' LIMIT 1");
+			//$section_id = Symphony::Database()->fetchVar('parent_section', 0, "SELECT `parent_section` FROM `fields` WHERE `id` = '".$fields['related-field-id']."' LIMIT 1");
 
 			foreach($this->{'related-field-id'} as $field_id){
 				$this->createSectionAssociation(NULL, $id, $field_id);
@@ -460,7 +460,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			try{
 				$rows = Symphony::Database()->query(
-					"SELECT `relation_id` FROM `tbl_data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
+					"SELECT `relation_id` FROM `data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
 					array(
 						$entry->section,
 						$this->{'element-name'},
@@ -496,9 +496,9 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 							SELECT
 								`e`.*, r.entry_id AS `entry_id`, r.relation_id AS `relation_id`
 							FROM
-								`tbl_data_%s_%s` AS `e`
+								`data_%s_%s` AS `e`
 							LEFT OUTER JOIN
-								`tbl_data_%s_%s` AS `r`
+								`data_%s_%s` AS `r`
 								ON (e.entry_id = r.relation_id)
 							WHERE
 								e.entry_id IN (%s)
@@ -610,7 +610,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 		public function saveData(MessageStack $errors, Entry $entry, $data = null) {
 
-			$table = sprintf('tbl_data_%s_%s', $entry->section, $this->{'element-name'});
+			$table = sprintf('data_%s_%s', $entry->section, $this->{'element-name'});
 			Symphony::Database()->delete($table, array($entry->id), '`entry_id` = %s');
 
 			if(is_null($data)) return;
@@ -777,7 +777,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 
 			$searchvalue = Symphony::Database()->fetchRow(0,
 				sprintf("
-					SELECT `entry_id` FROM `tbl_entries_data_%d`
+					SELECT `entry_id` FROM `entries_data_%d`
 					WHERE `handle` = '%s'
 					LIMIT 1", $field_id, addslashes($data['handle']))
 			);
@@ -786,11 +786,11 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		}
 
 		public function fetchAssociatedEntryCount($value){
-			return Symphony::Database()->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries_data_".$this->{'id'}."` WHERE `relation_id` = '$value'");
+			return Symphony::Database()->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `entries_data_".$this->{'id'}."` WHERE `relation_id` = '$value'");
 		}
 
 		public function fetchAssociatedEntryIDs($value){
-			return Symphony::Database()->fetchCol('entry_id', "SELECT `entry_id` FROM `tbl_entries_data_".$this->{'id'}."` WHERE `relation_id` = '$value'");
+			return Symphony::Database()->fetchCol('entry_id', "SELECT `entry_id` FROM `entries_data_".$this->{'id'}."` WHERE `relation_id` = '$value'");
 		}
 
 	/*-------------------------------------------------------------------------

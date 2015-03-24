@@ -5,5 +5,4 @@
     <user></user>
     <password></password>
     <database>symphony</database>
-    <table-prefix>tbl_</table-prefix>
 </configuration>

@@ -41,7 +41,7 @@
 		public function create() {
 			return Symphony::Database()->query(sprintf(
 				"
-					CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 						`entry_id` INT(11) UNSIGNED NOT NULL,
 						`handle` VARCHAR(255) DEFAULT NULL,
@@ -109,7 +109,7 @@
 					SELECT
 						f.handle
 					FROM
-						`tbl_entries_data_%s` AS f
+						`entries_data_%s` AS f
 					WHERE
 						f.entry_id = '%s'
 					LIMIT 1
@@ -124,7 +124,7 @@
 					SELECT
 						f.id
 					FROM
-						`tbl_entries_data_%s` AS f
+						`entries_data_%s` AS f
 					WHERE
 						f.handle = '%s'
 						%s
@@ -143,7 +143,7 @@
 					SELECT
 						f.id
 					FROM
-						`tbl_entries_data_%s` AS f
+						`entries_data_%s` AS f
 					WHERE
 						f.entry_id = '%s'
 						AND f.value = '%s'

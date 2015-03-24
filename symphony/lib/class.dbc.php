@@ -278,8 +278,8 @@
 		}
 
 		public function prepareQuery($query, array $values = null) {
-			if ($this->prefix != 'tbl_') {
-				$query = preg_replace('/tbl_([^\b`]+)/i', $this->prefix . '\\1', $query);
+			if ($this->prefix != '') {
+				$query = preg_replace('/([^\b`]+)/i', $this->prefix . '\\1', $query);
 			}
 
 			if (is_array($values) && empty($values) === false) {

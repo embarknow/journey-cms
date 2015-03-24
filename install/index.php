@@ -20,7 +20,8 @@ use Embark\CMS\Configuration\Loader as Configuration;
 	require DOCROOT . '/symphony/lib/class.htmldocument.php';
 
 	class Installer extends Symphony {
-		public static function instance() {
+		public static function instance()
+		{
 			if (!(self::$_instance instanceof Installer)) {
 				self::$_instance = new self;
 			}
@@ -28,37 +29,15 @@ use Embark\CMS\Configuration\Loader as Configuration;
 			return self::$_instance;
 		}
 
-		protected function __construct(){
-			self::$Configuration = new Configuration(__DIR__ . '/conf');
-			$settings = self::Configuration()->main();
-
-			date_default_timezone_set($settings->region->timezone);
-
-			self::$_lang = (
-				$settings->lang
-					? $settings->lang
-					: 'en'
-			);
-
-			define_safe('__SYM_DATE_FORMAT__', $settings->region->{'date-format'});
-			define_safe('__SYM_TIME_FORMAT__', $settings->region->{'time-format'});
-			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
-			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim($settings->admin->path, '/')));
-
+		protected function __construct()
+		{
+			$this->initialiseConfiguration(__DIR__ . '/conf');
 			$this->initialiseLog();
-
-			GenericExceptionHandler::initialise(self::$Log);
-			GenericErrorHandler::initialise(self::$Log);
-
 			// $this->initialiseDatabase();
 			$this->initialiseCookie();
-
-			Extension::init();
-
-			Lang::loadAll(true);
-
-			// HACK!
-			$this->Cookie->get('blah');
+			$this->initialiseExtensions();
+			$this->initialiseLanguage();
+			$this->initialiseUser();
 		}
 
 		public static function setDatabase($db)
@@ -138,8 +117,7 @@ use Embark\CMS\Configuration\Loader as Configuration;
 			$data['database']['port'],
 			$data['database']['user'],
 			$data['database']['password'],
-			$data['database']['database'],
-			$data['database']['table-prefix']
+			$data['database']['database']
 		))) {
 			$errors->append('database', 'Please fill in all of the fields.');
 		}
@@ -217,7 +195,7 @@ use Embark\CMS\Configuration\Loader as Configuration;
 					}
 
 					// Create the default user
-					$db->insert('tbl_users', [
+					$db->insert('users', [
 						'username' =>			'admin',
 						'password' =>			uniqid(true),
 						'first_name' =>			'Site',
@@ -330,11 +308,6 @@ use Embark\CMS\Configuration\Loader as Configuration;
 
 	$label = Widget::Label('Port', NULL, array('class' => 'input'));
 	$input = Widget::Input('database[port]', $databaseConf['port']);
-	$label->appendChild($input);
-	$group->appendChild($label);
-
-	$label = Widget::Label('Table Prefix', NULL, array('class' => 'input'));
-	$input = Widget::Input('database[table-prefix]', $databaseConf['table-prefix']);
 	$label->appendChild($input);
 	$group->appendChild($label);
 

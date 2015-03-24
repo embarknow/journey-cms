@@ -152,7 +152,7 @@ use Embark\CMS\Database\Connection;
 		}
 
 		/**
-		 * Given an ID, and some data, save it into `tbl_sessions`. This uses
+		 * Given an ID, and some data, save it into `sessions`. This uses
 		 * the ID as a unique key, and will override any existing data. If the
 		 * `$data` is deemed to be empty, no row will be saved in the database
 		 * unless there is an existing row.
@@ -179,11 +179,11 @@ use Embark\CMS\Database\Connection;
 				'session_data' => $data
 			);
 
-			return Symphony::Database()->insert('tbl_sessions', $fields, Connection::UPDATE_ON_DUPLICATE);
+			return Symphony::Database()->insert('sessions', $fields, Connection::UPDATE_ON_DUPLICATE);
 		}
 
 		/**
-		 * Given a session's ID, return it's row from `tbl_sessions`
+		 * Given a session's ID, return it's row from `sessions`
 		 *
 		 * @param string $id
 		 *  The identifier for the Session to fetch
@@ -196,7 +196,7 @@ use Embark\CMS\Database\Connection;
 						SELECT
 							`session_data`
 						FROM
-							`tbl_sessions`
+							`sessions`
 						WHERE
 							`session` = '%s'
 						LIMIT
@@ -220,7 +220,7 @@ use Embark\CMS\Database\Connection;
 		}
 
 		/**
-		 * Given a session's ID, remove it's row from `tbl_sessions`
+		 * Given a session's ID, remove it's row from `sessions`
 		 *
 		 * @param string $id
 		 *  The identifier for the Session to destroy
@@ -228,7 +228,7 @@ use Embark\CMS\Database\Connection;
 		 *  True if the Session was deleted successfully, false otherwise
 		 */
 		public static function destroy($id) {
-			return Symphony::Database()->delete('tbl_sessions', array($id), "`session` = '%s'");
+			return Symphony::Database()->delete('sessions', array($id), "`session` = '%s'");
 		}
 
 		/**
@@ -242,6 +242,6 @@ use Embark\CMS\Database\Connection;
 		 *  True on Session deletion, false if an error occurs
 		 */
 		public static function gc($max) {
-			return Symphony::Database()->delete('tbl_sessions', array(time() - $max), "`session_expires` <= '%s'");
+			return Symphony::Database()->delete('sessions', array(time() - $max), "`session_expires` <= '%s'");
 		}
 	}

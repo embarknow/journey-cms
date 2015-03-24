@@ -160,7 +160,7 @@
 					$user_ids = NULL;
 					$where_clauses = array();
 
-					$query = "SELECT * FROM `tbl_users` WHERE 1 %s ORDER BY `id` ASC";
+					$query = "SELECT * FROM `users` WHERE 1 %s ORDER BY `id` ASC";
 
 					foreach ($this->parameters()->filters as $field => $value){
 						if(!is_array($value) && trim($value) == '') continue;

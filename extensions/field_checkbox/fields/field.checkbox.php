@@ -9,7 +9,7 @@
 		public function create(){
 			return Symphony::Database()->query(
 				sprintf(
-					"CREATE TABLE IF NOT EXISTS `tbl_data_%s_%s` (
+					"CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
 						`value` enum('yes','no') NOT NULL default '%s',
@@ -189,7 +189,7 @@
 			$db = Symphony::Database();
 
 			$table = $db->prepareQuery(sprintf(
-				'`tbl_data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
+				'`data_%s_%s`', $this->section, $this->{'element-name'}, ++self::$key
 			));
 			$handle = sprintf(
 				'`data_%s_%s_%d`', $this->section, $this->{'element-name'}, self::$key

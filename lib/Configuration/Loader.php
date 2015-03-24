@@ -8,7 +8,7 @@ class Loader {
     protected $dir;
     protected $id;
 
-    public function __construct($dir = CONF)
+    public function __construct($dir)
     {
         $this->dir = realpath($dir);
         $this->id = md5($dir);

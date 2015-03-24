@@ -202,19 +202,19 @@ use Embark\CMS\SystemDateTime;
 				##Reset of password requested
 				elseif($action == 'reset'):
 
-					$user = Symphony::Database()->query("SELECT id, email, first_name FROM `tbl_users` WHERE `email` = '%s'", array($_POST['email']));
+					$user = Symphony::Database()->query("SELECT id, email, first_name FROM `users` WHERE `email` = '%s'", array($_POST['email']));
 
 					if($user->valid()){
 						$user = $user->current();
 						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('tbl_forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
 
 						$token = Symphony::Database()->query("
 							SELECT
 								token
 							FROM
-								`tbl_forgotpass`
+								`forgotpass`
 							WHERE
 								expiry > '%s'
 							AND
@@ -228,7 +228,7 @@ use Embark\CMS\SystemDateTime;
 							$token = substr(md5(time() . rand(0, 200)), 0, 6);
 							$date->setTimestamp(time() + (120 * 60));
 
-							Symphony::Database()->insert('tbl_forgotpass',
+							Symphony::Database()->insert('forgotpass',
 								array(
 									'user_id' =>	$user->id,
 									'token' =>		$token,
@@ -261,7 +261,7 @@ use Embark\CMS\SystemDateTime;
 					}
 
 					else {
-						$user_id = Administration::instance()->User->id;
+						$user_id = Symphony::User()->id;
 
 						$user = User::load($user_id);
 
@@ -285,7 +285,7 @@ use Embark\CMS\SystemDateTime;
 						SELECT
 							u.id, u.email, u.first_name
 						FROM
-							`tbl_users` as u, `tbl_forgotpass` as t2
+							`users` as u, `forgotpass` as t2
 						WHERE
 							t2.`token` = '%s'
 						AND
@@ -309,8 +309,8 @@ use Embark\CMS\SystemDateTime;
 								'Best Regards,' . PHP_EOL .
 								'The Symphony Team');
 
-					Symphony::Database()->update('tbl_users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
-					Symphony::Database()->delete('tbl_forgotpass', array($user->id), " `user_id` = '%d'");
+					Symphony::Database()->update('users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
+					Symphony::Database()->delete('forgotpass', array($user->id), " `user_id` = '%d'");
 
 					$this->_alert = 'Password reset. Check your email';
 				}

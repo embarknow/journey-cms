@@ -479,9 +479,6 @@
 			$root = $Document->documentElement;
 			$datasources = $events = array();
 
-			$events_wrapper = $Document->createElement('events');
-			$root->appendChild($events_wrapper);
-
 			if (is_array($this->about()->{'events'}) && !empty($this->about()->{'events'})) {
 				$events = $this->about()->{'events'};
 			}
@@ -524,7 +521,7 @@
 				uasort($events_ordered, array($this, '__cbSortEventsByPriority'));
 
 				foreach ($events_ordered as $event) {
-					if (!$event->canTrigger($postdata)) continue;
+					if (false === $event->canTrigger($postdata)) continue;
 
 					$reflection = new ReflectionObject($event);
 
@@ -537,7 +534,7 @@
 
 					if ($fragment instanceof DOMDocument && !is_null($fragment->documentElement)) {
 						$node = $Document->importNode($fragment->documentElement, true);
-						$events_wrapper->appendChild($node);
+						$root->appendChild($node);
 					}
 
 					Profiler::end();

@@ -84,9 +84,10 @@ use Embark\CMS\App;
 
 
 
-			Controller::read('articles');
+			// $section = Controller::read('articles');
 
-			exit;
+			// var_dump($section);
+			// exit;
 
 
 

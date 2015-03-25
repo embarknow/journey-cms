@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Upload;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -11,7 +11,7 @@ use Field;
 use General;
 use Section;
 
-class UploadElement implements MetadataInterface
+class Element implements MetadataInterface
 {
 	use MetadataTrait;
 

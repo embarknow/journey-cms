@@ -512,13 +512,13 @@
 		public function fetchIncludableElements() {
 			return array(
 				[
-					'type' =>	'Embark\CMS\Fields\TextFormattedElement',
+					'type' =>	'Embark\CMS\Fields\Textbox\FormattedElement',
 					'handle' =>	$this->{'element-name'} . ': formatted',
 					'name' =>	$this->name,
 					'mode' =>	'Formatted'
 				],
 				[
-					'type' =>	'Embark\CMS\Fields\TextUnformattedElement',
+					'type' =>	'Embark\CMS\Fields\Textbox\UnformattedElement',
 					'handle' =>	$this->{'element-name'} . ': unformatted',
 					'name' =>	$this->name,
 					'mode' =>	'Unformatted'

@@ -73,7 +73,7 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 		{
 			return [
 				[
-					'type' =>	'Embark\CMS\Fields\LinkElement',
+					'type' =>	'Embark\CMS\Fields\Link\Element',
 					'handle' =>	$this->{'element-name'},
 					'name' =>	$this->name,
 					'mode' =>	null

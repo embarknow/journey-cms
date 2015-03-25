@@ -270,25 +270,25 @@ use Embark\CMS\SystemDateTime;
 		public function fetchIncludableElements() {
 			return [
 				[
-					'type' =>	'Embark\CMS\Fields\DateElement',
+					'type' =>	'Embark\CMS\Fields\Date\DateElement',
 					'handle' =>	$this->{'element-name'},
 					'name' =>	$this->name,
 					'mode' =>	null
 				],
 				[
-					'type' =>	'Embark\CMS\Fields\DateSystemElement',
+					'type' =>	'Embark\CMS\Fields\Date\SystemDateElement',
 					'handle' =>	$this->{'element-name'} . ': system',
 					'name' =>	$this->name,
 					'mode' =>	'System'
 				],
 				[
-					'type' =>	'Embark\CMS\Fields\DateTimestampElement',
+					'type' =>	'Embark\CMS\Fields\Date\TimestampElement',
 					'handle' =>	$this->{'element-name'} . ': unix-timestamp',
 					'name' =>	$this->name,
 					'mode' =>	'Unix Timestamp'
 				],
 				[
-					'type' =>	'Embark\CMS\Fields\DateSystemTimestampElement',
+					'type' =>	'Embark\CMS\Fields\Date\SystemTimestampElement',
 					'handle' =>	$this->{'element-name'} . ': system-unix-timestamp',
 					'name' =>	$this->name,
 					'mode' =>	'System Unix Timestamp'

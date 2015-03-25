@@ -1,21 +1,18 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Textbox;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\SystemDateTime;
 use DOMElement;
 use Entry;
+use Exception;
 use Field;
-use General;
 use Section;
 
-class DateSystemElement implements MetadataInterface
+trait ElementTrait
 {
-	use MetadataTrait;
-
 	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
 	{
 		$field = $section->fetchFieldByHandle($this['field']);
@@ -25,12 +22,23 @@ class DateSystemElement implements MetadataInterface
 		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};
 
-		if (isset($data->value) && !is_null($data->value)) {
-			$date = new SystemDateTime($data->value);
+		if (isset($data->value) || isset($data->value_formatted)) {
+			$element = $document->createElement($this['field']);
+			$wrapper->appendChild($element);
 
-			$wrapper->appendChild(General::createXMLDateObject(
-				$document, $date, $this['field']
-			));
+			try {
+				$this->appendValue($element, $field, $data);
+			}
+
+			catch (Exception $e) {
+				// Only get 'Document Fragment is empty' errors here.
+			}
+
+			if ($field->{'text-handle'} == 'yes') {
+				$element->setAttribute('handle', $data->handle);
+			}
 		}
+
+		return $element;
 	}
 }

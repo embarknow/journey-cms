@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Textbox;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
@@ -9,10 +9,10 @@ use Entry;
 use Exception;
 use Field;
 
-class TextFormattedElement implements MetadataInterface
+class FormattedElement implements MetadataInterface
 {
 	use MetadataTrait;
-	use TextElementTrait;
+	use ElementTrait;
 
 	public function appendValue(DOMElement $element, Field $field, $data)
 	{

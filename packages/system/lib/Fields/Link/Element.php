@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Link;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -13,7 +13,7 @@ use Field;
 use General;
 use Section;
 
-class LinkElement implements MetadataInterface
+class Element implements MetadataInterface
 {
 	use MetadataTrait;
 

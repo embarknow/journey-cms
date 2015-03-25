@@ -103,7 +103,7 @@ use Embark\CMS\SystemDateTime;
 		{
 			return [
 				[
-					'type' =>	'Embark\CMS\Fields\UploadElement',
+					'type' =>	'Embark\CMS\Fields\Upload\Element',
 					'handle' =>	$this->{'element-name'},
 					'name' =>	$this->name,
 					'mode' =>	null

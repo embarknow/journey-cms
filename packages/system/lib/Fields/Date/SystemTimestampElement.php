@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Date;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -12,7 +12,7 @@ use Field;
 use General;
 use Section;
 
-class DateSystemTimestampElement implements MetadataInterface
+class SystemTimestampElement implements MetadataInterface
 {
 	use MetadataTrait;
 

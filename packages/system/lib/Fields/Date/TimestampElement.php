@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\Date;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -12,7 +12,7 @@ use Field;
 use General;
 use Section;
 
-class DateElement implements MetadataInterface
+class TimestampElement implements MetadataInterface
 {
 	use MetadataTrait;
 
@@ -29,9 +29,10 @@ class DateElement implements MetadataInterface
 			$date = new SystemDateTime($data->value);
 			$date = $date->toUserDateTime();
 
-			$wrapper->appendChild(General::createXMLDateObject(
-				$document, $date, $this['field']
-			));
+			$element = $document->createElement($this['field']);
+			$element->setAttribute('timezone', $date->getTimeZone()->getName());
+			$element->setAttribute('unix-timestamp', $date->getTimestamp());
+			$wrapper->appendChild($element);
 		}
 	}
 }

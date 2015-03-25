@@ -10,57 +10,68 @@ use Entry;
 use Field;
 use Section;
 
-class DatasourceOutputParameters implements MetadataInterface {
-	use MetadataTrait;
+class DatasourceOutputParameters implements MetadataInterface
+{
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
-			'item' => [
-				'type' =>		new Parameter()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'item' => [
+                'type' =>       new Parameter()
+            ]
+        ]);
+    }
 
-	public function appendSchema(array &$schema, Section $section)
-	{
-		foreach ($this->getIterator() as $item) {
-			if (isset($schema[$item['field']])) continue;
+    public function appendSchema(array &$schema, Section $section)
+    {
+        foreach ($this->getIterator() as $item) {
+            if (isset($schema[$item['field']])) {
+                continue;
+            }
 
-			$field = $section->fetchFieldByHandle($item['field']);
+            $field = $section->fetchFieldByHandle($item['field']);
 
-			if (!$field instanceof Field) continue;
+            if (!$field instanceof Field) {
+                continue;
+            }
 
-			$schema[$item['field']] = $field;
-		}
-	}
+            $schema[$item['field']] = $field;
+        }
+    }
 
-	public function appendParameters(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
-	{
-		foreach ($this->getIterator() as $item) {
-			$item->appendParameter($parameters, $datasource, $section, $entry);
-		}
-	}
+    public function appendParameters(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
+    {
+        foreach ($this->getIterator() as $item) {
+            $item->appendParameter($parameters, $datasource, $section, $entry);
+        }
+    }
 
-	public function containsInstanceOf($class) {
-		foreach ($this->getIterator() as $value) {
-			$reflect = new \ReflectionObject($value);
+    public function containsInstanceOf($class)
+    {
+        foreach ($this->getIterator() as $value) {
+            $reflect = new \ReflectionObject($value);
 
-			if ($class !== $reflect->getName()) continue;
+            if ($class !== $reflect->getName()) {
+                continue;
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public function containsField($field) {
-		foreach ($this->getIterator() as $value) {
-			if ($value['field'] !== $field) continue;
+    public function containsField($field)
+    {
+        foreach ($this->getIterator() as $value) {
+            if ($value['field'] !== $field) {
+                continue;
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 }

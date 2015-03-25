@@ -7,5 +7,5 @@ use Embark\CMS\Structures\MetadataTrait;
 
 class Field implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 }

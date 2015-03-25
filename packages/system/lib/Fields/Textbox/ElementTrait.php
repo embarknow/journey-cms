@@ -13,32 +13,32 @@ use Section;
 
 trait ElementTrait
 {
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
-	{
-		$field = $section->fetchFieldByHandle($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+    {
+        $field = $section->fetchFieldByHandle($this['field']);
 
-		if (!($field instanceof Field)) return;
+        if (!($field instanceof Field)) {
+            return;
+        }
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		if (isset($data->value) || isset($data->value_formatted)) {
-			$element = $document->createElement($this['field']);
-			$wrapper->appendChild($element);
+        if (isset($data->value) || isset($data->value_formatted)) {
+            $element = $document->createElement($this['field']);
+            $wrapper->appendChild($element);
 
-			try {
-				$this->appendValue($element, $field, $data);
-			}
+            try {
+                $this->appendValue($element, $field, $data);
+            } catch (Exception $e) {
+                // Only get 'Document Fragment is empty' errors here.
+            }
 
-			catch (Exception $e) {
-				// Only get 'Document Fragment is empty' errors here.
-			}
+            if ($field->{'text-handle'} == 'yes') {
+                $element->setAttribute('handle', $data->handle);
+            }
+        }
 
-			if ($field->{'text-handle'} == 'yes') {
-				$element->setAttribute('handle', $data->handle);
-			}
-		}
-
-		return $element;
-	}
+        return $element;
+    }
 }

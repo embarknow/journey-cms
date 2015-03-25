@@ -14,24 +14,26 @@ use Section;
 
 class DateElement implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
-	{
-		$field = $section->fetchFieldByHandle($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+    {
+        $field = $section->fetchFieldByHandle($this['field']);
 
-		if (!($field instanceof Field)) return;
+        if (!($field instanceof Field)) {
+            return;
+        }
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		if (isset($data->value) && !is_null($data->value)) {
-			$date = new SystemDateTime($data->value);
-			$date = $date->toUserDateTime();
+        if (isset($data->value) && !is_null($data->value)) {
+            $date = new SystemDateTime($data->value);
+            $date = $date->toUserDateTime();
 
-			$wrapper->appendChild(General::createXMLDateObject(
-				$document, $date, $this['field']
-			));
-		}
-	}
+            $wrapper->appendChild(General::createXMLDateObject(
+                $document, $date, $this['field']
+            ));
+        }
+    }
 }

@@ -2,7 +2,10 @@
 
 namespace Embark\CMS\Configuration;
 
-class Loader {
+use Element;
+
+class Loader
+{
     private static $objects;
 
     protected $dir;
@@ -24,7 +27,9 @@ class Loader {
         ) {
             $class = __NAMESPACE__ . '\\Element';
 
-            if (isset($param[0]) && strlen(trim($param[0])) > 0) $class = $param[0];
+            if (isset($param[0]) && strlen(trim($param[0])) > 0) {
+                $class = $param[0];
+            }
 
             self::$objects[$id] = new $class($this->dir . "/{$handle}.xml");
         }
@@ -34,6 +39,8 @@ class Loader {
 
     public function save()
     {
-        foreach (self::$objects as $obj) $obj->save();
+        foreach (self::$objects as $obj) {
+            $obj->save();
+        }
     }
 }

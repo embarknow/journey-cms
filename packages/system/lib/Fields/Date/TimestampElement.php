@@ -20,7 +20,9 @@ class TimestampElement implements MetadataInterface
 	{
 		$field = $section->fetchFieldByHandle($this['field']);
 
-		if (!($field instanceof Field)) return;
+		if (!($field instanceof Field)) {
+			return;
+		}
 
 		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};

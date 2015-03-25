@@ -59,7 +59,7 @@ class Element implements ArrayAccess
             // Using the value above, construct the group
             if (is_array($group)) {
                 $group[$index] = $value;
-            } selse {
+            } else {
                 $group->$name = $value;
             }
         }

@@ -5,8 +5,7 @@ use DOMElement;
 
 trait MetadataTrait {
     protected $metadata = [];
-    private $defaults = [];
-    private $filters = [];
+    private $schema = [];
 
     public function fromXML(DOMElement $xml = null)
     {
@@ -15,20 +14,20 @@ trait MetadataTrait {
 
             $name = $node->nodeName;
 
-            // The data has a default type:
-            if (
-                isset($this->defaults[$name])
-                && $this->defaults[$name] instanceof MetadataInterface
-            ) {
-                $value = $this->defaults[$name];
+            // The data has a type:
+            if ($node->hasAttribute('type')) {
+                $type = '\\' . $node->getAttribute('type');
+                $value = new $type;
                 $value->fromXML($node);
                 $value->fromDefaults();
             }
 
-            // The data has a type:
-            else if ($node->hasAttribute('type')) {
-                $type = '\\' . $node->getAttribute('type');
-                $value = new $type;
+            // An default type has been provided:
+            else if (
+                isset($this->schema[$name]['type'])
+                && $this->schema[$name]['type'] instanceof MetadataInterface
+            ) {
+                $value = clone $this->schema[$name]['type'];
                 $value->fromXML($node);
                 $value->fromDefaults();
             }
@@ -50,14 +49,19 @@ trait MetadataTrait {
 
     public function fromDefaults()
     {
-        foreach ($this->defaults as $name => $default) {
+        foreach ($this->schema as $name => $schema) {
             if (isset($this[$name])) continue;
+            if (false === isset($schema['required'])) continue;
+            if (true !== $schema['required']) continue;
 
-            if ($default instanceof MetadataInterface) {
-                $default->fromDefaults();
+            if ($schema['type'] instanceof MetadataInterface) {
+                $schema['type']->fromDefaults();
+                $this->metadata[$name] = $schema['type'];
             }
 
-            $this->metadata[$name] = $default;
+            else {
+                $this->metadata[$name] = $schema['default'];
+            }
         }
     }
 
@@ -90,14 +94,9 @@ trait MetadataTrait {
         unset($this->metadata[$name]);
     }
 
-    public function setDefaults(array $defaults)
+    public function setSchema(array $schema)
     {
-        $this->defaults = $defaults;
-    }
-
-    public function setFilters(array $filters)
-    {
-        $this->filters = $filters;
+        $this->schema = $schema;
     }
 
     public function toXML(DOMElement $xml)
@@ -106,6 +105,7 @@ trait MetadataTrait {
             if (is_integer($name)) {
                 $node = $xml->ownerDocument->createElement('item');
                 $xml->appendChild($node);
+                $name = 'item';
             }
 
             else {
@@ -115,9 +115,9 @@ trait MetadataTrait {
 
             // The data is of the type expected by default:
             if (
-                isset($this->defaults[$name])
-                && $this->defaults[$name] instanceof MetadataInterface
-                && get_class($value) === get_class($this->defaults[$name])
+                isset($this->schema[$name]['type'])
+                && $this->schema[$name]['type'] instanceof MetadataInterface
+                && get_class($value) === get_class($this->schema[$name]['type'])
             ) {
                 $value->toXML($node);
             }
@@ -140,10 +140,10 @@ trait MetadataTrait {
     protected function valueToXML($name, $value)
     {
         if (
-            isset($this->filters[$name])
-            && $this->filters[$name] instanceof MetadataValueInterface
+            isset($this->schema[$name]['filter'])
+            && $this->schema[$name]['filter'] instanceof MetadataValueInterface
         ) {
-            return $this->filters[$name]->toXML($value);
+            return $this->schema[$name]['filter']->toXML($value);
         }
 
         return $value;
@@ -152,10 +152,10 @@ trait MetadataTrait {
     protected function valueFromXML($name, $value)
     {
         if (
-            isset($this->filters[$name])
-            && $this->filters[$name] instanceof MetadataValueInterface
+            isset($this->schema[$name]['filter'])
+            && $this->schema[$name]['filter'] instanceof MetadataValueInterface
         ) {
-            return $this->filters[$name]->fromXML($value);
+            return $this->schema[$name]['filter']->fromXML($value);
         }
 
         return $value;

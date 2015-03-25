@@ -3,6 +3,7 @@
 namespace Embark\CMS\Actors;
 
 use Embark\CMS\Database\Exception as DatabaseException;
+use Embark\CMS\Structures\About;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
@@ -10,12 +11,14 @@ use Embark\CMS\Structures\Sorting;
 use Embark\CMS\SystemDateTime;
 use Context;
 use Datasource;
+use DOMElement;
 use General;
 use Field;
 use Profiler;
 use Section;
 use Symphony;
 use XMLDocument;
+use Widget;
 
 class SectionDatasource implements DatasourceInterface
 {
@@ -23,6 +26,23 @@ class SectionDatasource implements DatasourceInterface
 
 	public function __construct()
 	{
+		$this->setSchema([
+			'about' => [
+				'type' =>		new About()
+			],
+			'pagination' => [
+				'type' =>		new Pagination()
+			],
+			'sorting' => [
+				'type' =>		new Sorting()
+			],
+			'elements' => [
+				'type' =>		new SectionDatasourceOutputElements()
+			],
+			'parameters' => [
+				'type' =>		new SectionDatasourceOutputParameters()
+			]
+		]);
 	}
 
 	public function canExecute()
@@ -30,11 +50,58 @@ class SectionDatasource implements DatasourceInterface
 		return true;
 	}
 
+	public function prepareSourceColumnValue()
+	{
+		$section = Section::loadFromHandle($this['section']);
+
+		if ($section instanceof Section) {
+			return Widget::TableData(
+				Widget::Anchor($section->name, ADMIN_URL . '/blueprints/sections/edit/' . $section->handle . '/', array(
+					'title' => $section->handle
+				))
+			);
+		}
+
+		else {
+			return Widget::TableData(__('None'), array(
+				'class' => 'inactive'
+			));
+		}
+	}
+
+	public function appendColumns(DOMElement $wrapper)
+	{
+		$section = Section::loadFromHandle($this['section']);
+
+		// Name:
+		$wrapper->appendChild(Widget::TableData(Widget::Anchor(
+			$this['about']['name'],
+			ADMIN_URL . "/blueprints/datasources/edit/{$this['handle']}/"
+		)));
+
+		// Source:
+		if ($section instanceof Section) {
+			$wrapper->appendChild(Widget::TableData(Widget::Anchor(
+				$section->name,
+				ADMIN_URL . "/blueprints/sections/edit/{$section->handle}/"
+			)));
+		}
+
+		else {
+			$wrapper->appendChild(Widget::TableData(__('None'), [
+				'class' =>	'inactive'
+			]));
+		}
+
+		// Type:
+		$wrapper->appendChild(Widget::TableData(__('Section')));
+	}
+
 	public function execute(Context $parameter_output, $joins = null, array $where = [], $filter_operation_type = Datasource::FILTER_AND)
 	{
 		$execute = true;
 
-		Profiler::begin('Building query');
+		Profiler::begin('Creating query');
 
 		$result = new XMLDocument();
 		$result->appendChild($result->createElement($this['handle']));
@@ -85,6 +152,7 @@ class SectionDatasource implements DatasourceInterface
 
 		// Grab the section
 		$section = Section::loadFromHandle($this['section']);
+		$root->setAttribute('section', $section->handle);
 
 		if ($this['pagination'] instanceof Pagination) {
 			$pagination = $this['pagination']->replaceParameters($parameter_output);
@@ -246,51 +314,25 @@ class SectionDatasource implements DatasourceInterface
 
 		Profiler::end();
 
-		Profiler::begin('Executing query');
-
 		try {
-			$entries = Symphony::Database()->query($query, array(
+			Profiler::begin('Executing query');
+
+			$entries = Symphony::Database()->query($query, [
 					$section->handle,
 					$section->{'publish-order-handle'}
-				), __NAMESPACE__ . '\\SectionDatasourceResultIterator'
+				], __NAMESPACE__ . '\\SectionDatasourceResultIterator'
 			);
 
 			Profiler::end();
 
-			Profiler::begin('Formatting data');
-
-			if (isset($pagination) && $pagination['append']) {
-				Profiler::begin('Appended pagination element');
-
-				$pagination->setTotal(Symphony::Database()->query("SELECT FOUND_ROWS() AS `total`")->current()->total);
-
-				$root->appendChild($pagination->createElement($result));
-
-				Profiler::store('total-entries', $pagination['total-entries']);
-				Profiler::store('entries-per-page', $pagination['entries-per-page']);
-				Profiler::store('current-page', $pagination['current-page']);
-				Profiler::end();
-			}
-
-			if (isset($sorting) && $sorting['append']) {
-				Profiler::begin('Appended sorting element');
-
-				$root->appendChild($sorting->createElement($result));
-
-				Profiler::store('field', $sorting['field']);
-				Profiler::store('direction', $sorting['direction']);
-				Profiler::end();
-			}
-
-			// Output section details
-			$root->setAttribute('section', $section->handle);
-
-			$schema = [];
-
 			// Build Entry Records
 			if ($entries->valid()) {
-				$ids = array();
-				$data = array();
+				Profiler::begin('Creating entry data');
+
+				$parameters = [];
+				$schema = [];
+				$ids = [];
+				$data = [];
 
 				foreach($entries as $entry) {
 					$ids[] = $entry->id;
@@ -312,6 +354,24 @@ class SectionDatasource implements DatasourceInterface
 
 				$entries->setSchema($schema);
 				$entries->setData($data);
+
+				Profiler::end();
+
+				Profiler::begin('Creating entry parameters');
+
+				// Add in the param output values to the parameter_output object
+				foreach ($parameters as $name => $values) {
+					$values = array_filter($values);
+
+					if (empty($values)) continue;
+
+					$parameter_output->{$name} = array_unique($values);
+				}
+
+				Profiler::end();
+
+				Profiler::begin('Creating entry elements');
+
 				$parameters = [];
 
 				foreach ($entries as $entry) {
@@ -329,19 +389,30 @@ class SectionDatasource implements DatasourceInterface
 					}
 				}
 
-				// Add in the param output values to the parameter_output object
-				foreach ($parameters as $name => $values) {
-					$values = array_filter($values);
-
-					if (empty($values)) continue;
-
-					$parameter_output->{$name} = array_unique($values);
-				}
+				Profiler::end();
 			}
 
-			// No Entries, Show empty XML
-			else {
-				$this->emptyXMLSet($root);
+			if (isset($pagination) && $pagination['append']) {
+				Profiler::begin('Creating pagination element');
+
+				$pagination->setTotal(Symphony::Database()->query("SELECT FOUND_ROWS() AS `total`")->current()->total);
+
+				$root->appendChild($pagination->createElement($result));
+
+				Profiler::store('total-entries', $pagination['total-entries']);
+				Profiler::store('entries-per-page', $pagination['entries-per-page']);
+				Profiler::store('current-page', $pagination['current-page']);
+				Profiler::end();
+			}
+
+			if (isset($sorting) && $sorting['append']) {
+				Profiler::begin('Creating sorting element');
+
+				$root->appendChild($sorting->createElement($result));
+
+				Profiler::store('field', $sorting['field']);
+				Profiler::store('direction', $sorting['direction']);
+				Profiler::end();
 			}
 		}
 
@@ -350,8 +421,6 @@ class SectionDatasource implements DatasourceInterface
 				'error', $e->getMessage()
 			));
 		}
-
-		Profiler::end();
 
 		return $result;
 	}

@@ -97,9 +97,8 @@ use Embark\CMS\SystemDateTime;
 			}
 
 			else {
-
 				//	Load Views so we can determine what Datasources are attached
-				if(!self::$_loaded_views) {
+				if (!self::$_loaded_views) {
 					foreach (new ViewIterator as $view) {
 						self::$_loaded_views[$view->guid] = array(
 							'title' => $view->title,
@@ -111,32 +110,16 @@ use Embark\CMS\SystemDateTime;
 
 				foreach ($datasources as $pathname) {
 					$ds = DataSource::load($pathname);
+					$dsTableBody[] = $row = $this->createElement('tr');
 
-					$view_mode = ($ds->allowEditorToParse() == true ? 'edit' : 'info');
-					$handle = DataSource::getHandleFromFilename($pathname);
+					$ds->appendColumns($row);
 
-					// Name
-					$col_name = Widget::TableData(
-						Widget::Anchor($ds->about()->name, ADMIN_URL . "/blueprints/datasources/{$view_mode}/{$handle}/", array(
-							'title' => $ds->parameters()->pathname
-						))
-					);
-					$col_name->appendChild(Widget::Input("items[{$handle}]", NULL, 'checkbox'));
-
-					// Source
-					try{
-						$col_source = $ds->prepareSourceColumnValue();
-					}
-					catch(Exception $e){
-						$col_source = Widget::TableData(__('None'), array('class' => 'inactive'));
-					}
-
-					// Used By
+					// Used By:
 					$fragment_views = $this->createDocumentFragment();
 
-					foreach(self::$_loaded_views as $view) {
-						if(is_array($view['data-sources']) && in_array($handle, $view['data-sources'])) {
-							if($fragment_views->hasChildNodes()) $fragment_views->appendChild(new DOMText(', '));
+					foreach (self::$_loaded_views as $view) {
+						if (is_array($view['data-sources']) && in_array($ds['handle'], $view['data-sources'])) {
+							if ($fragment_views->hasChildNodes()) $fragment_views->appendChild(new DOMText(', '));
 
 							$fragment_views->appendChild(
 								Widget::Anchor($view['title'], ADMIN_URL . "/blueprints/views/edit/{$view['handle']}/")
@@ -144,31 +127,27 @@ use Embark\CMS\SystemDateTime;
 						}
 					}
 
-					if(!$fragment_views->hasChildNodes()) {
-						$col_views = Widget::TableData(__('None'), array('class' => 'inactive'));
-					}
-					else{
-						$col_views = Widget::TableData($fragment_views);
-					}
-
-					// Type
-					if (is_null($ds->getType())) {
-						$col_type = Widget::TableData(__('Unknown'), array('class' => 'inactive'));
+					if (!$fragment_views->hasChildNodes()) {
+						$row->appendChild(Widget::TableData(__('None'), [
+							'class' => 'inactive'
+						]));
 					}
 
-					else{
-						$col_type = Widget::TableData($this->types[$ds->getType()]->name);
+					else {
+						$row->appendChild(Widget::TableData($fragment_views));
 					}
 
-					$dsTableBody[] = Widget::TableRow(array(
-						$col_name, $col_source, $col_type, $col_views
-					));
+					$row->firstChild->appendChild(Widget::Input("items[{$handle}]", null, 'checkbox'));
 				}
 			}
 
-			$table = Widget::Table(Widget::TableHead($dsTableHead), NULL,Widget::TableBody($dsTableBody), array(
+			$table = Widget::Table(
+				Widget::TableHead($dsTableHead),
+				null,
+				Widget::TableBody($dsTableBody),
+				[
 					'id' => 'datasources-list'
-				)
+				]
 			);
 
 			$this->Form->appendChild($table);
@@ -176,10 +155,10 @@ use Embark\CMS\SystemDateTime;
 			$tableActions = $this->createElement('div');
 			$tableActions->setAttribute('class', 'actions');
 
-			$options = array(
-				array(NULL, false, __('With Selected...')),
-				array('delete', false, __('Delete'))
-			);
+			$options = [
+				[null, false, __('With Selected...')],
+				['delete', false, __('Delete')]
+			];
 
 			$tableActions->appendChild(Widget::Select('with-selected', $options));
 			$tableActions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));

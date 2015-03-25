@@ -5,12 +5,22 @@ namespace Embark\CMS\Actors;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Fields\Parameter;
 use Entry;
 use Field;
 use Section;
 
 class SectionDatasourceOutputParameters implements MetadataInterface {
 	use MetadataTrait;
+
+	public function __construct()
+	{
+		$this->setSchema([
+			'item' => [
+				'type' =>		new Parameter()
+			]
+		]);
+	}
 
 	public function appendSchema(array &$schema, Section $section)
 	{

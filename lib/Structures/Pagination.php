@@ -11,14 +11,28 @@ class Pagination implements MetadataInterface {
 
 	public function __construct()
 	{
-		$this->setFilters([
-			'append' =>				new Boolean(),
-			'limit' =>				new Integer(),
-			'page' =>				new Integer(),
-			'entries-per-page' =>	new MaxInteger(1),
-			'current-page' =>		new MaxInteger(1),
-			'total-entries' =>		new Integer(),
-			'total-pages' =>		new Integer()
+		$this->setSchema([
+			'append' => [
+				'filter' =>			new Boolean()
+			],
+			'limit' => [
+				'filter' =>			new Integer()
+			],
+			'page' => [
+				'filter' =>			new Integer()
+			],
+			'entries-per-page' => [
+				'filter' =>			new MaxInteger(1)
+			],
+			'current-page' => [
+				'filter' =>			new MaxInteger(1)
+			],
+			'total-entries' => [
+				'filter' =>			new Integer()
+			],
+			'total-pages' => [
+				'filter' =>			new Integer()
+			]
 		]);
 	}
 

@@ -84,7 +84,8 @@ use Embark\CMS\App;
 			// $output = ActorController::toXML($ds);
 			// $output->formatOutput = true;
 
-			// var_dump($output->saveXML($output->documentElement));
+			// var_dump($ds);
+			// echo '<pre>', htmlentities($output->saveXML($output->documentElement)), '</pre>';
 			// exit;
 
 			// Begin profiling:

@@ -14,9 +14,13 @@ class Sorting implements MetadataInterface
 
 	public function __construct()
 	{
-		$this->setFilters([
-			'append' =>			new Boolean(),
-			'direction' =>		new SortingDirection()
+		$this->setSchema([
+			'append' => [
+				'filter' =>		new Boolean()
+			],
+			'direction' => [
+				'filter' =>		new SortingDirection()
+			]
 		]);
 	}
 

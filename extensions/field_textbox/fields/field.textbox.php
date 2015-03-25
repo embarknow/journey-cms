@@ -511,8 +511,18 @@
 
 		public function fetchIncludableElements() {
 			return array(
-				array('handle' => $this->{'element-name'} . ': formatted', 'name' => $this->name, 'mode' => "Formatted"),
-				array('handle' => $this->{'element-name'} . ': unformatted', 'name' => $this->name, 'mode' => "Unformatted")
+				[
+					'type' =>	'Embark\CMS\Fields\TextFormattedElement',
+					'handle' =>	$this->{'element-name'} . ': formatted',
+					'name' =>	$this->name,
+					'mode' =>	'Formatted'
+				],
+				[
+					'type' =>	'Embark\CMS\Fields\TextUnformattedElement',
+					'handle' =>	$this->{'element-name'} . ': unformatted',
+					'name' =>	$this->name,
+					'mode' =>	'Unformatted'
+				]
 			);
 		}
 

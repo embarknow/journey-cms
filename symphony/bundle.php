@@ -73,25 +73,22 @@ use Embark\CMS\App;
 	 * Prepare the environment for Symphony, allow it to be booted by calling render.
 	 */
 	namespace {
-		use Embark\CMS\Actors\Controller as ActorController;
+		use Embark\CMS\Sections\Controller;
 
 		function render() {
-			// $input = new DOMDocument();
-			// $input->load(WORKSPACE . '/data-sources/articles.xml');
-
-			// $ds = ActorController::fromXML($input);
-
-			// $output = ActorController::toXML($ds);
-			// $output->formatOutput = true;
-
-			// var_dump($ds);
-			// echo '<pre>', htmlentities($output->saveXML($output->documentElement)), '</pre>';
-			// exit;
-
 			// Begin profiling:
 			if (isset($_GET['profiler'])) Profiler::enable();
 
 			$renderer = boot\launch();
+
+
+
+
+			Controller::read('articles');
+
+			exit;
+
+
 
 			// Allow Devkits to take control before any rendering occurs:
 			boot\devkit('ExecuteEarlyDevKit');

@@ -1,48 +1,25 @@
 <?php
 
-namespace Embark\CMS\Actors;
+namespace Embark\CMS\Actors\Section;
 
 use Embark\CMS\Database\Exception as DatabaseException;
-use Embark\CMS\Structures\About;
-use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\Structures\Sorting;
-use Embark\CMS\SystemDateTime;
 use Context;
-use Datasource;
-use DOMElement;
-use General;
 use Field;
 use Profiler;
 use Section;
 use Symphony;
 use XMLDocument;
-use Widget;
 
-class SectionDatasource implements DatasourceInterface
+class DatasourceRenderer
 {
-	use MetadataTrait;
+	protected $datasource;
 
-	public function __construct()
+	public function __construct(Datasource $datasource)
 	{
-		$this->setSchema([
-			'about' => [
-				'type' =>		new About()
-			],
-			'pagination' => [
-				'type' =>		new Pagination()
-			],
-			'sorting' => [
-				'type' =>		new Sorting()
-			],
-			'elements' => [
-				'type' =>		new SectionDatasourceOutputElements()
-			],
-			'parameters' => [
-				'type' =>		new SectionDatasourceOutputParameters()
-			]
-		]);
+		$this->datasource = $datasource;
 	}
 
 	public function canExecute()
@@ -50,119 +27,29 @@ class SectionDatasource implements DatasourceInterface
 		return true;
 	}
 
-	public function prepareSourceColumnValue()
-	{
-		$section = Section::loadFromHandle($this['section']);
-
-		if ($section instanceof Section) {
-			return Widget::TableData(
-				Widget::Anchor($section->name, ADMIN_URL . '/blueprints/sections/edit/' . $section->handle . '/', array(
-					'title' => $section->handle
-				))
-			);
-		}
-
-		else {
-			return Widget::TableData(__('None'), array(
-				'class' => 'inactive'
-			));
-		}
-	}
-
-	public function appendColumns(DOMElement $wrapper)
-	{
-		$section = Section::loadFromHandle($this['section']);
-
-		// Name:
-		$wrapper->appendChild(Widget::TableData(Widget::Anchor(
-			$this['about']['name'],
-			ADMIN_URL . "/blueprints/datasources/edit/{$this['handle']}/"
-		)));
-
-		// Source:
-		if ($section instanceof Section) {
-			$wrapper->appendChild(Widget::TableData(Widget::Anchor(
-				$section->name,
-				ADMIN_URL . "/blueprints/sections/edit/{$section->handle}/"
-			)));
-		}
-
-		else {
-			$wrapper->appendChild(Widget::TableData(__('None'), [
-				'class' =>	'inactive'
-			]));
-		}
-
-		// Type:
-		$wrapper->appendChild(Widget::TableData(__('Section')));
-	}
-
-	public function execute(Context $parameter_output, $joins = null, array $where = [], $filter_operation_type = Datasource::FILTER_AND)
+	public function execute(Context $parameter_output, $joins = null, array $where = [], $filter_operation_type = 1)
 	{
 		$execute = true;
 
 		Profiler::begin('Creating query');
 
 		$result = new XMLDocument();
-		$result->appendChild($result->createElement($this['handle']));
+		$result->appendChild($result->createElement($this->datasource['resource']['handle']));
 		$root = $result->documentElement;
 
-		// // Conditions:
-		// if (isset($this['conditions'])) {
-		// // TODO: Use this instead:
-		// // if ($this['conditions'] instanceof ConditionsMetadata) {
-		// 	foreach ($this['conditions'] as $condition) {
-		// 		if (strpos(':', $condition['parameter']) !== false) {
-		// 			$c = Datasource::replaceParametersInString($condition['parameter'], $parameter_output);
-		// 		}
-
-		// 		else {
-		// 			$c = Datasource::resolveParameter($condition['parameter'], $parameter_output);
-		// 		}
-
-		// 		// Is Empty
-		// 		if ($condition['logic'] == 'empty' && (is_null($c) || strlen($c) == 0)) {
-		// 			$execute = false;
-		// 		}
-
-		// 		// Is Set
-		// 		else if ($condition['logic'] == 'set' && is_null($c) === false) {
-		// 			$execute = false;
-		// 		}
-
-		// 		else if (isset($condition['type'], $condition['value'])) {
-		// 			$value = Datasource::replaceParametersInString($condition['value'], $parameter_output);
-
-		// 			if ($condition['type'] === 'is' && $c != $value) {
-		// 				$execute = false;
-		// 			}
-
-		// 			else if ($condition['type'] === 'is-not' && $c == $value) {
-		// 				$execute = false;
-		// 			}
-		// 		}
-
-		// 		if ($execute !== true) {
-		// 			Profiler::end();
-
-		// 			return null;
-		// 		}
-		// 	}
-		// }
-
 		// Grab the section
-		$section = Section::loadFromHandle($this['section']);
+		$section = Section::loadFromHandle($this->datasource['section']);
 		$root->setAttribute('section', $section->handle);
 
-		if ($this['pagination'] instanceof Pagination) {
-			$pagination = $this['pagination']->replaceParameters($parameter_output);
+		if ($this->datasource['pagination'] instanceof Pagination) {
+			$pagination = $this->datasource['pagination']->replaceParameters($parameter_output);
 		}
 
 		// Apply sorting:
 		$order = 'e.id ASC';
 
-		if ($this['sorting'] instanceof Sorting) {
-			$sorting = $this['sorting']->replaceParameters($parameter_output);
+		if ($this->datasource['sorting'] instanceof Sorting) {
+			$sorting = $this->datasource['sorting']->replaceParameters($parameter_output);
 
 			// Sort randomly:
 			if (Sorting::RANDOM === $soring['direction']) {
@@ -216,8 +103,8 @@ class SectionDatasource implements DatasourceInterface
 		// var_dump($this); exit;
 
 		// // Process Datasource Filters for each of the Fields
-		// if (isset($this['filters'])) {
-		// 	foreach ($this['filters'] as $k => $filter) {
+		// if (isset($this->datasource['filters'])) {
+		// 	foreach ($this->datasource['filters'] as $k => $filter) {
 		// 		if ($filter['element-name'] == 'system:id') {
 		// 			$filter_value = $this->prepareFilterValue($filter['value'], $parameter_output);
 
@@ -255,7 +142,7 @@ class SectionDatasource implements DatasourceInterface
 		);
 
 		// Remove distinct keyword:
-		if ($this['query'] instanceof QueryOptions && false === $this['query']['distinct-select']) {
+		if ($this->datasource['query'] instanceof QueryOptions && false === $this->datasource['query']['distinct-select']) {
 			$select_keywords = array_diff(
 				$select_keywords, array('DISTINCT')
 			);
@@ -276,14 +163,14 @@ class SectionDatasource implements DatasourceInterface
 			implode($select_keywords, ' '),
 			$o_joins,
 			$section->handle,
-			is_array($o_where) && !empty($o_where) ? 'AND (' . implode(($filter_operation_type == Datasource::FILTER_AND ? ' AND ' : ' OR '), $o_where) . ')' : NULL,
+			is_array($o_where) && !empty($o_where) ? 'AND (' . implode(($filter_operation_type == 1 ? ' AND ' : ' OR '), $o_where) . ')' : NULL,
 			$o_order,
 			$pagination['record-start'],
 			$pagination['entries-per-page']
 		);
 
 		// Replace duplicate right join statements:
-		if ($this['query'] instanceof QueryOptions && $this['query']['reduce-right-joins']) {
+		if ($this->datasource['query'] instanceof QueryOptions && $this->datasource['query']['reduce-right-joins']) {
 			$joins = array(); $changes = array();
 			$replace = function($matches) use (&$joins, &$changes) {
 				if (isset($joins[$matches[1]])) {
@@ -320,7 +207,7 @@ class SectionDatasource implements DatasourceInterface
 			$entries = Symphony::Database()->query($query, [
 					$section->handle,
 					$section->{'publish-order-handle'}
-				], __NAMESPACE__ . '\\SectionDatasourceResultIterator'
+				], __NAMESPACE__ . '\\DatasourceResultIterator'
 			);
 
 			Profiler::end();
@@ -334,17 +221,17 @@ class SectionDatasource implements DatasourceInterface
 				$ids = [];
 				$data = [];
 
-				foreach($entries as $entry) {
+				foreach ($entries as $entry) {
 					$ids[] = $entry->id;
 				}
 
 				// Figure out what fields to fetch, so we don't have to fetch them all:
-				if ($this['elements'] instanceof SectionDatasourceOutputElements) {
-					$this['elements']->appendSchema($schema, $section);
+				if ($this->datasource['elements'] instanceof DatasourceOutputElements) {
+					$this->datasource['elements']->appendSchema($schema, $section);
 				}
 
-				if ($this['parameters'] instanceof SectionDatasourceOutputParameters) {
-					$this['parameters']->appendSchema($schema, $section);
+				if ($this->datasource['parameters'] instanceof DatasourceOutputParameters) {
+					$this->datasource['parameters']->appendSchema($schema, $section);
 				}
 
 				// Load entry data:
@@ -380,12 +267,12 @@ class SectionDatasource implements DatasourceInterface
 					$root->appendChild($wrapper);
 
 					// If there are included elements, need an entry element.
-					if ($this['elements'] instanceof SectionDatasourceOutputElements) {
-						$this['elements']->appendElements($wrapper, $this, $section, $entry);
+					if ($this->datasource['elements'] instanceof DatasourceOutputElements) {
+						$this->datasource['elements']->appendElements($wrapper, $this->datasource, $section, $entry);
 					}
 
-					if ($this['parameters'] instanceof SectionDatasourceOutputParameters) {
-						$this['parameters']->appendParameters($parameters, $this, $section, $entry);
+					if ($this->datasource['parameters'] instanceof DatasourceOutputParameters) {
+						$this->datasource['parameters']->appendParameters($parameters, $this->datasource, $section, $entry);
 					}
 				}
 

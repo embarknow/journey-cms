@@ -99,6 +99,18 @@ use Embark\CMS\SystemDateTime;
 			return true;
 		}
 
+		public function fetchIncludableElements()
+		{
+			return [
+				[
+					'type' =>	'Embark\CMS\Fields\UploadElement',
+					'handle' =>	$this->{'element-name'},
+					'name' =>	$this->name,
+					'mode' =>	null
+				]
+			];
+		}
+
 	/*-------------------------------------------------------------------------
 		Settings:
 	-------------------------------------------------------------------------*/

@@ -7,9 +7,14 @@ trait MetadataTrait {
     protected $metadata = [];
     private $schema = [];
 
-    public function fromXML(DOMElement $xml = null)
+    public function fromXML(DOMElement $xml)
     {
-        if ($xml) foreach ($xml->childNodes as $node) {
+        // Give the root metadata information about where it came from:
+        if ($xml === $xml->ownerDocument->documentElement) {
+            $this['resource'] = new Resource($xml);
+        }
+
+        foreach ($xml->childNodes as $node) {
             if (($node instanceof DOMElement) === false) continue;
 
             $name = $node->nodeName;
@@ -19,7 +24,7 @@ trait MetadataTrait {
                 $type = '\\' . $node->getAttribute('type');
                 $value = new $type;
                 $value->fromXML($node);
-                $value->fromDefaults();
+                $value->setDefaults();
             }
 
             // An default type has been provided:
@@ -29,7 +34,7 @@ trait MetadataTrait {
             ) {
                 $value = clone $this->schema[$name]['type'];
                 $value->fromXML($node);
-                $value->fromDefaults();
+                $value->setDefaults();
             }
 
             // The data is a string:
@@ -47,7 +52,7 @@ trait MetadataTrait {
         }
     }
 
-    public function fromDefaults()
+    public function setDefaults()
     {
         foreach ($this->schema as $name => $schema) {
             if (isset($this[$name])) continue;
@@ -55,7 +60,7 @@ trait MetadataTrait {
             if (true !== $schema['required']) continue;
 
             if ($schema['type'] instanceof MetadataInterface) {
-                $schema['type']->fromDefaults();
+                $schema['type']->setDefaults();
                 $this->metadata[$name] = $schema['type'];
             }
 
@@ -102,6 +107,9 @@ trait MetadataTrait {
     public function toXML(DOMElement $xml)
     {
         foreach ($this->metadata as $name => $value) {
+            // Do not output resource information:
+            if ($value instanceof Resource) continue;
+
             if (is_integer($name)) {
                 $node = $xml->ownerDocument->createElement('item');
                 $xml->appendChild($node);

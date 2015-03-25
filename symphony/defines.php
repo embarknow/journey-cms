@@ -11,6 +11,8 @@
 	define_safe('ASSETS', 	SYMPHONY . '/assets');
 	define_safe('LANG',		SYMPHONY . '/lang');
 
+	define_safe('ACTORS',			WORKSPACE . '/actors');
+	define_safe('FORMS',			WORKSPACE . '/forms');
 	define_safe('UTILITIES', 		WORKSPACE . '/utilities');
 	define_safe('DATASOURCES',		WORKSPACE . '/data-sources');
 	define_safe('EVENTS',			WORKSPACE . '/events');

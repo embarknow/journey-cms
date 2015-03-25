@@ -1,12 +1,12 @@
 <?php
 
-namespace Embark\CMS\Actors;
+namespace Embark\CMS\Actors\Section;
 
 use Embark\CMS\Database\ResultIterator;
 use ArrayIterator;
 use Entry;
 
-class SectionDatasourceResultIterator extends ArrayIterator
+class DatasourceResultIterator extends ArrayIterator
 {
 	protected $schema;
 	protected $entries;

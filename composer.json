@@ -6,7 +6,9 @@
     },
     "autoload": {
         "psr-4": {
-            "Embark\\CMS\\": "lib/"
+            "Embark\\CMS\\": "packages/system/lib/",
+            "Embark\\CMS\\Actors\\Condition\\": "packages/condition-actors/lib/"
+            "Embark\\CMS\\Actors\\Section\\": "packages/section-actors/lib/"
         }
     }
 }

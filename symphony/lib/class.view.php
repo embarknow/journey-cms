@@ -479,113 +479,57 @@ use Embark\CMS\Actors\DatasourceInterface;
 			}
 
 			$root = $Document->documentElement;
-			$datasources = $events = array();
-
-			if (is_array($this->about()->{'events'}) && !empty($this->about()->{'events'})) {
-				$events = $this->about()->{'events'};
-			}
+			$actors = $events = array();
 
 			if (is_array($this->about()->{'data-sources'}) && !empty($this->about()->{'data-sources'})) {
-				$datasources = $this->about()->{'data-sources'};
+				$actors = $this->about()->{'data-sources'};
 			}
 
 			Profiler::end();
-			Profiler::begin('Executing events');
+
+			Profiler::begin('Executing actors');
 
 			####
-			# Delegate: FrontendEventsAppend
-			# Description: Append additional Events.
+			# Delegate: FrontendActorsAppend
+			# Description: Append additional actors to the view.
 			# Global: Yes
 			Extension::notify(
-				'FrontendEventsAppend', '/frontend/', array(
-					'events'	=> &$events
+				'FrontendActorsAppend', '/frontend/', array(
+					'actors'	=> &$actors
 				)
 			);
 
-			if (!empty($events)) {
-				$postdata = General::getPostData();
-				$events_ordered = array();
-				$events_loaded = array();
-
-				foreach ($events as $handle) {
-					if (in_array($handle, $events_loaded)) continue;
-
-					if ($handle instanceof Event) {
-						$events_ordered[] = $handle;
-					}
-
-					else {
-						$events_ordered[] = Event::loadFromHandle($handle);
-						$events_loaded[] = $handle;
-					}
-				}
-
-				uasort($events_ordered, array($this, '__cbSortEventsByPriority'));
-
-				foreach ($events_ordered as $event) {
-					if (false === $event->canTrigger($postdata)) continue;
-
-					$reflection = new ReflectionObject($event);
-
-					Profiler::begin('Executed event %event');
-					Profiler::store('event', $event->handle, 'system/event');
-					Profiler::store('class', get_class($event), 'system/class');
-					Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
-
-					$fragment = $event->trigger($outputParameters, $postdata);
-
-					if ($fragment instanceof DOMDocument && !is_null($fragment->documentElement)) {
-						$node = $Document->importNode($fragment->documentElement, true);
-						$root->appendChild($node);
-					}
-
-					Profiler::end();
-				}
-			}
-
-			Profiler::end();
-			Profiler::begin('Executing datasources');
-
-			####
-			# Delegate: FrontendDataSourceAppend
-			# Description: Append additional DataSources.
-			# Global: Yes
-			Extension::notify(
-				'FrontendDataSourcesAppend', '/frontend/', array(
-					'datasources'	=> &$datasources
-				)
-			);
-
-			//	Find dependancies and order accordingly
-			$datasource_pool = array();
+			// Find dependancies and order accordingly
+			$actors_pool = array();
 			$dependency_list = array();
-			$datasources_ordered = array();
+			$actors_ordered = array();
 			$all_dependencies = array();
 
-			foreach ($datasources as $handle) {
-				$datasource_pool[$handle] = Datasource::loadFromHandle($handle);
+			foreach ($actors as $handle) {
+				$actors_pool[$handle] = Datasource::loadFromHandle($handle);
 				$dependency_list[$handle] = (
-					isset($datasource_pool[$handle]['dependencies'])
-						? $datasource_pool[$handle]['dependencies']
+					isset($actors_pool[$handle]['dependencies'])
+						? $actors_pool[$handle]['dependencies']
 						: []
 				);
 			}
 
-			$datasources_ordered = General::dependenciesSort($dependency_list);
+			$actors_ordered = General::dependenciesSort($dependency_list);
 
-			if (!empty($datasources_ordered)) {
-				foreach ($datasources_ordered as $handle) {
-					$datasource = $datasource_pool[$handle];
-					$reflection = new ReflectionObject($datasource);
+			if (!empty($actors_ordered)) {
+				foreach ($actors_ordered as $handle) {
+					$actor = $actors_pool[$handle];
+					$reflection = new ReflectionObject($actor);
+					$renderer = $actor->createRenderer();
 
 					try {
-						Profiler::begin('Executed datasource %datasource');
-						Profiler::store('datasource', $handle, 'system/datasource');
-						Profiler::store('class', get_class($datasource), 'system/class');
+						Profiler::begin('Executed actor %actor');
+						Profiler::store('actor', $handle, 'system/actor');
+						Profiler::store('class', get_class($actor), 'system/class');
 						Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
 
-						if ($datasource->canExecute()) {
-							$fragment = $datasource->execute($outputParameters);
+						if ($renderer->canExecute()) {
+							$fragment = $renderer->execute($outputParameters);
 						}
 
 						Profiler::end();

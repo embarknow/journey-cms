@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Actors;
+namespace Embark\CMS\Actors\Section;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -10,7 +10,7 @@ use Entry;
 use Field;
 use Section;
 
-class SectionDatasourceOutputParameters implements MetadataInterface {
+class DatasourceOutputParameters implements MetadataInterface {
 	use MetadataTrait;
 
 	public function __construct()
@@ -40,5 +40,27 @@ class SectionDatasourceOutputParameters implements MetadataInterface {
 		foreach ($this->getIterator() as $item) {
 			$item->appendParameter($parameters, $datasource, $section, $entry);
 		}
+	}
+
+	public function containsInstanceOf($class) {
+		foreach ($this->getIterator() as $value) {
+			$reflect = new \ReflectionObject($value);
+
+			if ($class !== $reflect->getName()) continue;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public function containsField($field) {
+		foreach ($this->getIterator() as $value) {
+			if ($value['field'] !== $field) continue;
+
+			return true;
+		}
+
+		return false;
 	}
 }

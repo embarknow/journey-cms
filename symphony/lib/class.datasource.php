@@ -3,7 +3,7 @@
 use Embark\CMS\SystemDateTime;
 use Embark\CMS\Actors\Controller as ActorController;
 
-	Class DataSourceException extends Exception {}
+	// Class DataSourceException extends Exception {}
 
 	Class DataSourceFilterIterator extends FilterIterator{
 		public function __construct($path)

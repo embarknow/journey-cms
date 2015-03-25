@@ -99,7 +99,7 @@
 
 			try {
 				$entry_count = Symphony::Database()->query(
-					"SELECT COUNT(id) as `count` FROM `tbl_entries` WHERE `section` = '%s'", array($section->handle)
+					"SELECT COUNT(id) as `count` FROM `entries` WHERE `section` = '%s'", array($section->handle)
 				)->current()->count;
 			}
 			catch (DatabaseException $ex) {
@@ -118,9 +118,11 @@
 				Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'}
 			));
 
+			$max_rows = Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'};
+
 			$pagination_xml->appendChild($this->document->createElement(
 				'total-pages',
-				ceil($entry_count / Symphony::Configuration()->core()->symphony->{'pagination-maximum-rows'})
+				($entry_cont > $max_rows ? ceil($entry_count / $max_rows) : 1)
 			));
 
 			$pagination_xml->appendChild($this->document->createElement(
@@ -132,7 +134,7 @@
 
 			// Simplified/messy entry fetching
 			$entries = Symphony::Database()->query(
-					"SELECT * FROM `tbl_entries` WHERE `section` = '%s' ORDER BY `id` ASC",
+					"SELECT * FROM `entries` WHERE `section` = '%s' ORDER BY `id` ASC",
 					array(
 						$this->section->handle
 					), 'EntryResult'

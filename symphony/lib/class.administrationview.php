@@ -59,19 +59,19 @@
 				try {
 					if (is_null($url)) {
 						// Get user's default section
-						$section_handle = Controller::instance()->User->default_section;
+						$section_handle = Controller::instance()->User()->default_section;
 
 						// If the section exists, load publish view
 						try {
 							$section = Section::loadFromHandle($section_handle);
 							$this->parseURL('/publish/' . $section_handle);
 						}
-						
+
 						catch (Exception $e) {
 							$this->parseURL('/blueprints/sections/');
 						}
 					}
-					
+
 					else {
 						$this->parseURL($url);
 					}
@@ -89,17 +89,17 @@
 				}
 			}
 		}
-		
+
 		/**
 		* Parses the URL to figure out what View to load
-		* 
+		*
 		* @param	$path		string	View path including URL parameters to attempt to find
 		* @param	$expression string	Expression used to match the view driver/conf file. Use printf syntax.
 		*/
 		public function parseURL($path, $expression = '%s.driver.php') {
 			return parent::parseURL($path, $expression);
 		}
-		
+
 		/**
 		* Use data passed from parseURL() to locate the view driver and
 		* template.
@@ -115,7 +115,7 @@
 			$this->path = trim($path, '\\/');
 			$this->params = $params;
 			$this->handle = preg_replace('~^.*/~', null, $this->path);
-			
+
 			// Determine path to driver file
 			$driver_file = sprintf(
 				'%s/%s/%s.driver.php',
@@ -123,7 +123,7 @@
 				$this->path,
 				$this->handle
 			);
-			
+
 			// Make sure the driver file exists
 			if (!file_exists($driver_file)) {
 				throw new ViewException(__('View, %s, could not be found.', array($this->path)), self::ERROR_VIEW_NOT_FOUND);
@@ -148,7 +148,7 @@
 			$ss->setAttribute('version','1.0');
 			$ss->setAttribute('xmlns:xsl','http://www.w3.org/1999/XSL/Transform');
 			$this->stylesheet->appendChild($ss);
-			
+
 			// <xsl:include> the view's stylesheet. Use include because it's higher
 			// priority than <xsl:import> and the view's stylesheet should have
 			// top priority
@@ -156,10 +156,10 @@
 				$append_path = preg_replace('#' . DOCROOT . '/#','',$template_file);
 				$this->appendStylesheet($append_path, 'include');
 			}
-			
+
 			// <xsl:import> the main layout stylesheet.
 			$this->appendStylesheet('symphony/templates/interface/layout.xsl');
-			
+
 			// The Controller is responsible for initilizing the system context info
 			// (website name, user info, etc). Here we have the view register its
 			// own context info (handle, params, path, and so on)
@@ -240,7 +240,7 @@
 		public function buildDrawerXML($root) {
 
 		}
-		
+
 		/**
 		* Build the navigation XML and append it to the root element
 		* Copied method -- TODO cleanup
@@ -254,17 +254,17 @@
 				$template->documentElement, true
 			);
 			$first_child = $navigation->firstChild;
-			
+
 			// Force visible to be set:
 			foreach ($xpath->query('group//item[not(@visible)]', $navigation) as $item) {
 				$item->setAttribute('visible', 'yes');
 			}
-			
+
 			// Set all items as inactive:
 			foreach ($xpath->query('group//item', $navigation) as $item) {
 				$item->setAttribute('active', 'no');
 			}
-			
+
 			// Add section navigation:
 			foreach (new SectionIterator as $section) {
 				// Find the navigation group:
@@ -276,14 +276,14 @@
 					$navigation
 				);
 				$group = $group->item(0);
-				
+
 				if (is_null($group)) {
 					$group = $this->document->createElement('group');
 					$group->setAttribute('name', $section->{'navigation-group'});
 					$group->setAttribute('type', 'sections');
 					$first_child->parentNode->insertBefore($group, $first_child);
 				}
-				
+
 				$item = $this->document->createElement('item');
 				$item->setAttribute('link', 'publish/' . $section->handle);
 				$item->setAttribute('name', $section->name);
@@ -294,13 +294,13 @@
 				));
 				$item->setAttribute('active', 'no');
 				$group->appendChild($item);
-				
+
 				// New link:
 				$sub_item = clone $item;
 				$sub_item->setAttribute('link', 'publish/' . $section->handle . '/new');
 				$sub_item->setAttribute('name', __('New'));
 				$item->appendChild($sub_item);
-				
+
 				// Edit link:
 				$sub_item = clone $sub_item;
 				$sub_item->setAttribute('link', 'publish/' . $section->handle . '/edit');
@@ -308,19 +308,19 @@
 				$sub_item->setAttribute('visible', 'no');
 				$item->appendChild($sub_item);
 			}
-			
+
 			// Remove empty groups:
 			foreach ($xpath->query('group[not(item)]', $navigation) as $group) {
 				$group->parentNode->removeChild($group);
 			}
-			
+
 			// Assign handles to all groups:
 			foreach ($xpath->query('group[not(@handle)]', $navigation) as $group) {
 				$group->setAttribute('handle', Lang::createHandle(
 					$group->getAttribute('name')
 				));
 			}
-			
+
 			// Find active page:
 			$active = $xpath->query(
 				sprintf(
@@ -330,27 +330,27 @@
 				$navigation
 			);
 			$active = $active->item(0);
-			
+
 			if ($active instanceof DOMElement) {
 				$active->setAttribute('active', 'yes');
 			}
-			
+
 			//$this->document->formatOutput = true;
 			//echo '<pre>', htmlentities($this->document->saveXML($navigation)); exit;
-			
+
 			$root->appendChild($navigation);
 		}
-		
+
 		/**
-		* Append an XSLT stylesheet to be imported or included by the 
+		* Append an XSLT stylesheet to be imported or included by the
 		* view's $stylesheet document
 		*/
 		public function appendStylesheet($path, $mode = 'import') {
 			$element = $this->stylesheet->createElement('xsl:' . $mode);
 			$element->setAttribute('href',$path);
-			
+
 			$root = $this->stylesheet->documentElement;
-			
+
 			// Imports always have to come before includes
 			// Might need a better way to handle prioritizing multiple stylesheets
 			if($mode = 'import') {

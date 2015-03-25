@@ -9,6 +9,8 @@
 	require_once(LIB . '/class.view.php');
 	require_once(LIB . '/class.context.php');
 
+	use Embark\CMS\SystemDateTime;
+
 	class Controller extends Symphony {
 		/**
 		* A view object
@@ -93,11 +95,11 @@
 					'symphony-version'	=> Symphony::Configuration()->core()->symphony->version
 				),
 				'date'		=> array (
-					'today' 			=> DateTimeObj::get('Y-m-d'),
-					'current-time'		=> DateTimeObj::get('H:i'),
-					'this-year'			=> DateTimeObj::get('Y'),
-					'this-month'		=> DateTimeObj::get('m'),
-					'this-day'			=> DateTimeObj::get('d'),
+					'today' 			=> (new SystemDateTime)->format('Y-m-d'),
+					'current-time'		=> (new SystemDateTime)->format('H:i'),
+					'this-year'			=> (new SystemDateTime)->format('Y'),
+					'this-month'		=> (new SystemDateTime)->format('m'),
+					'this-day'			=> (new SystemDateTime)->format('d'),
 					'timezone'			=> date_default_timezone_get()
 				)
 			));

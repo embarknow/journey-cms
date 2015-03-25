@@ -74,7 +74,7 @@
 			$this->setHeaders();
 
 			// Initialize context
-			$this->context = new Register;
+			$this->context = new Context;
 
 			// Initialize XML
 			$this->document = new XMLDocument;
@@ -127,7 +127,6 @@
 		public function buildContextXML($root) {
 			$element = $this->document->createElement('context');
 			$root->prependChild($element);
-
 			foreach($this->context as $key => $item){
 				if(is_array($item->value) && count($item->value) > 1){
 					$p = $this->document->createElement($key);
@@ -136,60 +135,10 @@
 					}
 					$element->appendChild($p);
 				}
-			}
-
-			if(strlen(trim($view->template)) == 0){
-				$messages->append('template', 'Template is required, and cannot be empty.');
-			}
-			elseif(!General::validateXML($view->template, $errors)) {
-
-				$fragment = Administration::instance()->Page->createDocumentFragment();
-
-				$fragment->appendChild(new DOMText(
-					__('This document is not well formed. The following error was returned: ')
-				));
-				$fragment->appendChild(Administration::instance()->Page->createElement('code', $errors->current()->message));
-
-				$messages->append('template', $fragment);
-
-			}
-
-			if($messages->length() > 0){
-				throw new ViewException(__('View could not be saved. Validation failed.'), self::ERROR_MISSING_OR_INVALID_FIELDS);
-			}
-
-			if($simulate != true){
-				if(!is_dir(dirname($pathname)) && !mkdir(dirname($pathname), intval(Symphony::Configuration()->main()->system->{'directory-write-mode'}, 8), true)){
-					throw new ViewException(
-						__('Could not create view directory. Please check permissions on <code>%s</code>.', $view->path),
-						self::ERROR_FAILED_TO_WRITE
-					);
-				}
-
-				// Save the config
-				if(!General::writeFile($pathname, (string)$view,Symphony::Configuration()->main()->system->{'file-write-mode'})){
-					throw new ViewException(
-						__('View configuration XML could not be written to disk. Please check permissions on <code>%s</code>.', $view->path),
-						self::ERROR_FAILED_TO_WRITE
-					);
-				}
-
-				// Save the template file
-				$result = General::writeFile(
-					sprintf('%s/%s/%s.xsl', VIEWS, $view->path, $view->handle),
-					$view->template,
-					Symphony::Configuration()->main()->system->{'file-write-mode'}
-				);
-
-				if(!$result){
-					throw new ViewException(
-						__('Template could not be written to disk. Please check permissions on <code>%s</code>.', $view->path),
-						self::ERROR_FAILED_TO_WRITE
-					);
+				else{
+					$element->appendChild($this->document->createElement($key, (string)$item));
 				}
 			}
-
-			return true;
 		}
 
 		public function __toString() {

@@ -7,17 +7,17 @@ use Datasource;
 
 class QueryOptions implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setFilters([
-			'distinct-select' =>	new Boolean(),
-			'reduce-right-joins' =>	new Boolean()
-		]);
-		$this->setDefaults([
-			'distinct-select' =>	true,
-			'reduce-right-joins' =>	false
-		]);
-	}
+    public function __construct()
+    {
+        $this->setFilters([
+            'distinct-select' =>    new Boolean(),
+            'reduce-right-joins' => new Boolean()
+        ]);
+        $this->setDefaults([
+            'distinct-select' =>    true,
+            'reduce-right-joins' => false
+        ]);
+    }
 }

@@ -7,7 +7,8 @@ use Embark\CMS\ClosureFilterIterator;
 use DirectoryIterator;
 use DOMDocument;
 
-class Controller {
+class Controller
+{
     const FILE_EXTENSION = '.xml';
 
     /**
@@ -29,7 +30,7 @@ class Controller {
 
     public static function findAll()
     {
-        $iterator = new ClosureFilterIterator(new DirectoryIterator(ACTORS), function($item) {
+        $iterator = new ClosureFilterIterator(new DirectoryIterator(ACTORS), function ($item) {
             return (
                 false === $item->isDir()
                 && false !== strpos($item->getFilename(), static::FILE_EXTENSION)
@@ -39,7 +40,9 @@ class Controller {
         foreach ($iterator as $item) {
             $actor = static::read($item->getPathname());
 
-            if (false === $actor) continue;
+            if (false === $actor) {
+                continue;
+            }
 
             yield $actor['resource']['handle'] => $actor;
         }
@@ -60,7 +63,9 @@ class Controller {
     {
         $file = static::locate($name);
 
-        if (false === $file) return false;
+        if (false === $file) {
+            return false;
+        }
 
         $document = new DOMDocument();
         $document->load($file);

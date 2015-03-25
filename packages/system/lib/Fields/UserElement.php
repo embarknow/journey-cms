@@ -15,17 +15,17 @@ use User;
 
 class UserElement implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
-	{
-		$document = $wrapper->ownerDocument;
-		$user = User::load($entry->user_id);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+    {
+        $document = $wrapper->ownerDocument;
+        $user = User::load($entry->user_id);
 
-		$xml = $document->createElement('user', $user->getFullName());
-		$xml->setAttribute('id', $entry->user_id);
-		$xml->setAttribute('username', $user->username);
-		$xml->setAttribute('email-address', $user->email);
-		$wrapper->appendChild($xml);
-	}
+        $xml = $document->createElement('user', $user->getFullName());
+        $xml->setAttribute('id', $entry->user_id);
+        $xml->setAttribute('username', $user->username);
+        $xml->setAttribute('email-address', $user->email);
+        $wrapper->appendChild($xml);
+    }
 }

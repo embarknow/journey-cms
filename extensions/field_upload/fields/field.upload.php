@@ -99,6 +99,18 @@ use Embark\CMS\SystemDateTime;
 			return true;
 		}
 
+		public function fetchIncludableElements()
+		{
+			return [
+				[
+					'type' =>	'Embark\CMS\Fields\Upload\Element',
+					'handle' =>	$this->{'element-name'},
+					'name' =>	$this->name,
+					'mode' =>	null
+				]
+			];
+		}
+
 	/*-------------------------------------------------------------------------
 		Settings:
 	-------------------------------------------------------------------------*/
@@ -864,7 +876,9 @@ use Embark\CMS\SystemDateTime;
 		}
 
 		public function getParameterOutputValue(StdClass $data, Entry $entry = null) {
-			return rtrim($data->path, '/') . '/' . $data->file;
+			if (isset($data->file)) {
+				return rtrim($data->path, '/') . '/' . $data->file;
+			}
 		}
 	}
 

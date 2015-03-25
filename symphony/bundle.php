@@ -46,9 +46,6 @@ use Embark\CMS\App;
 			$class = require_once $path;
 			$renderer = call_user_func("\\{$class}::instance");
 
-			// var_dump((new \DateTime('@12523'))->format(\DateTime::W3C));
-			// exit;
-
 			Profiler::store('class', $class, 'system/class');
 			Profiler::store('location', $path, 'system/resource action/executed');
 
@@ -76,11 +73,23 @@ use Embark\CMS\App;
 	 * Prepare the environment for Symphony, allow it to be booted by calling render.
 	 */
 	namespace {
+		use Embark\CMS\Sections\Controller;
+
 		function render() {
 			// Begin profiling:
 			if (isset($_GET['profiler'])) Profiler::enable();
 
 			$renderer = boot\launch();
+
+
+
+
+			// $section = Controller::read('articles');
+
+			// var_dump($section);
+			// exit;
+
+
 
 			// Allow Devkits to take control before any rendering occurs:
 			boot\devkit('ExecuteEarlyDevKit');

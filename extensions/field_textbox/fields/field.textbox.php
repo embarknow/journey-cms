@@ -154,11 +154,11 @@
 			));
 		}
 
-		protected function repairEntities($value) {
+		public function repairEntities($value) {
 			return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
 		}
 
-		protected function repairMarkup($value) {
+		public function repairMarkup($value) {
 			$tidy = new Tidy();
 			$tidy->parseString(
 				$value, array(
@@ -511,8 +511,18 @@
 
 		public function fetchIncludableElements() {
 			return array(
-				array('handle' => $this->{'element-name'} . ': formatted', 'name' => $this->name, 'mode' => "Formatted"),
-				array('handle' => $this->{'element-name'} . ': unformatted', 'name' => $this->name, 'mode' => "Unformatted")
+				[
+					'type' =>	'Embark\CMS\Fields\Textbox\FormattedElement',
+					'handle' =>	$this->{'element-name'} . ': formatted',
+					'name' =>	$this->name,
+					'mode' =>	'Formatted'
+				],
+				[
+					'type' =>	'Embark\CMS\Fields\Textbox\UnformattedElement',
+					'handle' =>	$this->{'element-name'} . ': unformatted',
+					'name' =>	$this->name,
+					'mode' =>	'Unformatted'
+				]
 			);
 		}
 

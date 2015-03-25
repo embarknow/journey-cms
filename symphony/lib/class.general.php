@@ -968,6 +968,7 @@ use Embark\CMS\SystemDateTime;
 
 		public static function createXMLDateObject(DOMDocument $doc, DateTime $timestamp, $element='date'){
 			$xDate = $doc->createElement($element, $timestamp->format('Y-m-d'));
+			$xDate->setAttribute('timezone', $timestamp->getTimeZone()->getName());
 			$xDate->setAttribute('time', $timestamp->format('H:i'));
 			$xDate->setAttribute('weekday', $timestamp->format('N'));
 

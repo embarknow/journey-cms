@@ -185,12 +185,6 @@ use Embark\CMS\Database\Connection;
 			return true;
 		}
 
-		public function fetchIncludableElements(){
-			return array(
-				array('handle' => $this->{'element-name'}, 'name' => $this->name, 'mode' => NULL)
-			);
-		}
-
 		public function fetchDataKey() {
 			return 'entry_id';
 		}

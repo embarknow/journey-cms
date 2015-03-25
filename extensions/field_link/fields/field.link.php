@@ -69,6 +69,18 @@ use Embark\CMS\Datasource\Exception as DatabaseException;
 			return true;
 		}
 
+		public function fetchIncludableElements()
+		{
+			return [
+				[
+					'type' =>	'Embark\CMS\Fields\Link\Element',
+					'handle' =>	$this->{'element-name'},
+					'name' =>	$this->name,
+					'mode' =>	null
+				]
+			];
+		}
+
 	/*-------------------------------------------------------------------------
 		Utilities:
 	-------------------------------------------------------------------------*/

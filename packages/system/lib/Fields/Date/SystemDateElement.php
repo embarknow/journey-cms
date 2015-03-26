@@ -15,23 +15,23 @@ use Section;
 
 class SystemDateElement implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$field = $section->findField($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $field = $section->findField($this['field']);
 
-		if (false === $field) return;
+        if (false === $field) return;
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		if (isset($data->value) && !is_null($data->value)) {
-			$date = new SystemDateTime($data->value);
+        if (isset($data->value) && !is_null($data->value)) {
+            $date = new SystemDateTime($data->value);
 
-			$wrapper->appendChild(General::createXMLDateObject(
-				$document, $date, $this['field']
-			));
-		}
-	}
+            $wrapper->appendChild(General::createXMLDateObject(
+                $document, $date, $this['field']
+            ));
+        }
+    }
 }

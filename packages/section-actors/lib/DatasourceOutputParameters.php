@@ -12,56 +12,56 @@ use Field;
 use Section;
 
 class DatasourceOutputParameters implements MetadataInterface {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
-			'item' => [
-				'type' =>		new Parameter()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'item' => [
+                'type' =>       new Parameter()
+            ]
+        ]);
+    }
 
-	public function appendSchema(array &$schema, Schema $section)
-	{
-		foreach ($this->findAll() as $item) {
-			if (isset($schema[$item['field']])) continue;
+    public function appendSchema(array &$schema, Schema $section)
+    {
+        foreach ($this->findAll() as $item) {
+            if (isset($schema[$item['field']])) continue;
 
-			$field = $section->findField($item['field']);
+            $field = $section->findField($item['field']);
 
-			if (false === $field) continue;
+            if (false === $field) continue;
 
-			$schema[$item['field']] = $field;
-		}
-	}
+            $schema[$item['field']] = $field;
+        }
+    }
 
-	public function appendParameters(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		foreach ($this->findAll() as $item) {
-			$item->appendParameter($parameters, $datasource, $section, $entry);
-		}
-	}
+    public function appendParameters(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        foreach ($this->findAll() as $item) {
+            $item->appendParameter($parameters, $datasource, $section, $entry);
+        }
+    }
 
-	public function containsInstanceOf($class) {
-		foreach ($this->findAll() as $value) {
-			$reflect = new \ReflectionObject($value);
+    public function containsInstanceOf($class) {
+        foreach ($this->findAll() as $value) {
+            $reflect = new \ReflectionObject($value);
 
-			if ($class !== $reflect->getName()) continue;
+            if ($class !== $reflect->getName()) continue;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public function containsField($field) {
-		foreach ($this->findAll() as $value) {
-			if ($value['field'] !== $field) continue;
+    public function containsField($field) {
+        foreach ($this->findAll() as $value) {
+            if ($value['field'] !== $field) continue;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 }

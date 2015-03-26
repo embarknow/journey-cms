@@ -1,9 +1,11 @@
 <?php
 
 namespace Embark\CMS\Structures;
+
 use DOMElement;
 
-trait MetadataTrait {
+trait MetadataTrait
+{
     protected $metadata = [];
     private $schema = [];
 
@@ -15,7 +17,9 @@ trait MetadataTrait {
         }
 
         foreach ($xml->childNodes as $node) {
-            if (($node instanceof DOMElement) === false) continue;
+            if (($node instanceof DOMElement) === false) {
+                continue;
+            }
 
             $name = $node->nodeName;
 
@@ -28,7 +32,7 @@ trait MetadataTrait {
             }
 
             // An default type has been provided:
-            else if (
+            elseif (
                 isset($this->schema[$name]['type'])
                 && $this->schema[$name]['type'] instanceof MetadataInterface
             ) {
@@ -44,9 +48,7 @@ trait MetadataTrait {
 
             if ('item' === $name) {
                 $this->metadata[] = $value;
-            }
-
-            else {
+            } else {
                 $this->metadata[$name] = $value;
             }
         }
@@ -55,16 +57,22 @@ trait MetadataTrait {
     public function setDefaults()
     {
         foreach ($this->schema as $name => $schema) {
-            if (isset($this[$name])) continue;
-            if (false === isset($schema['required'])) continue;
-            if (true !== $schema['required']) continue;
+            if (isset($this[$name])) {
+                continue;
+            }
+
+            if (false === isset($schema['required'])) {
+                continue;
+            }
+
+            if (true !== $schema['required']) {
+                continue;
+            }
 
             if ($schema['type'] instanceof MetadataInterface) {
                 $schema['type']->setDefaults();
                 $this->metadata[$name] = $schema['type'];
-            }
-
-            else {
+            } else {
                 $this->metadata[$name] = $schema['default'];
             }
         }
@@ -114,9 +122,7 @@ trait MetadataTrait {
                 $node = $xml->ownerDocument->createElement('item');
                 $xml->appendChild($node);
                 $name = 'item';
-            }
-
-            else {
+            } else {
                 $node = $xml->ownerDocument->createElement($name);
                 $xml->appendChild($node);
             }

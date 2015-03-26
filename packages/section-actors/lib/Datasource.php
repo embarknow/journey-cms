@@ -28,71 +28,69 @@ use Widget;
 
 class Datasource implements DatasourceInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
-			'pagination' => [
-				'type' =>		new Pagination()
-			],
-			'sorting' => [
-				'type' =>		new Sorting()
-			],
-			'elements' => [
-				'type' =>		new DatasourceOutputElements()
-			],
-			'parameters' => [
-				'type' =>		new DatasourceOutputParameters()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'pagination' => [
+                'type' =>       new Pagination()
+            ],
+            'sorting' => [
+                'type' =>       new Sorting()
+            ],
+            'elements' => [
+                'type' =>       new DatasourceOutputElements()
+            ],
+            'parameters' => [
+                'type' =>       new DatasourceOutputParameters()
+            ]
+        ]);
+    }
 
-	public function canExecute()
-	{
-		return true;
-	}
+    public function canExecute()
+    {
+        return true;
+    }
 
-	public function getType()
-	{
-		return __('Section Datasource');
-	}
+    public function getType()
+    {
+        return __('Section Datasource');
+    }
 
-	public function createForm()
-	{
-		return new DatasourceForm($this);
-	}
+    public function createForm()
+    {
+        return new DatasourceForm($this);
+    }
 
-	public function createRenderer()
-	{
-		return new DatasourceRenderer($this);
-	}
+    public function createRenderer()
+    {
+        return new DatasourceRenderer($this);
+    }
 
-	public function appendColumns(DOMElement $wrapper)
-	{
-		$section = Section::loadFromHandle($this['section']);
+    public function appendColumns(DOMElement $wrapper)
+    {
+        $section = Section::loadFromHandle($this['section']);
 
-		// Name:
-		$wrapper->appendChild(Widget::TableData(Widget::Anchor(
-			$this['name'],
-			ADMIN_URL . "/blueprints/actors/edit/{$this['resource']['handle']}/"
-		)));
+        // Name:
+        $wrapper->appendChild(Widget::TableData(Widget::Anchor(
+            $this['name'],
+            ADMIN_URL . "/blueprints/actors/edit/{$this['resource']['handle']}/"
+        )));
 
-		// Source:
-		if ($section instanceof Section) {
-			$wrapper->appendChild(Widget::TableData(Widget::Anchor(
-				$section->name,
-				ADMIN_URL . "/blueprints/sections/edit/{$section->handle}/"
-			)));
-		}
+        // Source:
+        if ($section instanceof Section) {
+            $wrapper->appendChild(Widget::TableData(Widget::Anchor(
+                $section->name,
+                ADMIN_URL . "/blueprints/sections/edit/{$section->handle}/"
+            )));
+        } else {
+            $wrapper->appendChild(Widget::TableData(__('None'), [
+                'class' =>  'inactive'
+            ]));
+        }
 
-		else {
-			$wrapper->appendChild(Widget::TableData(__('None'), [
-				'class' =>	'inactive'
-			]));
-		}
-
-		// Type:
-		$wrapper->appendChild(Widget::TableData($this->getType()));
-	}
+        // Type:
+        $wrapper->appendChild(Widget::TableData($this->getType()));
+    }
 }

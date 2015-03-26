@@ -1,9 +1,11 @@
 <?php
 
 namespace Embark\CMS\Configuration;
+
 use ArrayAccess;
-use SimpleXMLElement;
+use Exception;
 use Mutex;
+use SimpleXMLElement;
 use StdClass;
 
 class Element implements ArrayAccess
@@ -14,20 +16,16 @@ class Element implements ArrayAccess
 
     public function __construct($path)
     {
-        $this->properties = (object)array();
+        $this->properties = new StdClass;
         $this->path = $path;
 
         if (!file_exists($path)) {
             $this->doc = new SimpleXMLElement('<configuration></configuration>');
-        }
-
-        else {
+        } else {
             try {
                 $this->doc = simplexml_load_file($this->path);
                 self::loadVariablesFromNode($this->doc, $this->properties);
-            }
-
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 throw new Exception(sprintf(
                     "Error while reading '%s': %s",
                     $this->path, $e->getMessage()
@@ -52,20 +50,16 @@ class Element implements ArrayAccess
                 : $name;
 
             if (count($element->children()) > 0) {
-                $value = NULL;
+                $value = null;
                 $this->loadVariablesFromNode($element, $value);
-            }
-
-            else {
+            } else {
                 $value = (string)$element;
             }
 
             // Using the value above, construct the group
             if (is_array($group)) {
                 $group[$index] = $value;
-            }
-
-            else {
+            } else {
                 $group->$name = $value;
             }
         }
@@ -92,7 +86,9 @@ class Element implements ArrayAccess
 
     public function offsetGet($name)
     {
-        if (isset($this->properties->$name) === false) return null;
+        if (isset($this->properties->$name) === false) {
+            return null;
+        }
 
         return $this->properties->$name;
     }
@@ -134,14 +130,14 @@ class Element implements ArrayAccess
             $this->generateXML($this->properties, $root);
 
             // Wait for a few seconds if file is locked:
-            while (!Mutex::acquire($path, 2)) usleep(500000);
+            while (!Mutex::acquire($path, 2)) {
+                usleep(500000);
+            }
 
             file_put_contents($path, $doc->saveXML());
 
             Mutex::release($path);
-        }
-
-        catch (Exception $e) {
+        } catch (Exception $e) {
             throw new Exception(sprintf(
                 "Error while writing '%s': %s",
                 $this->path, $e->getMessage()
@@ -162,9 +158,7 @@ class Element implements ArrayAccess
                 $element = $parent->ownerDocument->createElement($element_name);
 
                 $this->generateXML($e, $element);
-            }
-
-            else {
+            } else {
                 $element = $parent->ownerDocument->createElement($element_name);
                 $element->appendChild(new DOMText((string)$e));
             }
@@ -174,35 +168,3 @@ class Element implements ArrayAccess
     }
 }
 
-    class Configuration {
-        private static $objects;
-
-        protected $dir;
-        protected $id;
-
-        public function __construct($dir = CONF) {
-            $this->dir = realpath($dir);
-            $this->id = md5($dir);
-        }
-
-        public function __call($handle, array $param) {
-            $id = $this->id . '.' . $handle;
-
-            if (
-                isset(self::$objects[$id]) === false
-                || (self::$objects[$id] instanceof ConfigurationElement) === false
-            ) {
-                $class = 'ConfigurationElement';
-
-                if (isset($param[0]) && strlen(trim($param[0])) > 0) $class = $param[0];
-
-                self::$objects[$id] = new $class($this->dir . "/{$handle}.xml");
-            }
-
-            return self::$objects[$id];
-        }
-
-        public function save() {
-            foreach (self::$objects as $obj) $obj->save();
-        }
-    }

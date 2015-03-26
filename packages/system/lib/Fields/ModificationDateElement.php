@@ -15,16 +15,16 @@ use Section;
 
 class ModificationDateElement implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$document = $wrapper->ownerDocument;
-		$date = new SystemDateTime($entry->modification_date);
-		$date = $date->toUserDateTime();
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $document = $wrapper->ownerDocument;
+        $date = new SystemDateTime($entry->modification_date);
+        $date = $date->toUserDateTime();
 
-		$wrapper->appendChild(General::createXMLDateObject(
-			$document, $date, 'modification-date'
-		));
-	}
+        $wrapper->appendChild(General::createXMLDateObject(
+            $document, $date, 'modification-date'
+        ));
+    }
 }

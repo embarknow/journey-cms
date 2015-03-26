@@ -15,24 +15,24 @@ use Section;
 
 class SystemTimestampElement implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$field = $section->findField($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $field = $section->findField($this['field']);
 
-		if (false === $field) return;
+        if (false === $field) return;
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		if (isset($data->value) && !is_null($data->value)) {
-			$date = new SystemDateTime($data->value);
+        if (isset($data->value) && !is_null($data->value)) {
+            $date = new SystemDateTime($data->value);
 
-			$element = $document->createElement($this['field']);
-			$element->setAttribute('timezone', $date->getTimeZone()->getName());
-			$element->setAttribute('unix-timestamp', $date->getTimestamp());
-			$wrapper->appendChild($element);
-		}
-	}
+            $element = $document->createElement($this['field']);
+            $element->setAttribute('timezone', $date->getTimeZone()->getName());
+            $element->setAttribute('unix-timestamp', $date->getTimestamp());
+            $wrapper->appendChild($element);
+        }
+    }
 }

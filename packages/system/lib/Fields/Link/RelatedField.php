@@ -9,5 +9,5 @@ use Symphony;
 
 class RelatedField implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 }

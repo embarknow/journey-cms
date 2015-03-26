@@ -1,6 +1,7 @@
 <?php
 
 namespace Embark\CMS\Database;
+
 use DOMDocument;
 use GenericExceptionHandler;
 use General;

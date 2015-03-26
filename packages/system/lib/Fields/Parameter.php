@@ -11,27 +11,27 @@ use Field;
 use Section;
 
 class Parameter implements MetadataInterface {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendParameter(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$field = $section->findField($this['field']);
-		$key = sprintf('ds-%s.%s', $datasource['handle'], $this['field']);
+    public function appendParameter(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $field = $section->findField($this['field']);
+        $key = sprintf('ds-%s.%s', $datasource['handle'], $this['field']);
 
-		if (false === $field) return;
+        if (false === $field) return;
 
-		$data = $field->getParameterOutputValue($entry->data()->{$this['field']}, $entry);
+        $data = $field->getParameterOutputValue($entry->data()->{$this['field']}, $entry);
 
-		if (false === isset($parameters[$key])) {
-			$parameters[$key] = [];
-		}
+        if (false === isset($parameters[$key])) {
+            $parameters[$key] = [];
+        }
 
-		if (is_array($data)) {
-			$parameters[$key] = array_merge($data, $parameters[$key]);
-		}
+        if (is_array($data)) {
+            $parameters[$key] = array_merge($data, $parameters[$key]);
+        }
 
-		else {
-			$parameters[$key][] = $data;
-		}
-	}
+        else {
+            $parameters[$key][] = $data;
+        }
+    }
 }

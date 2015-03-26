@@ -10,25 +10,23 @@ use Exception;
 
 class FormattedElement implements MetadataInterface
 {
-	use MetadataTrait;
-	use ElementTrait;
+    use MetadataTrait;
+    use ElementTrait;
 
-	public function appendValue(DOMElement $element, Field $field, $data)
-	{
-		$document = $element->ownerDocument;
-		$fragment = $document->createDocumentFragment();
-		$element->setAttribute('mode', 'formatted');
-		$value = $field->repairEntities($data->value_formatted);
+    public function appendValue(DOMElement $element, Field $field, $data)
+    {
+        $document = $element->ownerDocument;
+        $fragment = $document->createDocumentFragment();
+        $element->setAttribute('mode', 'formatted');
+        $value = $field->repairEntities($data->value_formatted);
 
-		try {
-			$fragment->appendXML($value);
-		}
+        try {
+            $fragment->appendXML($value);
+        } catch (Exception $e) {
+            $value = $field->repairMarkup($value);
+            $fragment->appendXML($value);
+        }
 
-		catch (Exception $e) {
-			$value = $field->repairMarkup($value);
-			$fragment->appendXML($value);
-		}
-
-		$element->appendChild($fragment);
-	}
+        $element->appendChild($fragment);
+    }
 }

@@ -17,59 +17,59 @@ use Section;
 
 class Element implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$field = $section->findField($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $field = $section->findField($this['field']);
 
-		if (false === $field) return;
+        if (false === $field) return;
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		// if (isset($data)) {
-		// 	if (false === is_array($data)) {
-		// 		$data = [$data];
-		// 	}
+        // if (isset($data)) {
+        //  if (false === is_array($data)) {
+        //      $data = [$data];
+        //  }
 
-		// 	$element = $document->createElement($this['field']);
-		// 	$wrapper->appendChild($element);
-		// 	$xpath = new DOMXPath($document);
-		// 	$groups = array();
+        //  $element = $document->createElement($this['field']);
+        //  $wrapper->appendChild($element);
+        //  $xpath = new DOMXPath($document);
+        //  $groups = array();
 
-		// 	foreach ($data as $item) {
-		// 		if (!isset($item->relation_id) || is_null($item->relation_id)) continue;
+        //  foreach ($data as $item) {
+        //      if (!isset($item->relation_id) || is_null($item->relation_id)) continue;
 
-		// 		if (!isset($groups[$item->relation_id])) {
-		// 			$groups[$item->relation_id] = array();
-		// 		}
+        //      if (!isset($groups[$item->relation_id])) {
+        //          $groups[$item->relation_id] = array();
+        //      }
 
-		// 		$groups[$item->relation_id][] = $item;
-		// 	}
+        //      $groups[$item->relation_id][] = $item;
+        //  }
 
-		// 	var_dump($data, $groups, $field['related-fields']); exit;
+        //  var_dump($data, $groups, $field['related-fields']); exit;
 
-		// 	foreach ($groups as $relations) {
-		// 		foreach ($relations as $relation) {
-		// 			list($section_handle, $field_handle) = $relation->relation_field;
+        //  foreach ($groups as $relations) {
+        //      foreach ($relations as $relation) {
+        //          list($section_handle, $field_handle) = $relation->relation_field;
 
-		// 			$item = $xpath->query('item[@id = ' . $relation->relation_id . ']', $list)->item(0);
+        //          $item = $xpath->query('item[@id = ' . $relation->relation_id . ']', $list)->item(0);
 
-		// 			if (is_null($item)) {
-		// 				$section = Controller::read($section_handle);
+        //          if (is_null($item)) {
+        //              $section = Controller::read($section_handle);
 
-		// 				$item = $document->createElement('item');
-		// 				$item->setAttribute('id', $relation->relation_id);
-		// 				$item->setAttribute('section', $section_handle);
+        //              $item = $document->createElement('item');
+        //              $item->setAttribute('id', $relation->relation_id);
+        //              $item->setAttribute('section', $section_handle);
 
-		// 				$element->appendChild($item);
-		// 			}
+        //              $element->appendChild($item);
+        //          }
 
-		// 			$related_field = $section->findField($field_handle);
-		// 			$related_field->appendFormattedElement($item, $relation);
-		// 		}
-		// 	}
-		// }
-	}
+        //          $related_field = $section->findField($field_handle);
+        //          $related_field->appendFormattedElement($item, $relation);
+        //      }
+        //  }
+        // }
+    }
 }

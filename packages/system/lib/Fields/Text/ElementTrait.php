@@ -15,43 +15,41 @@ use Section;
 
 trait ElementTrait
 {
-	public function __construct()
-	{
-		$this->setSchema([
-			'handle' => [
-				'filter' =>		new Boolean()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'handle' => [
+                'filter' =>     new Boolean()
+            ]
+        ]);
+    }
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$field = $section->findField($this['field']);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $field = $section->findField($this['field']);
 
-		if (false === $field) return;
+        if (false === $field) return;
 
-		// var_dump($this['handle']); exit;
+        $document = $wrapper->ownerDocument;
+        $data = $entry->data()->{$this['field']};
 
-		$document = $wrapper->ownerDocument;
-		$data = $entry->data()->{$this['field']};
+        if (isset($data->value) || isset($data->value_formatted)) {
+            $element = $document->createElement($this['field']);
+            $wrapper->appendChild($element);
 
-		if (isset($data->value) || isset($data->value_formatted)) {
-			$element = $document->createElement($this['field']);
-			$wrapper->appendChild($element);
+            try {
+                $this->appendValue($element, $field, $data);
+            }
 
-			try {
-				$this->appendValue($element, $field, $data);
-			}
+            catch (Exception $e) {
+                // Only get 'Document Fragment is empty' errors here.
+            }
 
-			catch (Exception $e) {
-				// Only get 'Document Fragment is empty' errors here.
-			}
+            if ($this['handle']) {
+                $element->setAttribute('handle', $data->handle);
+            }
+        }
 
-			if ($this['handle']) {
-				$element->setAttribute('handle', $data->handle);
-			}
-		}
-
-		return $element;
-	}
+        return $element;
+    }
 }

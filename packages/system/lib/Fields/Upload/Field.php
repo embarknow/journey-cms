@@ -9,37 +9,37 @@ use Symphony;
 
 class Field implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function getParameterOutputValue($data, Entry $entry = null)
-	{
-		if (isset($data->file)) {
-			return rtrim($data->path, '/') . '/' . $data->file;
-		}
-	}
+    public function getParameterOutputValue($data, Entry $entry = null)
+    {
+        if (isset($data->file)) {
+            return rtrim($data->path, '/') . '/' . $data->file;
+        }
+    }
 
-	public function loadDataFromDatabaseEntries($section, $entryIds)
-	{
-		try {
-			$result = [];
-			$rows = Symphony::Database()->query(
-				"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
-				[
-					$section,
-					$this['name'],
-					implode(',', $entryIds)
-				]
-			);
+    public function loadDataFromDatabaseEntries($section, $entryIds)
+    {
+        try {
+            $result = [];
+            $rows = Symphony::Database()->query(
+                "SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+                [
+                    $section,
+                    $this['name'],
+                    implode(',', $entryIds)
+                ]
+            );
 
-			foreach ($rows as $row) {
-				$result[] = $row;
-			}
+            foreach ($rows as $row) {
+                $result[] = $row;
+            }
 
-			return $result;
-		}
+            return $result;
+        }
 
-		catch (DatabaseException $e) {
-			return [];
-		}
-	}
+        catch (DatabaseException $e) {
+            return [];
+        }
+    }
 }

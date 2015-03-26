@@ -12,52 +12,52 @@ use Field;
 use Section;
 
 class DatasourceOutputElements implements MetadataInterface {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function appendSchema(array &$schema, Schema $section)
-	{
-		foreach ($this->findAll() as $item) {
-			if (isset($schema[$item['field']])) continue;
+    public function appendSchema(array &$schema, Schema $section)
+    {
+        foreach ($this->findAll() as $item) {
+            if (isset($schema[$item['field']])) continue;
 
-			$field = $section->findField($item['field']);
+            $field = $section->findField($item['field']);
 
-			if (false === $field) continue;
+            if (false === $field) continue;
 
-			$schema[$item['field']] = $field;
-		}
-	}
+            $schema[$item['field']] = $field;
+        }
+    }
 
-	public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
-	{
-		$document = $wrapper->ownerDocument;
+    public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    {
+        $document = $wrapper->ownerDocument;
 
-		foreach ($this->findAll() as $item) {
-			$item->appendElement($wrapper, $datasource, $section, $entry);
-		}
-	}
+        foreach ($this->findAll() as $item) {
+            $item->appendElement($wrapper, $datasource, $section, $entry);
+        }
+    }
 
-	public function containsInstanceOf($class) {
-		foreach ($this->findAll() as $value) {
-			$reflect = new \ReflectionObject($value);
+    public function containsInstanceOf($class) {
+        foreach ($this->findAll() as $value) {
+            $reflect = new \ReflectionObject($value);
 
-			if ($class !== $reflect->getName()) continue;
+            if ($class !== $reflect->getName()) continue;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public function containsInstanceOfField($class, $field) {
-		foreach ($this->findAll() as $value) {
-			$reflect = new \ReflectionObject($value);
+    public function containsInstanceOfField($class, $field) {
+        foreach ($this->findAll() as $value) {
+            $reflect = new \ReflectionObject($value);
 
-			if ($class !== $reflect->getName()) continue;
-			if ($value['field'] !== $field) continue;
+            if ($class !== $reflect->getName()) continue;
+            if ($value['field'] !== $field) continue;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 }

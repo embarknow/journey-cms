@@ -8,9 +8,9 @@
 			<item link="/blueprints/actors/new/" name="Actors New" visible="no" />
 			<item link="/blueprints/actors/edit/" name="Actors Edit" visible="no" />
 
-			<item link="/blueprints/sections/" name="Sections" />
-			<item link="/blueprints/sections/new/" name="Section New" visible="no" />
-			<item link="/blueprints/sections/edit/" name="Section Edit" visible="no" />
+			<item link="/blueprints/schemas/" name="Schemas" />
+			<item link="/blueprints/schemas/new/" name="Schemas New" visible="no" />
+			<item link="/blueprints/schemas/edit/" name="Schemas Edit" visible="no" />
 
 			<item link="/blueprints/utilities/" name="Utilities" />
 			<item link="/blueprints/utilities/new/" name="Utility New" visible="no" />

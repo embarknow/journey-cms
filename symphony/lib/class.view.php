@@ -1,5 +1,6 @@
 <?php
 
+use Embark\CMS\Actors\Controller;
 use Embark\CMS\Actors\DatasourceInterface;
 
 	require_once(LIB . '/class.event.php');
@@ -506,7 +507,7 @@ use Embark\CMS\Actors\DatasourceInterface;
 			$all_dependencies = array();
 
 			foreach ($actors as $handle) {
-				$actors_pool[$handle] = Datasource::loadFromHandle($handle);
+				$actors_pool[$handle] = Controller::read($handle);
 				$dependency_list[$handle] = (
 					isset($actors_pool[$handle]['dependencies'])
 						? $actors_pool[$handle]['dependencies']

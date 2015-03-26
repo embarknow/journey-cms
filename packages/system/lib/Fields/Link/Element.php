@@ -5,6 +5,8 @@ namespace Embark\CMS\Fields\Link;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Controller;
+use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
 use DOMElement;
 use DOMXPath;
@@ -17,55 +19,57 @@ class Element implements MetadataInterface
 {
 	use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
-		$field = $section->fetchFieldByHandle($this['field']);
+		$field = $section->findField($this['field']);
 
-		if (!($field instanceof Field)) return;
+		if (false === $field) return;
 
 		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};
 
-		if (isset($data)) {
-			if (false === is_array($data)) {
-				$data = [$data];
-			}
+		// if (isset($data)) {
+		// 	if (false === is_array($data)) {
+		// 		$data = [$data];
+		// 	}
 
-			$element = $document->createElement($this['field']);
-			$wrapper->appendChild($element);
-			$xpath = new DOMXPath($document);
-			$groups = array();
+		// 	$element = $document->createElement($this['field']);
+		// 	$wrapper->appendChild($element);
+		// 	$xpath = new DOMXPath($document);
+		// 	$groups = array();
 
-			foreach ($data as $item) {
-				if (!isset($item->relation_id) || is_null($item->relation_id)) continue;
+		// 	foreach ($data as $item) {
+		// 		if (!isset($item->relation_id) || is_null($item->relation_id)) continue;
 
-				if (!isset($groups[$item->relation_id])) {
-					$groups[$item->relation_id] = array();
-				}
+		// 		if (!isset($groups[$item->relation_id])) {
+		// 			$groups[$item->relation_id] = array();
+		// 		}
 
-				$groups[$item->relation_id][] = $item;
-			}
+		// 		$groups[$item->relation_id][] = $item;
+		// 	}
 
-			foreach ($groups as $relations) {
-				foreach ($relations as $relation) {
-					list($section_handle, $field_handle) = $relation->relation_field;
+		// 	var_dump($data, $groups, $field['related-fields']); exit;
 
-					$item = $xpath->query('item[@id = ' . $relation->relation_id . ']', $list)->item(0);
+		// 	foreach ($groups as $relations) {
+		// 		foreach ($relations as $relation) {
+		// 			list($section_handle, $field_handle) = $relation->relation_field;
 
-					if (is_null($item)) {
-						$section = Section::loadFromHandle($section_handle);
+		// 			$item = $xpath->query('item[@id = ' . $relation->relation_id . ']', $list)->item(0);
 
-						$item = $document->createElement('item');
-						$item->setAttribute('id', $relation->relation_id);
-						$item->setAttribute('section', $section_handle);
+		// 			if (is_null($item)) {
+		// 				$section = Controller::read($section_handle);
 
-						$element->appendChild($item);
-					}
+		// 				$item = $document->createElement('item');
+		// 				$item->setAttribute('id', $relation->relation_id);
+		// 				$item->setAttribute('section', $section_handle);
 
-					$related_field = $section->fetchFieldByHandle($field_handle);
-					$related_field->appendFormattedElement($item, $relation);
-				}
-			}
-		}
+		// 				$element->appendChild($item);
+		// 			}
+
+		// 			$related_field = $section->findField($field_handle);
+		// 			$related_field->appendFormattedElement($item, $relation);
+		// 		}
+		// 	}
+		// }
 	}
 }

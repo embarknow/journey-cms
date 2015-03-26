@@ -5,6 +5,7 @@ namespace Embark\CMS\Actors\Section;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Schema;
 use DOMElement;
 use Entry;
 use Field;
@@ -13,30 +14,30 @@ use Section;
 class DatasourceOutputElements implements MetadataInterface {
 	use MetadataTrait;
 
-	public function appendSchema(array &$schema, Section $section)
+	public function appendSchema(array &$schema, Schema $section)
 	{
-		foreach ($this->getIterator() as $item) {
+		foreach ($this->findAll() as $item) {
 			if (isset($schema[$item['field']])) continue;
 
-			$field = $section->fetchFieldByHandle($item['field']);
+			$field = $section->findField($item['field']);
 
-			if (!$field instanceof Field) continue;
+			if (false === $field) continue;
 
 			$schema[$item['field']] = $field;
 		}
 	}
 
-	public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
 		$document = $wrapper->ownerDocument;
 
-		foreach ($this->getIterator() as $item) {
+		foreach ($this->findAll() as $item) {
 			$item->appendElement($wrapper, $datasource, $section, $entry);
 		}
 	}
 
 	public function containsInstanceOf($class) {
-		foreach ($this->getIterator() as $value) {
+		foreach ($this->findAll() as $value) {
 			$reflect = new \ReflectionObject($value);
 
 			if ($class !== $reflect->getName()) continue;
@@ -48,7 +49,7 @@ class DatasourceOutputElements implements MetadataInterface {
 	}
 
 	public function containsInstanceOfField($class, $field) {
-		foreach ($this->getIterator() as $value) {
+		foreach ($this->findAll() as $value) {
 			$reflect = new \ReflectionObject($value);
 
 			if ($class !== $reflect->getName()) continue;

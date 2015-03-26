@@ -6,6 +6,7 @@ use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Fields\Parameter;
+use Embark\CMS\Schemas\Schema;
 use Entry;
 use Field;
 use Section;
@@ -22,28 +23,28 @@ class DatasourceOutputParameters implements MetadataInterface {
 		]);
 	}
 
-	public function appendSchema(array &$schema, Section $section)
+	public function appendSchema(array &$schema, Schema $section)
 	{
-		foreach ($this->getIterator() as $item) {
+		foreach ($this->findAll() as $item) {
 			if (isset($schema[$item['field']])) continue;
 
-			$field = $section->fetchFieldByHandle($item['field']);
+			$field = $section->findField($item['field']);
 
-			if (!$field instanceof Field) continue;
+			if (false === $field) continue;
 
 			$schema[$item['field']] = $field;
 		}
 	}
 
-	public function appendParameters(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendParameters(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
-		foreach ($this->getIterator() as $item) {
+		foreach ($this->findAll() as $item) {
 			$item->appendParameter($parameters, $datasource, $section, $entry);
 		}
 	}
 
 	public function containsInstanceOf($class) {
-		foreach ($this->getIterator() as $value) {
+		foreach ($this->findAll() as $value) {
 			$reflect = new \ReflectionObject($value);
 
 			if ($class !== $reflect->getName()) continue;
@@ -55,7 +56,7 @@ class DatasourceOutputParameters implements MetadataInterface {
 	}
 
 	public function containsField($field) {
-		foreach ($this->getIterator() as $value) {
+		foreach ($this->findAll() as $value) {
 			if ($value['field'] !== $field) continue;
 
 			return true;

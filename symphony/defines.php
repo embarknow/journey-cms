@@ -6,6 +6,7 @@
 	define_safe('SYMPHONY', 	DOCROOT . '/symphony');
 	define_safe('EXTENSIONS', 	DOCROOT . '/extensions');
 	define_safe('WORKSPACE', 	DOCROOT . '/workspace');
+	define_safe('DATA', 		DOCROOT . '/data');
 
 	define_safe('LIB',		SYMPHONY . '/lib');
 	define_safe('ASSETS', 	SYMPHONY . '/assets');

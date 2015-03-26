@@ -1,11 +1,13 @@
 <?php
 
-namespace Embark\CMS\Fields\Date;
+namespace Embark\CMS\Fields\Link;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Entry;
+use Symphony;
 
-class Field implements MetadataInterface
+class RelatedField implements MetadataInterface
 {
 	use MetadataTrait;
 }

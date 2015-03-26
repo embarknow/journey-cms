@@ -6,6 +6,7 @@ use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\Structures\Sorting;
+use Embark\CMS\Schemas\Controller;
 use Context;
 use Field;
 use Profiler;
@@ -38,8 +39,8 @@ class DatasourceRenderer
 		$root = $result->documentElement;
 
 		// Grab the section
-		$section = Section::loadFromHandle($this->datasource['section']);
-		$root->setAttribute('section', $section->handle);
+		$section = Controller::read($this->datasource['section']);
+		$root->setAttribute('section', $section['resource']['handle']);
 
 		if ($this->datasource['pagination'] instanceof Pagination) {
 			$pagination = $this->datasource['pagination']->replaceParameters($parameter_output);
@@ -79,7 +80,7 @@ class DatasourceRenderer
 
 				// Section field:
 				else {
-					$field = $section->fetchFieldByHandle($sorting['field']);
+					$field = $section->findField($sorting['field']);
 					$join = null;
 
 					if (
@@ -89,7 +90,7 @@ class DatasourceRenderer
 					) {
 						$field->buildSortingQuery($join, $order);
 
-						$joins .= sprintf($join, $field->section, $field->{'element-name'});
+						$joins .= sprintf($join, $section['resource']['handle'], $field['handle']);
 						$order = sprintf($order, $sorting['direction']);
 					}
 				}
@@ -162,7 +163,7 @@ class DatasourceRenderer
 
 			implode($select_keywords, ' '),
 			$o_joins,
-			$section->handle,
+			$section['resource']['handle'],
 			is_array($o_where) && !empty($o_where) ? 'AND (' . implode(($filter_operation_type == 1 ? ' AND ' : ' OR '), $o_where) . ')' : NULL,
 			$o_order,
 			$pagination['record-start'],
@@ -205,7 +206,7 @@ class DatasourceRenderer
 			Profiler::begin('Executing query');
 
 			$entries = Symphony::Database()->query($query, [
-					$section->handle,
+					$section['resource']['handle'],
 					$section->{'publish-order-handle'}
 				], __NAMESPACE__ . '\\DatasourceResultIterator'
 			);
@@ -236,7 +237,7 @@ class DatasourceRenderer
 
 				// Load entry data:
 				foreach ($schema as $field => $instance) {
-					$data[$field] = $instance->loadDataFromDatabaseEntries($section->handle, $ids);
+					$data[$field] = $instance->loadDataFromDatabaseEntries($section['resource']['handle'], $ids);
 				}
 
 				$entries->setSchema($schema);

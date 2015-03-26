@@ -1,11 +1,11 @@
 <?php
 
-namespace Embark\CMS\Fields\Textbox;
+namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 
-class Field implements MetadataInterface
+class FieldsListItem implements MetadataInterface
 {
 	use MetadataTrait;
 }

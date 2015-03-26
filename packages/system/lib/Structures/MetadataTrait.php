@@ -70,7 +70,7 @@ trait MetadataTrait {
         }
     }
 
-    public function getIterator()
+    public function findAll()
     {
         foreach ($this->metadata as $name => $value) {
             yield $name => $value;

@@ -5,6 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Schema;
 use Entry;
 use Field;
 use Section;
@@ -12,12 +13,12 @@ use Section;
 class Parameter implements MetadataInterface {
 	use MetadataTrait;
 
-	public function appendParameter(array &$parameters, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendParameter(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
-		$field = $section->fetchFieldByHandle($this['field']);
+		$field = $section->findField($this['field']);
 		$key = sprintf('ds-%s.%s', $datasource['handle'], $this['field']);
 
-		if (!($field instanceof Field)) return;
+		if (false === $field) return;
 
 		$data = $field->getParameterOutputValue($entry->data()->{$this['field']}, $entry);
 

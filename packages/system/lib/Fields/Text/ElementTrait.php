@@ -3,8 +3,10 @@
 namespace Embark\CMS\Fields\Textbox;
 
 use Embark\CMS\Actors\DatasourceInterface;
+use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Schema;
 use DOMElement;
 use Entry;
 use Exception;
@@ -13,11 +15,22 @@ use Section;
 
 trait ElementTrait
 {
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function __construct()
 	{
-		$field = $section->fetchFieldByHandle($this['field']);
+		$this->setSchema([
+			'handle' => [
+				'filter' =>		new Boolean()
+			]
+		]);
+	}
 
-		if (!($field instanceof Field)) return;
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+	{
+		$field = $section->findField($this['field']);
+
+		if (false === $field) return;
+
+		// var_dump($this['handle']); exit;
 
 		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};
@@ -34,7 +47,7 @@ trait ElementTrait
 				// Only get 'Document Fragment is empty' errors here.
 			}
 
-			if ($field->{'text-handle'} == 'yes') {
+			if ($this['handle']) {
 				$element->setAttribute('handle', $data->handle);
 			}
 		}

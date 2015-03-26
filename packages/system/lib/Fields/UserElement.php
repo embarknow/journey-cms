@@ -5,6 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
 use DOMElement;
 use Entry;
@@ -17,7 +18,7 @@ class UserElement implements MetadataInterface
 {
 	use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
 		$document = $wrapper->ownerDocument;
 		$user = User::load($entry->user_id);

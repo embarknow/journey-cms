@@ -73,7 +73,7 @@ use Embark\CMS\App;
 	 * Prepare the environment for Symphony, allow it to be booted by calling render.
 	 */
 	namespace {
-		use Embark\CMS\Sections\Controller;
+		use Embark\CMS\Schemas\Controller;
 
 		function render() {
 			// Begin profiling:

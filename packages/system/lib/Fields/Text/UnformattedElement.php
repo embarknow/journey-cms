@@ -1,13 +1,12 @@
 <?php
 
-namespace Embark\CMS\Fields\Textbox;
+namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
 use Entry;
 use Exception;
-use Field;
 
 class UnformattedElement implements MetadataInterface
 {

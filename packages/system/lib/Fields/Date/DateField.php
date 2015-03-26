@@ -1,9 +1,10 @@
 <?php
 
-namespace Embark\CMS\Fields\Upload;
+namespace Embark\CMS\Fields\Date;
 
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\SystemDateTime;
 use Entry;
 use Symphony;
 
@@ -13,9 +14,11 @@ class Field implements MetadataInterface
 
 	public function getParameterOutputValue($data, Entry $entry = null)
 	{
-		if (isset($data->file)) {
-			return rtrim($data->path, '/') . '/' . $data->file;
-		}
+		if (is_null($data->value)) return;
+
+		$date = new SystemDateTime($data->value);
+
+ 		return $date->format('Y-m-d H:i:s');
 	}
 
 	public function loadDataFromDatabaseEntries($section, $entryIds)

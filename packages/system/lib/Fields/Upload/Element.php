@@ -5,6 +5,7 @@ namespace Embark\CMS\Fields\Upload;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Schemas\Schema;
 use DOMElement;
 use Entry;
 use Field;
@@ -15,11 +16,11 @@ class Element implements MetadataInterface
 {
 	use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Section $section, Entry $entry)
+	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
 	{
-		$field = $section->fetchFieldByHandle($this['field']);
+		$field = $section->findField($this['field']);
 
-		if (!($field instanceof Field)) return;
+		if (false === $field) return;
 
 		$document = $wrapper->ownerDocument;
 		$data = $entry->data()->{$this['field']};

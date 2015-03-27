@@ -40,10 +40,10 @@ CREATE TABLE IF NOT EXISTS `forgotpass` (
 SQL;
 
 $queries[] = <<<SQL
-CREATE TABLE IF NOT EXISTS `sections_sync` (
-  `section` varchar(32) NOT NULL DEFAULT '',
-  `xml` text,
-  PRIMARY KEY (`section`)
+CREATE TABLE IF NOT EXISTS `schemas` (
+  `guid` varchar(64) NOT NULL DEFAULT '',
+  `object` text,
+  PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 SQL;
 

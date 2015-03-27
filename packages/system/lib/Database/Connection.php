@@ -68,6 +68,18 @@ class Connection
         return $this->connection->prepare($statement, $driver_options);
     }
 
+    public function createDataTableName($schema, $field, $guid)
+    {
+        $table = $schema . '_' . $field;
+
+        if (strlen($table) > 64) {
+            $table = trim(substr($table, 0, 63 - strlen($guid)), '-_');
+            $table .= '_' . $guid;
+        }
+
+        return $table;
+    }
+
     public function prepareQuery($query, array $values = null)
     {
         if (is_array($values) && empty($values) === false) {

@@ -33,7 +33,9 @@ class DateData implements DataInterface, MetadataInterface
     {
         $this->setSchema([
             'guid' => [
-                'filter' =>     new Guid()
+                'required' =>   true,
+                'filter' =>     new Guid(),
+                'default' =>    uniqid()
             ]
         ]);
     }
@@ -131,6 +133,27 @@ class DateData implements DataInterface, MetadataInterface
         $statement->bindValue(1, $entry->getId(), PDO::PARAM_INT);
         $statement->bindValue(2, $data->handle, PDO::PARAM_STR);
         $statement->bindValue(3, $data->value, PDO::PARAM_STR);
+
+        return $statement->execute();
+    }
+
+    public function createTable(Schema $schema)
+    {
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $this['handle'],
+            $this['guid']
+        );
+        $statement = Symphony::Database()->prepare("
+            create table if not exists `{$table}` (
+                `id` int(11) unsigned not null auto_increment,
+                `entryId` int(11) unsigned not null,
+                `value` datetime default null,
+                primary key (`id`),
+                unique key `entryId` (`entryId`),
+                key `value` (`value`)
+            )
+        ");
 
         return $statement->execute();
     }

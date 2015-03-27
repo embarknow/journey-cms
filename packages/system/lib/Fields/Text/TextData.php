@@ -32,7 +32,9 @@ class TextData implements DataInterface, MetadataInterface
     {
         $this->setSchema([
             'guid' => [
-                'filter' =>     new Guid()
+                'required' =>   true,
+                'filter' =>     new Guid(),
+                'default' =>    uniqid()
             ]
         ]);
     }
@@ -122,14 +124,86 @@ class TextData implements DataInterface, MetadataInterface
 
     public function write(Schema $section, Entry $entry, $field, $data)
     {
-        $statement = Symphony::Database()->prepare(sprintf(
-            'insert into `data_%s_%s`(entry_id, handle, value) VALUES(?, ?, ?)',
-            $section->settings()->handle,
-            $field->settings()->handle
-        ));
-        $statement->bindValue(1, $entry->getId(), PDO::PARAM_INT);
-        $statement->bindValue(2, $data->handle, PDO::PARAM_STR);
-        $statement->bindValue(3, $data->value, PDO::PARAM_STR);
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $this['handle'],
+            $this['guid']
+        );
+        $statement = Symphony::Database()->prepare("
+            insert into `{$table}` set
+                entryId = :entryId,
+                handle = :handle,
+                value = :value,
+                formatted = :formatted
+            on duplicate key update
+                value = :updateValue,
+                formatted = :updateFormatted
+        ");
+
+        return $statement->execute([
+            ':entryId' =>           $entry->getId(),
+            ':handle' =>            $data->handle,
+            ':value' =>             $data->value,
+            ':updateValue' =>       $data->value,
+            ':formatted' =>         $data->formatted,
+            ':updateFormatted' =>   $data->formatted
+        ]);
+    }
+
+    public function createTable(Schema $schema)
+    {
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $this['handle'],
+            $this['guid']
+        );
+        $statement = Symphony::Database()->prepare("
+            create table if not exists `{$table}` (
+                `id` int(11) unsigned not null auto_increment,
+                `entryId` int(11) unsigned not null,
+                `handle` varchar(255) default null,
+                `value` text default null,
+                `formatted` text default null,
+                primary key (`id`),
+                unique key `entryId` (`entryId`),
+                fulltext key `value` (`value`),
+                fulltext key `formatted` (`formatted`)
+            )
+        ");
+
+        return $statement->execute();
+    }
+
+    public function renameTable(Schema $schema, Schema $oldSchema, self $oldField)
+    {
+        $oldTable = Symphony::Database()->createDataTableName(
+            $oldSchema['resource']['handle'],
+            $oldField['handle'],
+            $oldField['guid']
+        );
+        $newTable = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $this['handle'],
+            $this['guid']
+        );
+        $statement = Symphony::Database()->prepare("
+            alter table `{$oldTable}`
+            rename to `{$newTable}
+        ");
+
+        return $statement->execute();
+    }
+
+    public function removeTable(Schema $schema)
+    {
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $this['handle'],
+            $this['guid']
+        );
+        $statement = Symphony::Database()->prepare("
+            drop table if exists `{$table}`
+        ");
 
         return $statement->execute();
     }

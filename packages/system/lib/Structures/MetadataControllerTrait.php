@@ -1,6 +1,7 @@
 <?php
 
 namespace Embark\CMS\Structures;
+
 use Embark\CMS\ClosureFilterIterator;
 use DirectoryIterator;
 use DOMDocument;

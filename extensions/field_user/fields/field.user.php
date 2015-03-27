@@ -12,10 +12,10 @@
 					'CREATE TABLE IF NOT EXISTS `data_%s_%s` (
 						`id` int(11) unsigned NOT NULL auto_increment,
 						`entry_id` int(11) unsigned NOT NULL,
-						`user_id` int(11) unsigned NOT NULL,
+						`user` int(11) unsigned NOT NULL,
 						PRIMARY KEY  (`id`),
 						KEY `entry_id` (`entry_id`),
-						KEY `user_id` (`user_id`)
+						KEY `user` (`user`)
 					)',
 					$this->section,
 					$this->{'element-name'}
@@ -61,7 +61,7 @@
 		}
 
 		public function toggleEntryData(StdClass $data, $value, Entry $entry=NULL){
-			$data['user_id'] = $newState;
+			$data['user'] = $newState;
 			return $data;
 		}
 
@@ -120,15 +120,15 @@
 
 			$values = array();
 			foreach($data as $d){
-				$values[] = $d->user_id;
+				$values[] = $d->user;
 			}
 
 			$fragment = Symphony::Parent()->Page->createDocumentFragment();
 
-			foreach($values as $user_id){
-				if(is_null($user_id)) continue;
+			foreach($values as $user){
+				if(is_null($user)) continue;
 
-				$user = User::load($user_id);
+				$user = User::load($user);
 
 				if($user instanceof User){
 					if($fragment->hasChildNodes()) $fragment->appendChild(new DOMText(', '));
@@ -160,8 +160,8 @@
 
 			$selected = array();
 			foreach($data as $d){
-				if(!($d instanceof StdClass) || !isset($d->user_id)) continue;
-				$selected[] = $d->user_id;
+				if(!($d instanceof StdClass) || !isset($d->user)) continue;
+				$selected[] = $d->user;
 			}
 
 			//$callback = Administration::instance()->getPageCallback();
@@ -208,10 +208,10 @@
 		public function processData($data, Entry $entry=NULL){
 
 			$result = (object)array(
-				'user_id' => NULL
+				'user' => NULL
 			);
 
-			$result->user_id = $data;
+			$result->user = $data;
 
 			return $result;
 		}
@@ -222,7 +222,7 @@
 				$data = array($data);
 			}
 
-			if ($this->required == 'yes' && (!isset($data[0]->user_id) || strlen(trim($data[0]->user_id)) == 0)){
+			if ($this->required == 'yes' && (!isset($data[0]->user) || strlen(trim($data[0]->user)) == 0)){
 				$errors->append(
 					null, (object)array(
 					 	'message' => __("'%s' is a required field.", array($this->{'name'})),
@@ -243,10 +243,10 @@
 				"`entry_id` = %s"
 			);
 
-			if(!is_array($data->user_id)){
-				$data->user_id = array($data->user_id);
+			if(!is_array($data->user)){
+				$data->user = array($data->user);
 			}
-			foreach($data->user_id as $d){
+			foreach($data->user as $d){
 				$d = $this->processData($d, $entry);
 				parent::saveData($errors, $entry, $d);
 			}
@@ -266,7 +266,7 @@
 
 	        $list = $wrapper->ownerDocument->createElement($this->{'element-name'});
 	        foreach($data as $user){
-	            $user = User::load($user->user_id);
+	            $user = User::load($user->user);
 
 				if($user instanceof User) {
 					$list->appendChild(
@@ -286,7 +286,7 @@
 
 		//	TODO: This field will need to override the DatasourceFilterPanel so that you can actually filter
 		//	users on their fields in the sym_users table. Once done, this buildFilterQuery will have to be updated
-		//	to think use those columns. For now this just filters on USER_ID (which is Symphony 2.0.x behaviour)
+		//	to think use those columns. For now this just filters on user (which is Symphony 2.0.x behaviour)
 
 		public function buildFilterQuery($filter, &$joins, array &$where, Context $ParameterOutput=NULL){
 			self::$key++;
@@ -300,7 +300,7 @@
 			if ($filter['type'] == 'regex') {
 				$where .= sprintf("
 						AND (
-							t%1\$s.user_id REGEXP '%2\$s'
+							t%1\$s.user REGEXP '%2\$s'
 						)
 					",	self::$key,	$value
 				);
@@ -310,7 +310,7 @@
 				$clause = NULL;
 				foreach ($value as $v) {
 					$clause .= sprintf(
-						"(t%1\$s.user_id %2\$s '%3\$s') AND",
+						"(t%1\$s.user %2\$s '%3\$s') AND",
 						self::$key,
 						$filter['type'] == 'is-not' ? '<>' : '=',
 						$v
@@ -321,7 +321,7 @@
 
 			else {
 				$where[] = sprintf(
-					"(t%1\$s.user_id %2\$s IN ('%3\$s'))",
+					"(t%1\$s.user %2\$s IN ('%3\$s'))",
 					self::$key,
 					$filter['type'] == 'is-not' ? 'NOT' : NULL,
 					implode("', '", $value)
@@ -339,7 +339,7 @@
 				'%s_%s_%s', $this->section, $this->{'element-name'}, self::$key
 			);
 			$joins .= sprintf(
-				"\nLEFT OUTER JOIN `%s` AS data_%s ON (e.id = data_%2\$s.entry_id)\nJOIN `users` AS users_%2\$s ON (data_%2\$s.user_id = users_%2\$s.id)",
+				"\nLEFT OUTER JOIN `%s` AS data_%s ON (e.id = data_%2\$s.entry_id)\nJOIN `users` AS users_%2\$s ON (data_%2\$s.user = users_%2\$s.id)",
 				$table, $handle
 			);
 

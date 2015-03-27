@@ -5,7 +5,6 @@ namespace Embark\CMS\Structures;
 use DOMElement;
 use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\Resource;
 
 trait MetadataTrait
 {

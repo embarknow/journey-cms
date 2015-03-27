@@ -239,13 +239,17 @@ use Embark\CMS\SystemDateTime;
 
 		public function initialiseUser()
 		{
+			// Use the login token:
 			if (isset($_REQUEST['auth-token']) && $_REQUEST['auth-token'] && strlen($_REQUEST['auth-token']) == 8) {
-				$user = User::loadFromAuthToken($token);
+				$user = User::loadFromAuthToken($_REQUEST['auth-token']);
 			}
 
-			$username = Symphony::Cookie()->get('username');
-			$password = Symphony::Cookie()->get('pass');
-			$user = User::loadFromCredentials($username, $password, true);
+			// Try and use the cookie:
+			if (!($user instanceof User)) {
+				$username = Symphony::Cookie()->get('username');
+				$password = Symphony::Cookie()->get('pass');
+				$user = User::loadFromCredentials($username, $password, true);
+			}
 
 			if ($user instanceof User) {
 				if ($user->login()) {

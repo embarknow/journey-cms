@@ -175,8 +175,8 @@ use Embark\CMS\Database\Connection;
 
 			$fields = array(
 				'session' => $id,
-				'session_expires' => time(),
-				'session_data' => $data
+				'expires' => time(),
+				'data' => $data
 			);
 
 			return Symphony::Database()->insert('sessions', $fields, Connection::UPDATE_ON_DUPLICATE);
@@ -194,7 +194,7 @@ use Embark\CMS\Database\Connection;
 			try {
 				$result = Symphony::Database()->query("
 						SELECT
-							`session_data`
+							`data`
 						FROM
 							`sessions`
 						WHERE
@@ -206,7 +206,7 @@ use Embark\CMS\Database\Connection;
 				);
 
 				if ($result->valid()) {
-					return $result->current()->session_data;
+					return $result->current()->data;
 				}
 			}
 
@@ -242,6 +242,6 @@ use Embark\CMS\Database\Connection;
 		 *  True on Session deletion, false if an error occurs
 		 */
 		public static function gc($max) {
-			return Symphony::Database()->delete('sessions', array(time() - $max), "`session_expires` <= '%s'");
+			return Symphony::Database()->delete('sessions', array(time() - $max), "`expires` <= '%s'");
 		}
 	}

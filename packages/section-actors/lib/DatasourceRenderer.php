@@ -153,7 +153,7 @@ class DatasourceRenderer
         $o_joins = $joins;
         $o_order = $order;
         $query = sprintf('
-            %1$s e.id, e.section, e.user_id, e.creation_date, e.modification_date
+            %1$s e.id, e.section, e.user, e.creation_date, e.modification_date
             FROM `entries` AS `e`
             %2$s
             WHERE `section` = "%3$s"

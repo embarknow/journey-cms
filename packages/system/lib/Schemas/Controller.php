@@ -15,7 +15,7 @@ class Controller implements MetadataControllerInterface
         MetadataControllerTrait::delete as deleteFile;
     }
 
-    const DIR = WORKSPACE . '/schemas';
+    const DIR = '/workspace/schemas';
     const FILE_EXTENSION = '.xml';
 
     public static function delete(MetadataInterface $schema)

@@ -304,11 +304,11 @@
 				$entry->section = $this->parameters()->{'section'};
 
 				if (Symphony::User() instanceof User) {
-					$entry->user_id = Symphony::User()->id;
+					$entry->user = Symphony::User()->id;
 				}
 
 				else {
-					$entry->user_id = (int)Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+					$entry->user = (int)Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 				}
 
 				$type = 'create';

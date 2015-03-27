@@ -2,6 +2,8 @@
 
 namespace Embark\CMS\Structures;
 
+use Embark\CMS\Structures\MetadataInterface;
+
 class Boolean implements MetadataValueInterface
 {
     public function toXML($value)

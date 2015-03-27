@@ -2,23 +2,27 @@
 
 namespace Embark\CMS\Structures;
 
-class Author implements MetadataInterface {
+use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Structures\MetadataTrait;
+
+class Author implements MetadataInterface
+{
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
             'name' => [
-                'required' =>   true,
-                'default' =>    ''
+                'required' => true,
+                'default' =>  ''
             ],
             'website' => [
-                'required' =>   true,
-                'default' =>    ''
+                'required' => true,
+                'default' =>  ''
             ],
             'email' => [
-                'required' =>   true,
-                'default' =>    ''
+                'required' => true,
+                'default' =>  ''
             ]
         ]);
     }

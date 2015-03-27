@@ -2,13 +2,15 @@
 
 namespace Embark\CMS\Structures;
 
+use Embark\CMS\Structures\MetadataInterface;
+
 class MaxInteger implements MetadataValueInterface
 {
     protected $max;
 
     public function __construct($max)
     {
-        $this->max = (integer)$max;
+        $this->max = (integer) $max;
     }
 
     public function toXML($value)
@@ -23,6 +25,6 @@ class MaxInteger implements MetadataValueInterface
 
     public function sanitise($value)
     {
-        return max($this->max, (integer)$value);
+        return max($this->max, (integer) $value);
     }
 }

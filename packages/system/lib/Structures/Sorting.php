@@ -5,6 +5,8 @@ namespace Embark\CMS\Structures;
 use Context;
 use Datasource;
 use DOMDocument;
+use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Structures\MetadataTrait;
 
 class Sorting implements MetadataInterface
 {
@@ -16,10 +18,10 @@ class Sorting implements MetadataInterface
     {
         $this->setSchema([
             'append' => [
-                'filter' =>     new Boolean()
+                'filter' => new Boolean()
             ],
             'direction' => [
-                'filter' =>     new SortingDirection()
+                'filter' => new SortingDirection()
             ]
         ]);
     }

@@ -3,6 +3,9 @@
 namespace Embark\CMS\Structures;
 
 use DOMElement;
+use Embark\CMS\Structures\Resource;
+use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Structures\Resource;
 
 trait MetadataTrait
 {
@@ -92,7 +95,9 @@ trait MetadataTrait
 
     public function offsetGet($name)
     {
-        if (false === isset($this->metadata[$name])) return null;
+        if (false === isset($this->metadata[$name])) {
+            return null;
+        }
 
         return $this->metadata[$name];
     }
@@ -116,7 +121,9 @@ trait MetadataTrait
     {
         foreach ($this->metadata as $name => $value) {
             // Do not output resource information:
-            if ($value instanceof Resource) continue;
+            if ($value instanceof Resource) {
+                continue;
+            }
 
             if (is_integer($name)) {
                 $node = $xml->ownerDocument->createElement('item');

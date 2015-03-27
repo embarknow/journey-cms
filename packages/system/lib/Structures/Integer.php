@@ -2,6 +2,8 @@
 
 namespace Embark\CMS\Structures;
 
+use Embark\CMS\Structures\MetadataInterface;
+
 class Integer implements MetadataValueInterface
 {
     public function toXML($value)
@@ -16,6 +18,6 @@ class Integer implements MetadataValueInterface
 
     public function sanitise($value)
     {
-        return (integer)$value;
+        return (integer) $value;
     }
 }

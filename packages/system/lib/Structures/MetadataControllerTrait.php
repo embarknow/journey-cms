@@ -6,7 +6,8 @@ use Embark\CMS\ClosureFilterIterator;
 use DirectoryIterator;
 use DOMDocument;
 
-trait MetadataControllerTrait {
+trait MetadataControllerTrait
+{
     /**
      * Save a new object.
      *
@@ -22,7 +23,7 @@ trait MetadataControllerTrait {
 
         // Does not have a file extension, assume it is a handle
         if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
         }
 
         $document = static::toXML($object);
@@ -43,7 +44,7 @@ trait MetadataControllerTrait {
     {
         // Does not have a file extension, assume it is a handle
         if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
         }
 
         else if (is_file($handleOrFile)) {
@@ -73,7 +74,7 @@ trait MetadataControllerTrait {
     {
         // Does not have a file extension, assume it is a handle
         if (isset($handleOrFile) && false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
         }
 
         // The handle is a file and it exists:
@@ -120,6 +121,14 @@ trait MetadataControllerTrait {
         return unlink($file);
     }
 
+    /**
+     * Shortcut for read
+     *
+     * @param   string              $handleOrFile
+     *  If a handle is provided the object will be loaded from
+     *  the default location, if a file name is provided that
+     *  will be used instead.
+     */
     public static function find($handleOrFile)
     {
         return static::read($handleOrFile);
@@ -127,7 +136,7 @@ trait MetadataControllerTrait {
 
     public static function findAll()
     {
-        $iterator = new ClosureFilterIterator(new DirectoryIterator(static::DIR), function($item) {
+        $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::DIR), function ($item) {
             return (
                 false === $item->isDir()
                 && false !== strpos($item->getFilename(), static::FILE_EXTENSION)
@@ -137,7 +146,9 @@ trait MetadataControllerTrait {
         foreach ($iterator as $item) {
             $object = static::read($item->getPathname());
 
-            if (false === $object) continue;
+            if (false === $object) {
+                continue;
+            }
 
             yield $object['resource']['handle'] => $object;
         }

@@ -14,25 +14,25 @@ class Pagination implements MetadataInterface
     {
         $this->setSchema([
             'append' => [
-                'filter' =>         new Boolean()
+                'filter' => new Boolean()
             ],
             'limit' => [
-                'filter' =>         new Integer()
+                'filter' => new Integer()
             ],
             'page' => [
-                'filter' =>         new Integer()
+                'filter' => new Integer()
             ],
             'entries-per-page' => [
-                'filter' =>         new MaxInteger(1)
+                'filter' => new MaxInteger(1)
             ],
             'current-page' => [
-                'filter' =>         new MaxInteger(1)
+                'filter' => new MaxInteger(1)
             ],
             'total-entries' => [
-                'filter' =>         new Integer()
+                'filter' => new Integer()
             ],
             'total-pages' => [
-                'filter' =>         new Integer()
+                'filter' => new Integer()
             ]
         ]);
     }
@@ -51,8 +51,8 @@ class Pagination implements MetadataInterface
 
     public function setTotal($total)
     {
-        $this['total-entries'] = (integer)$total;
-        $this['total-pages'] = (integer)ceil($this['total-entries'] * (1 / $this['entries-per-page']));
+        $this['total-entries'] = (integer) $total;
+        $this['total-pages'] = (integer) ceil($this['total-entries'] * (1 / $this['entries-per-page']));
     }
 
     public function createElement(DOMDocument $document)

@@ -4,6 +4,7 @@ namespace Embark\CMS;
 
 use DateTime;
 use DateTimeZone;
+use Embark\CMS\UserDateTime;
 
 class SystemDateTime extends DateTime
 {

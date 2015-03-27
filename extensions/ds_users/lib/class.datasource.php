@@ -157,7 +157,7 @@
 				##	User Filtering
 				if (is_array($this->parameters()->filters) && !empty($this->parameters()->filters)) {
 
-					$user_ids = NULL;
+					$users = NULL;
 					$where_clauses = array();
 
 					$query = "SELECT * FROM `users` WHERE 1 %s ORDER BY `id` ASC";

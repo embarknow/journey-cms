@@ -760,7 +760,7 @@ use Embark\CMS\SystemDateTime;
 			$o_joins = $joins;
 			$o_order = $order;
 			$query = sprintf('
-				%1$s e.id, e.section, e.user_id, e.creation_date, e.modification_date
+				%1$s e.id, e.section, e.user, e.creation_date, e.modification_date
 				FROM `entries` AS `e`
 				%2$s
 				WHERE `section` = "%3$s"
@@ -958,9 +958,9 @@ use Embark\CMS\SystemDateTime;
 										break;
 
 									case 'user':
-										$obj = User::load($e->user_id);
+										$obj = User::load($e->user);
 										$user = $result->createElement('user', $obj->getFullName());
-										$user->setAttribute('id', $e->user_id);
+										$user->setAttribute('id', $e->user);
 										$user->setAttribute('username', $obj->username);
 										$user->setAttribute('email-address', $obj->email);
 										$entry->appendChild($user);
@@ -993,7 +993,7 @@ use Embark\CMS\SystemDateTime;
 										break;
 
 									case 'user':
-										$output_parameters->system[$field][] = $e->user_id;
+										$output_parameters->system[$field][] = $e->user;
 										break;
 								}
 							}

@@ -23,6 +23,6 @@ class UserParameter implements MetadataInterface
             $parameters[$key] = [];
         }
 
-        $parameters[$key][] = $entry->user_id;
+        $parameters[$key][] = $entry->user;
     }
 }

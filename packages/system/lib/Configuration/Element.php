@@ -3,6 +3,9 @@
 namespace Embark\CMS\Configuration;
 
 use ArrayAccess;
+use DOMDocument;
+use DOMNode;
+use DOMText;
 use Exception;
 use Mutex;
 use SimpleXMLElement;

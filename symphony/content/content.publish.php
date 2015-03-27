@@ -655,7 +655,7 @@
 
 				$entry = new Entry;
 				$entry->section = $callback['context']['section_handle'];
-				$entry->user_id = Symphony::User()->id;
+				$entry->user = Symphony::User()->id;
 
 				$post = General::getPostData();
 				if(isset($post['fields']) && is_array($post['fields']) && !empty($post['fields'])){

@@ -140,7 +140,7 @@ use Embark\CMS\SystemDateTime;
 						FROM
 							`users` AS u, `forgotpass` AS f
 						WHERE
-							`u`.id = `f`.user_id
+							`u`.id = `f`.user
 						AND
 							`f`.expiry > '%s'
 						AND
@@ -262,7 +262,7 @@ use Embark\CMS\SystemDateTime;
 			Symphony::Database()->delete(
 				'forgotpass',
 				[$this->id],
-				"`user_id` = %d"
+				"`user` = %d"
 			);
 
 			return true;

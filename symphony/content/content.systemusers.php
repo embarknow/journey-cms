@@ -106,9 +106,9 @@ use Embark\CMS\SystemDateTime;
 
 				$checked = array_keys($_POST['items']);
 
-				foreach($checked as $user_id){
-					if(Symphony::User()->id == $user_id) continue;
-					User::delete($user_id);
+				foreach($checked as $user){
+					if(Symphony::User()->id == $user) continue;
+					User::delete($user);
 				}
 
 				redirect(ADMIN_URL . '/system/users/');
@@ -188,9 +188,9 @@ use Embark\CMS\SystemDateTime;
 
 			elseif($this->_context[0] == 'edit'){
 
-				if(!$user_id = $this->_context[1]) redirect(ADMIN_URL . '/system/users/');
+				if(!$user = $this->_context[1]) redirect(ADMIN_URL . '/system/users/');
 
-				if(!$user = UserManager::fetchByID($user_id)){
+				if(!$user = UserManager::fetchByID($user)){
 					throw new SymphonyErrorPage('The user profile you requested does not exist.', 'User not found');
 				}
 			}
@@ -373,7 +373,7 @@ use Embark\CMS\SystemDateTime;
 						$this->errors->append('password-confirmation', __('Passwords did not match'));
 					}
 
-					elseif($user_id = User::save($this->user)){
+					elseif($user = User::save($this->user)){
 
 						###
 						# Delegate: PostCreate
@@ -402,15 +402,15 @@ use Embark\CMS\SystemDateTime;
 
 		public function __actionEdit(){
 
-			if(!$user_id = $this->_context[1]) redirect(ADMIN_URL . '/system/users/');
+			if(!$user = $this->_context[1]) redirect(ADMIN_URL . '/system/users/');
 
 			if(array_key_exists('save', $_POST['action']) || array_key_exists('done', $_POST['action'])) {
 
 				$fields = $_POST['fields'];
 
-			    $this->user = User::load($user_id);
+			    $this->user = User::load($user);
 
-				$this->user->id = $user_id;
+				$this->user->id = $user;
 
 				$this->user->email = $fields['email'];
 				$this->user->username = $fields['username'];
@@ -450,10 +450,10 @@ use Embark\CMS\SystemDateTime;
 					elseif(User::save($this->user)){
 						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user_id), " `expiry` < '%s' OR `user_id` = %d ");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user), " `expiry` < '%s' OR `user` = %d ");
 
 						// This is the logged in user, so update their session
-						if($user_id == Symphony::User()->id){
+						if($user == Symphony::User()->id){
 							Administration::instance()->login($this->user->username, $this->user->password, true);
 						}
 
@@ -481,7 +481,7 @@ use Embark\CMS\SystemDateTime;
 			}
 
 			elseif(array_key_exists('delete', $_POST['action'])){
-				User::delete($user_id);
+				User::delete($user);
 
 				redirect(ADMIN_URL . '/system/users/');
 			}

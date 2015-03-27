@@ -60,7 +60,7 @@ use Embark\CMS\SystemDateTime;
 			$this->meta = (object)array(
 				'id' =>						null,
 				'section' =>				null,
-				'user_id' =>				null,
+				'user' =>				null,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			);
@@ -165,7 +165,7 @@ use Embark\CMS\SystemDateTime;
 			$purge_meta_on_error = false;
 			if(!isset($entry->id) || is_null($entry->id)){
 				$purge_meta_on_error = true;
-				$entry->id = self::generateID($entry->section, $entry->user_id);
+				$entry->id = self::generateID($entry->section, $entry->user);
 			}
 
 			// Update the modification details
@@ -268,17 +268,17 @@ use Embark\CMS\SystemDateTime;
 			return $status;
 		}
 
-		public static function generateID($section, $user_id = null)
+		public static function generateID($section, $user = null)
 		{
 			$date = new SystemDateTime();
 
-			if (is_null($user_id)) {
-				$user_id = Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+			if (is_null($user)) {
+				$user = Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
 			}
 
 			return Symphony::Database()->insert('entries', [
 				'section' =>				$section,
-				'user_id' =>				$user_id,
+				'user' =>				$user,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			]);

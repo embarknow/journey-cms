@@ -218,7 +218,7 @@ use Embark\CMS\SystemDateTime;
 							WHERE
 								expiry > '%s'
 							AND
-								user_id = %d
+								user = %d
 							",
 							$date->format(DateTime::W3C),
 							$user->id
@@ -230,7 +230,7 @@ use Embark\CMS\SystemDateTime;
 
 							Symphony::Database()->insert('forgotpass',
 								array(
-									'user_id' =>	$user->id,
+									'user' =>	$user->id,
 									'token' =>		$token,
 									'expiry' =>		$date->format(DateTime::W3C)
 								)
@@ -261,14 +261,14 @@ use Embark\CMS\SystemDateTime;
 					}
 
 					else {
-						$user_id = Symphony::User()->id;
+						$user = Symphony::User()->id;
 
-						$user = User::load($user_id);
+						$user = User::load($user);
 
 						$user->set('password', md5(Symphony::Database()->escape($_POST['password'])));
 
 						if(!User::save($user) || !Administration::instance()->login($user->username, $_POST['password'])){
-							redirect(URL . "symphony/system/users/edit/{$user_id}/error/");
+							redirect(URL . "symphony/system/users/edit/{$user}/error/");
 						}
 
 						redirect(ADMIN_URL . '/');
@@ -289,7 +289,7 @@ use Embark\CMS\SystemDateTime;
 						WHERE
 							t2.`token` = '%s'
 						AND
-							u.`id` = t2.`user_id`
+							u.`id` = t2.`user`
 						LIMIT 1
 					",
 					$_REQUEST['token']
@@ -310,7 +310,7 @@ use Embark\CMS\SystemDateTime;
 								'The Symphony Team');
 
 					Symphony::Database()->update('users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
-					Symphony::Database()->delete('forgotpass', array($user->id), " `user_id` = '%d'");
+					Symphony::Database()->delete('forgotpass', array($user->id), " `user` = '%d'");
 
 					$this->_alert = 'Password reset. Check your email';
 				}

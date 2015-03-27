@@ -21,10 +21,10 @@ class UserElement implements MetadataInterface
     public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
     {
         $document = $wrapper->ownerDocument;
-        $user = User::load($entry->user_id);
+        $user = User::load($entry->user);
 
         $xml = $document->createElement('user', $user->getFullName());
-        $xml->setAttribute('id', $entry->user_id);
+        $xml->setAttribute('id', $entry->user);
         $xml->setAttribute('username', $user->username);
         $xml->setAttribute('email-address', $user->email);
         $wrapper->appendChild($xml);

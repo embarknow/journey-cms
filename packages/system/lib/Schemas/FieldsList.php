@@ -7,9 +7,7 @@ use Embark\CMS\Structures\MetadataTrait;
 
 class FieldsList implements MetadataInterface
 {
-    use MetadataTrait {
-        MetadataTrait::findAll as findAllItems;
-    }
+    use MetadataTrait;
 
     public function __construct()
     {
@@ -18,25 +16,5 @@ class FieldsList implements MetadataInterface
                 'type' =>       new FieldsListItem()
             ]
         ]);
-    }
-
-    public function findAll()
-    {
-        foreach ($this->findAllItems() as $name => $value) {
-            $type = $value->createType();
-            $type['data'] = $value;
-
-            yield $name => $type;
-        }
-    }
-
-    public function findAllWithGuids()
-    {
-        foreach ($this->findAllItems() as $name => $value) {
-            // $type = $value->createType();
-            // $type['data'] = $value;
-
-            yield $value['guid'] => $value;
-        }
     }
 }

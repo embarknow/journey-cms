@@ -11,11 +11,45 @@ use PDO;
 class Controller
 {
     use MetadataControllerTrait {
-        // MetadataTrait::
+        MetadataControllerTrait::delete as deleteFile;
     }
 
     const DIR = WORKSPACE . '/schemas';
     const FILE_EXTENSION = '.xml';
+
+    public static function delete(MetadataInterface $schema)
+    {
+        if (static::deleteFile($schema)) {
+            // Delete field data:
+            if ($schema['fields'] instanceof FieldsList) {
+                foreach ($schema['fields']->findAll() as $field) {
+                    $field['schema']->delete($schema, $field);
+                }
+            }
+
+            // Delete entries:
+            $statement = Symphony::Database()->prepare('
+                delete from `entries` where
+                    `schema` = :handle
+            ');
+            $statement->execute([
+                ':handle' =>        $schema['resource']['handle']
+            ]);
+
+            // Delete sync information:
+            $statement = Symphony::Database()->prepare('
+                delete from `schemas` where
+                    `guid` = :guid
+            ');
+            $statement->execute([
+                ':guid' =>          $schema['guid']
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
 
     public static function syncStats(Schema $newSchema) {
         $new = $old = [];
@@ -58,9 +92,9 @@ class Controller
             }
 
             if ($oldSchema['fields'] instanceof FieldsList) {
-                foreach ($oldSchema['fields']->findAllWithGuids() as $guid => $field) {
-                    $old[$guid] = (object)[
-                        'raw' =>   iterator_to_array($field->findAll()),
+                foreach ($oldSchema['fields']->findAll() as $field) {
+                    $old[$field['schema']['guid']] = (object)[
+                        'raw' =>    iterator_to_array($field['schema']->findAll()),
                         'type' =>   get_class($field),
                         'field' =>  $field
                     ];
@@ -76,9 +110,9 @@ class Controller
         }
 
         if ($newSchema['fields'] instanceof FieldsList) {
-            foreach ($newSchema['fields']->findAllWithGuids() as $guid => $field) {
-                $new[$guid] = (object)[
-                    'raw' =>   iterator_to_array($field->findAll()),
+            foreach ($newSchema['fields']->findAll() as $field) {
+                $new[$field['schema']['guid']] = (object)[
+                    'raw' =>    iterator_to_array($field['schema']->findAll()),
                     'type' =>   get_class($field),
                     'field' =>  $field
                 ];
@@ -155,23 +189,37 @@ class Controller
 
         // Remove fields:
         foreach ($stats->remove as $guid => $data) {
-            $data->field->removeTable($schema);
+            $data->field['schema']->delete($schema, $data->field);
         }
 
         // Rename fields:
         foreach ($stats->rename as $guid => $data) {
-            $data->new->field->renameTable($schema, $stats->schema->old, $data->old->field);
+            $data->new->field['schema']->rename($schema, $data->new->field, $stats->schema->old, $data->old->field);
         }
 
         // Create fields:
         foreach ($stats->create as $guid => $data) {
-            $data->field->createTable($schema);
+            $data->field['schema']->create($schema, $data->field);
+        }
+
+        // Move entries to the new schema:
+        if ($stats->schema->rename) {
+            $statement = Symphony::Database()->prepare('
+                update `entries` set
+                    `schema` = :new
+                where
+                    `schema` = :old
+            ');
+            $statement->execute([
+                ':new' =>       $stats->schema->new['resource']['handle'],
+                ':old' =>       $stats->schema->old['resource']['handle']
+            ]);
         }
 
         // Remove old sync data:
         $statement = Symphony::Database()->prepare('
             delete from `schemas` where
-                guid = :guid
+                `guid` = :guid
         ');
         $statement->execute([
             ':guid' =>          $schema['guid']
@@ -180,10 +228,12 @@ class Controller
         // Create new sync data:
         $statement = Symphony::Database()->prepare('
             insert into `schemas` set
-                guid = :guid,
-                object = :object
+                `schema` = :handle,
+                `guid` = :guid,
+                `object` = :object
         ');
         $statement->execute([
+            ':handle' =>        $schema['resource']['handle'],
             ':guid' =>          $schema['guid'],
             ':object' =>        serialize($schema)
         ]);

@@ -18,15 +18,15 @@ SQL;
 $queries[] = <<<SQL
 CREATE TABLE IF NOT EXISTS `entries` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `section` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `user_id` int(11) unsigned NOT NULL,
-  `creation_date` datetime NOT NULL,
-  `modification_date` datetime NOT NULL,
+  `schema` varchar(64) COLLATE utf8_unicode_ci NOT NULL,
+  `user` int(11) unsigned NOT NULL,
+  `creationDate` datetime NOT NULL,
+  `modificationDate` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `section_id` (`section`),
-  KEY `author_id` (`user_id`),
-  KEY `creation_date` (`creation_date`),
-  KEY `modification_date` (`modification_date`),
+  KEY `schema` (`schema`),
+  KEY `user` (`user`),
+  KEY `creationDate` (`creationDate`),
+  KEY `modificationDate` (`modificationDate`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SQL;
 
@@ -41,7 +41,8 @@ SQL;
 
 $queries[] = <<<SQL
 CREATE TABLE IF NOT EXISTS `schemas` (
-  `guid` varchar(64) NOT NULL DEFAULT '',
+  `schema` varchar(64) NOT NULL,
+  `guid` varchar(13) NOT NULL,
   `object` text,
   PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

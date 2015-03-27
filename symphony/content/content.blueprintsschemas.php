@@ -119,129 +119,6 @@ use Embark\CMS\Schemas\FieldsList;
             $actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
         }
 
-        private function __save(array $essentials = null, array $fields = null, array $layout = null, Section $section = null){
-            var_dump('__save'); exit;
-
-            if (is_null($section)) {
-                $section = new Section;
-                $section->path = SECTIONS;
-            }
-
-            $this->section = $section;
-            $this->errors = new MessageStack;
-            $old_handle = false;
-
-            if (is_array($essentials)) {
-                if ($essentials['name'] !== $this->section->name and $this->section->name != '') {
-                    $old_handle = $this->section->handle;
-                }
-
-                $this->section->name = $essentials['name'];
-                $this->section->{'navigation-group'} = $essentials['navigation-group'];
-                $this->section->{'hidden-from-publish-menu'} = (
-                    isset($essentials['hidden-from-publish-menu'])
-                    && $essentials['hidden-from-publish-menu'] == 'yes'
-                        ? 'yes'
-                        : 'no'
-                );
-            }
-
-            // Resave fields:
-            if (!is_null($fields)) {
-                $this->section->removeAllFields();
-
-                if (is_array($fields) and !empty($fields)) {
-                    foreach ($fields as $field) {
-                        $this->section->appendFieldByType($field['type'], $field);
-                    }
-                }
-            }
-
-            // Resave layout:
-            if (!is_null($layout)) {
-                foreach ($layout as &$column) {
-                    $column = (object)$column;
-
-                    if (is_array($column->fieldsets)) foreach ($column->fieldsets as &$fieldset) {
-                        $fieldset = (object)$fieldset;
-                    }
-                }
-
-                $this->section->layout = $layout;
-            }
-
-            try {
-                $callback = Administration::instance()->getPageCallback();
-                $current_page = $callback['pageroot'] . $callback['context'][0] . '/';
-
-                ###
-                # Delegate: SectionPreSave
-                Extension::notify(
-                    'SectionPreSave',
-                    $current_page, array(
-                        'section' => &$this->section, 'errors' => &$this->errors
-                    )
-                );
-
-                Section::save($this->section, $this->errors);
-
-                ###
-                # Delegate: SectionPostSave
-                Extension::notify(
-                    'SectionPostSave',
-                    $current_page, array(
-                        'section' => &$this->section, 'errors' => &$this->errors
-                    )
-                );
-
-                // Rename section:
-                if ($old_handle !== false) {
-                    Section::rename($this->section, $old_handle);
-
-                    ###
-                    # Delegate: SectionPostRename
-                    Extension::notify(
-                        'SectionPostRename',
-                        $current_page, array(
-                            'section' => &$this->section, 'old-handle' => $old_handle, 'errors' => &$this->errors
-                        )
-                    );
-
-                }
-
-                Section::synchronise($this->section);
-
-                return true;
-            }
-
-            catch (SectionException $e) {
-                switch ($e->getCode()) {
-                    case Section::ERROR_MISSING_OR_INVALID_FIELDS:
-                        $this->alerts()->append(
-                            __('Could not save the layout, there are errors in your field configuration. <a class="more">More information.</a>'),
-                            AlertStack::ERROR,
-                            $this->errors
-                        );
-                        break;
-                    case Section::ERROR_FAILED_TO_WRITE:
-                        $this->alerts()->append(
-                            $e->getMessage(),
-                            AlertStack::ERROR
-                        );
-                        break;
-                }
-            }
-
-            catch (Exception $e) {
-                $this->alerts()->append(
-                    __('An unknown error has occurred. <a class="more">Show trace information.</a>'),
-                    AlertStack::ERROR, $e
-                );
-            }
-
-            return false;
-        }
-
         public function __actionIndex()
         {
             var_dump('__actionIndex'); exit;
@@ -273,10 +150,30 @@ use Embark\CMS\Schemas\FieldsList;
 
         public function __actionNew()
         {
-            $this->__actionEdit();
+            $this->__save();
         }
 
         public function __actionEdit()
+        {
+            if (isset($_POST['action']['save'])) {
+                $this->__save();
+            }
+
+            if (isset($_POST['action']['delete'])) {
+                $this->__delete();
+            }
+        }
+
+        public function __delete()
+        {
+            $schema = SchemaController::read($this->_context[1]);
+
+            if (SchemaController::delete($schema)) {
+                redirect(ADMIN_URL . "/blueprints/schemas");
+            }
+        }
+
+        public function __save()
         {
             $handle = Lang::createHandle($_POST['essentials']['handle']);
             $schema = new Schema();

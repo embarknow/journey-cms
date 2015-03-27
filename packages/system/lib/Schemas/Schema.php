@@ -35,7 +35,7 @@ class Schema implements SchemaInterface
 					FROM
 						`entries` AS e
 					WHERE
-						e.section = '%s'
+						e.schema = '%s'
 				",
 				[$this['resource']['handle']]
 			);

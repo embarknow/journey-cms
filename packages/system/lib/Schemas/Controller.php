@@ -17,6 +17,40 @@ class Controller
     const DIR = WORKSPACE . '/schemas';
     const FILE_EXTENSION = '.xml';
 
+    public static function delete(MetadataInterface $schema)
+    {
+        if (static::deleteFile($schema)) {
+            // Delete field data:
+            if ($schema['fields'] instanceof FieldsList) {
+                foreach ($schema['fields']->findAll() as $field) {
+                    $field['schema']->delete($schema, $field);
+                }
+            }
+
+            // Delete entries:
+            $statement = Symphony::Database()->prepare('
+                delete from `entries` where
+                    `schema` = :handle
+            ');
+            $statement->execute([
+                ':handle' =>        $schema['resource']['handle']
+            ]);
+
+            // Delete sync information:
+            $statement = Symphony::Database()->prepare('
+                delete from `schemas` where
+                    `guid` = :guid
+            ');
+            $statement->execute([
+                ':guid' =>          $schema['guid']
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
+
     public static function syncStats(Schema $newSchema) {
         $new = $old = [];
         $result = (object)[
@@ -168,10 +202,24 @@ class Controller
             $data->field['schema']->create($schema, $data->field);
         }
 
+        // Move entries to the new schema:
+        if ($stats->schema->rename) {
+            $statement = Symphony::Database()->prepare('
+                update `entries` set
+                    `schema` = :new
+                where
+                    `schema` = :old
+            ');
+            $statement->execute([
+                ':new' =>       $stats->schema->new['resource']['handle'],
+                ':old' =>       $stats->schema->old['resource']['handle']
+            ]);
+        }
+
         // Remove old sync data:
         $statement = Symphony::Database()->prepare('
             delete from `schemas` where
-                guid = :guid
+                `guid` = :guid
         ');
         $statement->execute([
             ':guid' =>          $schema['guid']
@@ -180,10 +228,12 @@ class Controller
         // Create new sync data:
         $statement = Symphony::Database()->prepare('
             insert into `schemas` set
-                guid = :guid,
-                object = :object
+                `schema` = :handle,
+                `guid` = :guid,
+                `object` = :object
         ');
         $statement->execute([
+            ':handle' =>        $schema['resource']['handle'],
             ':guid' =>          $schema['guid'],
             ':object' =>        serialize($schema)
         ]);

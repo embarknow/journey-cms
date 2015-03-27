@@ -2,9 +2,10 @@
 
 use Embark\CMS\Database\Connection;
 use Embark\CMS\Database\ResultIterator;
+use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\SystemDateTime;
 
-	class EntryResult extends ResultIterator {
+	class EntryResult extends ResultIterator implements EntryInterface {
 		public $schema = array();
 
 		public function current(){

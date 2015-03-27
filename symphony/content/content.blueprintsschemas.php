@@ -299,14 +299,24 @@ use Embark\CMS\Schemas\FieldsList;
 
             if (isset($_POST['fields'])) {
                 foreach ($_POST['fields'] as $index => $fieldData) {
-                    $field = new $fieldData['type'];
+                    $field = FieldController::read($fieldData['type']);
                     $schema['fields'][$index] = $field;
 
+                    unset($fieldData['type']);
+
+                    // Apply data:
                     foreach ($fieldData as $name => $value) {
-                        $field[$name] = $value;
+                        if ($name === 'type') continue;
+
+                        $field['schema'][$name] = $value;
                     }
 
-                    $field->setDefaults();
+                    // Remove data that we do not want to save:
+                    foreach ($field->findAll() as $name => $value) {
+                        if ($name === 'schema') continue;
+
+                        unset($field[$name]);
+                    }
                 }
             }
 
@@ -328,6 +338,7 @@ use Embark\CMS\Schemas\FieldsList;
 
             // Save was a success:
             if ($saved) {
+                $schema = SchemaController::read($handle);
                 SchemaController::sync($schema);
 
                 redirect(ADMIN_URL . "/blueprints/schemas/edit/{$handle}/:{$action}/");
@@ -486,8 +497,10 @@ use Embark\CMS\Schemas\FieldsList;
 
             foreach (FieldController::findAll() as $field) {
                 $item = $duplicator->createTemplate($field['name']);
-                $field['data']->appendSettings($item, new MessageStack());
+                $field['schema']->appendSettings($item, new MessageStack());
             }
+
+            // var_dump($schema['fields']); exit;
 
             if ($schema['fields'] instanceof FieldsList) {
                 foreach ($schema['fields']->findAll() as $position => $field) {
@@ -499,8 +512,8 @@ use Embark\CMS\Schemas\FieldsList;
                         $messages = new MessageStack();
                     }
 
-                    $item = $duplicator->createInstance($field['data']['handle'], $field['name']);
-                    $field['data']->appendSettings($item, $messages);
+                    $item = $duplicator->createInstance($field['schema']['handle'], $field['name']);
+                    $field['schema']->appendSettings($item, $messages);
                 }
             }
 

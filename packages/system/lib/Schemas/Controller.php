@@ -11,7 +11,7 @@ use PDO;
 class Controller
 {
     use MetadataControllerTrait {
-        // MetadataTrait::
+        MetadataControllerTrait::delete as deleteFile;
     }
 
     const DIR = WORKSPACE . '/schemas';
@@ -58,9 +58,9 @@ class Controller
             }
 
             if ($oldSchema['fields'] instanceof FieldsList) {
-                foreach ($oldSchema['fields']->findAllWithGuids() as $guid => $field) {
-                    $old[$guid] = (object)[
-                        'raw' =>   iterator_to_array($field->findAll()),
+                foreach ($oldSchema['fields']->findAll() as $field) {
+                    $old[$field['schema']['guid']] = (object)[
+                        'raw' =>    iterator_to_array($field['schema']->findAll()),
                         'type' =>   get_class($field),
                         'field' =>  $field
                     ];
@@ -76,9 +76,9 @@ class Controller
         }
 
         if ($newSchema['fields'] instanceof FieldsList) {
-            foreach ($newSchema['fields']->findAllWithGuids() as $guid => $field) {
-                $new[$guid] = (object)[
-                    'raw' =>   iterator_to_array($field->findAll()),
+            foreach ($newSchema['fields']->findAll() as $field) {
+                $new[$field['schema']['guid']] = (object)[
+                    'raw' =>    iterator_to_array($field['schema']->findAll()),
                     'type' =>   get_class($field),
                     'field' =>  $field
                 ];
@@ -155,17 +155,17 @@ class Controller
 
         // Remove fields:
         foreach ($stats->remove as $guid => $data) {
-            $data->field->removeTable($schema);
+            $data->field['schema']->delete($schema, $data->field);
         }
 
         // Rename fields:
         foreach ($stats->rename as $guid => $data) {
-            $data->new->field->renameTable($schema, $stats->schema->old, $data->old->field);
+            $data->new->field['schema']->rename($schema, $data->new->field, $stats->schema->old, $data->old->field);
         }
 
         // Create fields:
         foreach ($stats->create as $guid => $data) {
-            $data->field->createTable($schema);
+            $data->field['schema']->create($schema, $data->field);
         }
 
         // Remove old sync data:

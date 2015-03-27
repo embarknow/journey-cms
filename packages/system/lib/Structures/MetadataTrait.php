@@ -31,8 +31,8 @@ trait MetadataTrait
                 $value->setDefaults();
             }
 
-            // An default type has been provided:
-            elseif (
+            // // An default type has been provided:
+            else if (
                 isset($this->schema[$name]['type'])
                 && $this->schema[$name]['type'] instanceof MetadataInterface
             ) {
@@ -46,9 +46,13 @@ trait MetadataTrait
                 $value = $this->valueFromXML($name, $node->nodeValue);
             }
 
+            // Treat 'item' as an item in a list:
             if ('item' === $name) {
                 $this->metadata[] = $value;
-            } else {
+            }
+
+            // Normal named properties:
+            else {
                 $this->metadata[$name] = $value;
             }
         }

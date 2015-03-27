@@ -27,7 +27,7 @@ class TextType implements MetadataInterface
         $this->setSchema([
             'data' => [
                 'required' =>   true,
-                'type' =>       new TextData()
+                'type' =>       new TextData($this)
             ]
         ]);
 

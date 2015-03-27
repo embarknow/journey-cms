@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<object type="Embark\CMS\Fields\Text\TextType">
+<object type="Embark\CMS\Fields\Text\TextField">
   <name>Textbox</name>
 </object>

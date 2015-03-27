@@ -18,13 +18,13 @@ class Controller implements MetadataControllerInterface
     const DIR = '/workspace/schemas';
     const FILE_EXTENSION = '.xml';
 
-    public static function delete(MetadataInterface $schema)
+    public static function delete(MetadataInterface $object)
     {
-        if (static::deleteFile($schema)) {
+        if (static::deleteFile($object)) {
             // Delete field data:
-            if ($schema['fields'] instanceof FieldsList) {
-                foreach ($schema['fields']->findAll() as $field) {
-                    $field['schema']->delete($schema, $field);
+            if ($object['fields'] instanceof FieldsList) {
+                foreach ($object['fields']->findAll() as $field) {
+                    $field['schema']->delete($object, $field);
                 }
             }
 
@@ -34,7 +34,7 @@ class Controller implements MetadataControllerInterface
                     `schema` = :handle
             ');
             $statement->execute([
-                ':handle' =>        $schema['resource']['handle']
+                ':handle' =>        $object['resource']['handle']
             ]);
 
             // Delete sync information:
@@ -43,7 +43,7 @@ class Controller implements MetadataControllerInterface
                     `guid` = :guid
             ');
             $statement->execute([
-                ':guid' =>          $schema['guid']
+                ':guid' =>          $object['guid']
             ]);
 
             return true;

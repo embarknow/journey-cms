@@ -3,12 +3,13 @@
 namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Schemas\FieldsList;
+use Embark\CMS\Structures\MetadataControllerInterface;
 use Embark\CMS\Structures\MetadataControllerTrait;
 use Embark\CMS\Structures\MetadataInterface;
 use Symphony;
 use PDO;
 
-class Controller
+class Controller implements MetadataControllerInterface
 {
     use MetadataControllerTrait {
         MetadataControllerTrait::delete as deleteFile;

@@ -154,6 +154,10 @@ trait MetadataControllerTrait
         }
     }
 
+    /**
+     * Get metadata from XML
+     * @param  DOMDocument $document
+     */
     public static function fromXML(DOMDocument $document)
     {
         $element = $document->documentElement;
@@ -165,6 +169,10 @@ trait MetadataControllerTrait
         return $metadata;
     }
 
+    /**
+     * Set metadata to XML
+     * @param  MetadataInterface $object
+     */
     public static function toXML(MetadataInterface $object)
     {
         $document = new DOMDocument();

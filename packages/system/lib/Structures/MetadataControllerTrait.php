@@ -33,6 +33,33 @@ trait MetadataControllerTrait
     }
 
     /**
+     * Locate an object.
+     *
+     * @param   string              $handleOrFile
+     *  If a handle is provided the object will be loaded from
+     *  the default location, if a file name is provided that
+     *  will be used instead.
+     *
+     * @return  string|false
+     *  The file name of the object or false on failure.
+     */
+    public static function locate($handleOrFile)
+    {
+        // Does not have a file extension, assume it is a handle
+        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
+            return DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        }
+
+        else if (is_file($handleOrFile)) {
+           return $handleOrFile;
+        }
+
+        else {
+            return false;
+        }
+    }
+
+    /**
      * Read an object.
      *
      * @param   string              $handleOrFile
@@ -42,23 +69,16 @@ trait MetadataControllerTrait
      */
     public static function read($handleOrFile)
     {
-        // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        $file = static::locate($handleOrFile);
+
+        if ($file) {
+            $document = new DOMDocument();
+            $document->load($file);
+
+            return static::fromXML($document);
         }
 
-        else if (is_file($handleOrFile)) {
-           $file = $handleOrFile;
-        }
-
-        else {
-            return false;
-        }
-
-        $document = new DOMDocument();
-        $document->load($file);
-
-        return static::fromXML($document);
+        return false;
     }
 
     /**

@@ -19,6 +19,19 @@ interface MetadataControllerInterface
     public static function create(MetadataInterface $object, $handleOrFile);
 
     /**
+     * Locate an object.
+     *
+     * @param   string              $handleOrFile
+     *  If a handle is provided the object will be loaded from
+     *  the default location, if a file name is provided that
+     *  will be used instead.
+     *
+     * @return  string|false
+     *  The file name of the object or false on failure.
+     */
+    public static function locate($handleOrFile);
+
+    /**
      * Read an object.
      *
      * @param   string              $handleOrFile

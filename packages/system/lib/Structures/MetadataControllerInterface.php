@@ -5,7 +5,7 @@ namespace Embark\CMS\Structures;
 use DOMDocument;
 use Embark\CMS\Structures\MetadataInterface;
 
-namespace MetadataControllerInterface
+interface MetadataControllerInterface
 {
     /**
      * Save a new object.

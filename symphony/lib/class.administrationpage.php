@@ -1,6 +1,7 @@
 <?php
 
 use Embark\CMS\Sections\Controller;
+use Embark\CMS\Structures\MenuItem;
 
 	require_once(LIB . '/class.htmldocument.php');
 	require_once(LIB . '/class.section.php');
@@ -343,11 +344,9 @@ use Embark\CMS\Sections\Controller;
 				}
 			}
 
-
-
 			foreach (Controller::findAll() as $section) {
 				// Section doesn't have a menu item, don't append it:
-				if (!($section['menu'] instanceof Embark\CMS\Structures\MenuItem)) {
+				if (!($section['menu'] instanceof MenuItem)) {
 					continue;
 				}
 
@@ -367,6 +366,7 @@ use Embark\CMS\Sections\Controller;
 				$nav[$groupIndex]['children'][] = [
 					'link' =>		'/publish/' . $section['resource']['handle'],
 					'name' =>		$section['name'],
+					'order' =>		$section['menu']['order'],
 					'type' =>		'section',
 					'section' =>	[
 										'id' =>		$section['guid'],
@@ -502,6 +502,32 @@ use Embark\CMS\Sections\Controller;
 			Extension::notify(
 				'ExtensionsAddToNavigation', '/administration/', array('navigation' => &$nav)
 			);
+
+			// Sort navigation groups:
+			foreach ($nav as &$group) {
+				if (isset($group['children'])) {
+					usort($group['children'], function($a, $b) {
+						$aOrder = (
+							isset($a['order'])
+								? $a['order']
+								: 0
+						);
+						$bOrder = (
+							isset($b['order'])
+								? $b['order']
+								: 0
+						);
+
+						// Orders are different, use them for sorting:
+						if ($aOrder !== $bOrder) {
+							return $aOrder - $bOrder;
+						}
+
+						// Orders are the same, sort by name:
+						return strnatcasecmp($a['name'], $b['name']);
+					});
+				}
+			}
 
 			$pageCallback = Administration::instance()->getPageCallback();
 

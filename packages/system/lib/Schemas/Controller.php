@@ -3,12 +3,13 @@
 namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Schemas\FieldsList;
+use Embark\CMS\Structures\MetadataControllerInterface;
 use Embark\CMS\Structures\MetadataControllerTrait;
 use Embark\CMS\Structures\MetadataInterface;
 use Symphony;
 use PDO;
 
-class Controller
+class Controller implements MetadataControllerInterface
 {
     use MetadataControllerTrait {
         MetadataControllerTrait::delete as deleteFile;
@@ -17,13 +18,13 @@ class Controller
     const DIR = '/workspace/schemas';
     const FILE_EXTENSION = '.xml';
 
-    public static function delete(MetadataInterface $schema)
+    public static function delete(MetadataInterface $object)
     {
-        if (static::deleteFile($schema)) {
+        if (static::deleteFile($object)) {
             // Delete field data:
-            if ($schema['fields'] instanceof FieldsList) {
-                foreach ($schema['fields']->findAll() as $field) {
-                    $field['schema']->delete($schema, $field);
+            if ($object['fields'] instanceof FieldsList) {
+                foreach ($object['fields']->findAll() as $field) {
+                    $field['schema']->delete($object, $field);
                 }
             }
 
@@ -33,7 +34,7 @@ class Controller
                     `schema` = :handle
             ');
             $statement->execute([
-                ':handle' =>        $schema['resource']['handle']
+                ':handle' =>        $object['resource']['handle']
             ]);
 
             // Delete sync information:
@@ -42,7 +43,7 @@ class Controller
                     `guid` = :guid
             ');
             $statement->execute([
-                ':guid' =>          $schema['guid']
+                ':guid' =>          $object['guid']
             ]);
 
             return true;

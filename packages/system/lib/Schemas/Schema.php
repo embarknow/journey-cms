@@ -55,7 +55,18 @@ class Schema implements SchemaInterface
 	public function findField($handle)
 	{
 		foreach ($this['fields']->findAll() as $field) {
-			if ($field['data']['handle'] !== $handle) continue;
+			if ($field['schema']['handle'] !== $handle) continue;
+
+			return $field;
+		}
+
+		return false;
+	}
+
+	public function findFieldByGuid($guid)
+	{
+		foreach ($this['fields']->findAll() as $field) {
+			if ($field['schema']['guid'] !== $guid) continue;
 
 			return $field;
 		}

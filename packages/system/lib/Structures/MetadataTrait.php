@@ -9,7 +9,7 @@ use Embark\CMS\Structures\MetadataInterface;
 trait MetadataTrait
 {
     protected $metadata = [];
-    private $schema = [];
+    private $metadataSchema = [];
 
     public function fromXML(DOMElement $xml)
     {
@@ -35,10 +35,10 @@ trait MetadataTrait
 
             // // An default type has been provided:
             else if (
-                isset($this->schema[$name]['type'])
-                && $this->schema[$name]['type'] instanceof MetadataInterface
+                isset($this->metadataSchema[$name]['type'])
+                && $this->metadataSchema[$name]['type'] instanceof MetadataInterface
             ) {
-                $value = clone $this->schema[$name]['type'];
+                $value = clone $this->metadataSchema[$name]['type'];
                 $value->fromXML($node);
                 $value->setDefaults();
             }
@@ -62,7 +62,7 @@ trait MetadataTrait
 
     public function setDefaults()
     {
-        foreach ($this->schema as $name => $schema) {
+        foreach ($this->metadataSchema as $name => $schema) {
             if (isset($this[$name])) {
                 continue;
             }
@@ -117,7 +117,7 @@ trait MetadataTrait
 
     public function setSchema(array $schema)
     {
-        $this->schema = $schema;
+        $this->metadataSchema = $schema;
     }
 
     public function toXML(DOMElement $xml)
@@ -139,9 +139,9 @@ trait MetadataTrait
 
             // The data is of the type expected by default:
             if (
-                isset($this->schema[$name]['type'])
-                && $this->schema[$name]['type'] instanceof MetadataInterface
-                && get_class($value) === get_class($this->schema[$name]['type'])
+                isset($this->metadataSchema[$name]['type'])
+                && $this->metadataSchema[$name]['type'] instanceof MetadataInterface
+                && get_class($value) === get_class($this->metadataSchema[$name]['type'])
             ) {
                 $value->toXML($node);
             }
@@ -164,10 +164,10 @@ trait MetadataTrait
     protected function valueToXML($name, $value)
     {
         if (
-            isset($this->schema[$name]['filter'])
-            && $this->schema[$name]['filter'] instanceof MetadataValueInterface
+            isset($this->metadataSchema[$name]['filter'])
+            && $this->metadataSchema[$name]['filter'] instanceof MetadataValueInterface
         ) {
-            return $this->schema[$name]['filter']->toXML($value);
+            return $this->metadataSchema[$name]['filter']->toXML($value);
         }
 
         return $value;
@@ -176,10 +176,10 @@ trait MetadataTrait
     protected function valueFromXML($name, $value)
     {
         if (
-            isset($this->schema[$name]['filter'])
-            && $this->schema[$name]['filter'] instanceof MetadataValueInterface
+            isset($this->metadataSchema[$name]['filter'])
+            && $this->metadataSchema[$name]['filter'] instanceof MetadataValueInterface
         ) {
-            return $this->schema[$name]['filter']->fromXML($value);
+            return $this->metadataSchema[$name]['filter']->fromXML($value);
         }
 
         return $value;

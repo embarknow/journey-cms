@@ -1,12 +1,31 @@
 <?php
 
+use Embark\CMS\Sections\Controller as SectionController;
+
 require_once LIB . '/class.administrationpage.php';
 
 class ContentPublish extends AdministrationPage
 {
+	protected $section;
+
 	public function __switchboard($type = 'view')
 	{
-		var_dump($type); exit;
+		$method = $type . ucfirst($this->_context['page']);
+
+		if (false === isset($this->section)) {
+			$this->section = SectionController::read($this->_context['section_handle']);
+		}
+
+		switch ($type) {
+			case 'prepare':
+				$this->section->{$method}();
+				break;
+			case 'view':
+				$this->section->{$method}($this);
+				break;
+			default:
+				var_dump($type); exit;
+		}
 	}
 }
 

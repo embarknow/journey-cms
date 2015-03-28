@@ -7,17 +7,17 @@
 		public static function init(XMLDocument $doc) {
 			self::$Symphony = $doc;
 		}
-		
+
 		public static function Group(SymphonyDOMElement $element) {
 			$group = Widget::$Symphony->createElement('div');
 			$group->setAttribute('class', 'group');
-			
+
 			foreach (func_get_args() as $node) {
 				if (!($node instanceof DOMNode)) continue;
-				
+
 				$group->appendChild($node);
 			}
-			
+
 			return $group;
 		}
 
@@ -31,14 +31,14 @@
 					Widget::$Symphony->createElement('h3',$value)
 				);
 			}
-			
+
 			if(!is_null($help)){
 				$para = Widget::$Symphony->createElement('p');
 				$para->setAttribute('class', 'help');
-				
+
 				$frag = Widget::$Symphony->createDocumentFragment();
 				$frag->appendXML($help);
-				
+
 				$para->appendChild($frag);
 				$fieldset->appendChild($para);
 			}
@@ -72,7 +72,7 @@
 
 			return $obj;
 		}
-		
+
 		public static function Submit($name, $value, array $attributes=NULL) {
 			$obj = Widget::$Symphony->createElement('button', null, $attributes);
 			$obj->setAttribute('name', $name);
@@ -80,10 +80,10 @@
 			$obj->appendChild(
 				Widget::$Symphony->createElement('span', $value)
 			);
-			
+
 			return $obj;
 		}
-		
+
 		public static function Textarea($name, $value=null, array $attributes=NULL){
 			$obj = Widget::$Symphony->createElement('textarea', $value, $attributes);
 
@@ -96,9 +96,9 @@
 
 		public static function Select($name, $options, array $attributes=NULL){
 			$obj = Widget::$Symphony->createElement('select');
-			
+
 			$attributes['name'] = $name;
-			
+
 			if(!is_null($attributes)){
 				$obj->setAttributeArray($attributes);
 			}
@@ -175,25 +175,37 @@
 			$thead = Widget::$Symphony->createElement('thead');
 			$tr = Widget::$Symphony->createElement('tr');
 
-			foreach($columns as $col){
-				$th = Widget::$Symphony->createElement('th');
-
-				$value = $scope = null;
-
-				$value = $col[0];
-				if(isset($col[1])) $scope = $col[1];
-				if(isset($col[2])) $th->setAttributeArray($col[2]);
-
-				$th->setValue($value);
-
-				if($scope && $scope != '') $th->setAttribute('scope', $scope);
-
-				$tr->appendChild($th);
+			foreach ($columns as $col) {
+				$tr->appendChild(Widget::TableColumn($col));
 			}
 
 			$thead->appendChild($tr);
 
 			return $thead;
+		}
+
+		public static function TableColumn($column)
+		{
+			$th = Widget::$Symphony->createElement('th');
+
+			$value = $scope = null;
+			$value = $column[0];
+
+			if (isset($column[1])) {
+				$scope = $column[1];
+			}
+
+			if (isset($column[2])) {
+				$th->setAttributeArray($column[2]);
+			}
+
+			$th->setValue($value);
+
+			if ($scope && $scope != '') {
+				$th->setAttribute('scope', $scope);
+			}
+
+			return $th;
 		}
 
 		public static function TableBody($rows, array $attributes=NULL){
@@ -210,7 +222,7 @@
 
 		public static function TableRow($data, array $attributes=NULL){
 			$tr = Widget::$Symphony->createElement('tr');
-			
+
 			if(!is_null($attributes)){
 				$tr->setAttributeArray($attributes);
 			}

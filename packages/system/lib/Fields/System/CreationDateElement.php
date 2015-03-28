@@ -3,21 +3,19 @@
 namespace Embark\CMS\Fields;
 
 use Embark\CMS\Actors\DatasourceInterface;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Fields\FieldElementInterface;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
 use DOMElement;
-use Entry;
-use Field;
 use General;
-use Section;
 
-class CreationDateElement implements MetadataInterface
+class CreationDateElement implements FieldElementInterface
 {
 	use MetadataTrait;
 
-	public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry)
 	{
 		$document = $wrapper->ownerDocument;
 		$date = new SystemDateTime($entry->creation_date);

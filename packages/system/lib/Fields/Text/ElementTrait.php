@@ -1,20 +1,19 @@
 <?php
 
-namespace Embark\CMS\Fields\Textbox;
+namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Actors\DatasourceInterface;
+use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Schemas\Schema;
 use DOMElement;
-use Entry;
 use Exception;
-use Field;
-use Section;
 
 trait ElementTrait
 {
+    use MetadataTrait;
+
     public function __construct()
     {
         $this->setSchema([
@@ -24,9 +23,9 @@ trait ElementTrait
         ]);
     }
 
-    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry)
     {
-        $field = $section->findField($this['field']);
+        $field = $schema->findField($this['field']);
 
         if (false === $field) return;
 

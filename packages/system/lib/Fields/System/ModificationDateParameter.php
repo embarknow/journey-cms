@@ -1,21 +1,20 @@
 <?php
 
-namespace Embark\CMS\Fields;
+namespace Embark\CMS\Fields\System;
 
 use Embark\CMS\Actors\DatasourceInterface;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Fields\FieldParameterInterface;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
 use DateTime;
-use Entry;
-use Section;
 
-class ModificationDateParameter implements MetadataInterface
+class ModificationDateParameter implements FieldParameterInterface
 {
     use MetadataTrait;
 
-    public function appendParameter(array &$parameters, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    public function appendParameter(array &$parameters, DatasourceInterface $datasource, SchemaInterface $section, EntryInterface $entry)
     {
         $key = sprintf('ds-%s.system.%s', $datasource['handle'], 'modification-date');
 

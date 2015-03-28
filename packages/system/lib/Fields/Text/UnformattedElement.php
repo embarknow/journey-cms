@@ -2,18 +2,15 @@
 
 namespace Embark\CMS\Fields\Text;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldElementInterface;
 use DOMElement;
-use Entry;
-use Exception;
 
-class UnformattedElement implements MetadataInterface
+class UnformattedElement implements FieldElementInterface
 {
-    use MetadataTrait;
     use ElementTrait;
 
-    public function appendValue(DOMElement $element, Field $field, $data)
+    public function appendValue(DOMElement $element, FieldInterface $field, $data)
     {
         $document = $element->ownerDocument;
         $element->setAttribute('mode', 'unformatted');

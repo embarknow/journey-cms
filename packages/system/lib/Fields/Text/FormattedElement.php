@@ -2,18 +2,16 @@
 
 namespace Embark\CMS\Fields\Text;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldElementInterface;
 use DOMElement;
-use Entry;
 use Exception;
 
-class FormattedElement implements MetadataInterface
+class FormattedElement implements FieldElementInterface
 {
-    use MetadataTrait;
     use ElementTrait;
 
-    public function appendValue(DOMElement $element, Field $field, $data)
+    public function appendValue(DOMElement $element, FieldInterface $field, $data)
     {
         $document = $element->ownerDocument;
         $fragment = $document->createDocumentFragment();
@@ -22,7 +20,9 @@ class FormattedElement implements MetadataInterface
 
         try {
             $fragment->appendXML($value);
-        } catch (Exception $e) {
+        }
+
+        catch (Exception $e) {
             $value = $field->repairMarkup($value);
             $fragment->appendXML($value);
         }

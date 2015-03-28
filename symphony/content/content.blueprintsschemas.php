@@ -1,6 +1,7 @@
 <?php
 
 use Embark\CMS\Fields\Controller as FieldController;
+use Embark\CMS\Fields\FieldSchemaInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Schemas\Schema;
 use Embark\CMS\Schemas\FieldsList;
@@ -393,11 +394,11 @@ use Embark\CMS\Schemas\FieldsList;
             $duplicator->setAttribute('id', 'section-duplicator');
 
             foreach (FieldController::findAll() as $field) {
-                $item = $duplicator->createTemplate($field['name']);
-                $field['schema']->appendSettings($item, new MessageStack());
+                if ($field['schema'] instanceof FieldSchemaInterface) {
+                    $item = $duplicator->createTemplate($field['name']);
+                    $field['schema']->appendSettings($item, new MessageStack());
+                }
             }
-
-            // var_dump($schema['fields']); exit;
 
             if ($schema['fields'] instanceof FieldsList) {
                 foreach ($schema['fields']->findAll() as $position => $field) {

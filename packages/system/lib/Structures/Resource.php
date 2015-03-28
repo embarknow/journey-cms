@@ -2,7 +2,6 @@
 
 namespace Embark\CMS\Structures;
 
-use Embark\CMS\Structures\Author;
 use DOMElement;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;

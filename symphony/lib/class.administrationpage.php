@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Sections\Controller;
+
 	require_once(LIB . '/class.htmldocument.php');
 	require_once(LIB . '/class.section.php');
 	require_once(LIB . '/class.layout.php');
@@ -341,28 +343,37 @@
 				}
 			}
 
-			foreach(new SectionIterator as $s){
 
-				$group_index = self::__navigationFindGroupIndex($nav, $s->{'navigation-group'});
 
-				if($group_index === false){
-					$group_index = General::array_find_available_index($nav, 0);
+			foreach (Controller::findAll() as $section) {
+				// Section doesn't have a menu item, don't append it:
+				if (!($section['menu'] instanceof Embark\CMS\Structures\MenuItem)) {
+					continue;
+				}
 
-					$nav[$group_index] = array(
-						'name' => $s->{'navigation-group'},
-						'index' => $group_index,
-						'children' => array(),
-						'limit' => NULL
+				$groupIndex = self::__navigationFindGroupIndex($nav, $section['menu']['name']);
+
+				if (false === $groupIndex) {
+					$groupIndex = General::array_find_available_index($nav, 0);
+
+					$nav[$groupIndex] = array(
+						'name' =>		$section['menu']['name'],
+						'index' =>		$groupIndex,
+						'children' =>	[],
+						'limit' =>		null
 					);
 				}
 
-				$nav[$group_index]['children'][] = array(
-					'link' => '/publish/' . $s->handle . '/',
-					'name' => $s->name,
-					'type' => 'section',
-					'section' => array('id' => $s->guid, 'handle' => $s->handle),
-					'visible' => ($s->{'hidden-from-publish-menu'} == 'no' ? 'yes' : 'no')
-				);
+				$nav[$groupIndex]['children'][] = [
+					'link' =>		'/publish/' . $section['resource']['handle'],
+					'name' =>		$section['name'],
+					'type' =>		'section',
+					'section' =>	[
+										'id' =>		$section['guid'],
+										'handle' =>	$section['resource']['handle']
+									],
+					'visible' =>	'yes'
+				];
 			}
 
 			$extensions = new ExtensionQuery();

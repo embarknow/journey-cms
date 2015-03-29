@@ -34,16 +34,16 @@ class Controller implements MetadataControllerInterface
                     `schema` = :handle
             ');
             $statement->execute([
-                ':handle' =>        $object['resource']['handle']
+                ':handle' => $object['resource']['handle']
             ]);
 
             // Delete sync information:
             $statement = Symphony::Database()->prepare('
-                delete from `schemas` where
+                delete from `sync` where
                     `guid` = :guid
             ');
             $statement->execute([
-                ':guid' =>          $object['guid']
+                ':guid' => $object['guid']
             ]);
 
             return true;
@@ -73,7 +73,7 @@ class Controller implements MetadataControllerInterface
             SELECT
                 s.object
             FROM
-                `schemas` AS s
+                `sync` AS s
             WHERE
                 s.guid = ?
         ');
@@ -212,31 +212,31 @@ class Controller implements MetadataControllerInterface
                     `schema` = :old
             ');
             $statement->execute([
-                ':new' =>       $stats->schema->new['resource']['handle'],
-                ':old' =>       $stats->schema->old['resource']['handle']
+                ':new' => $stats->schema->new['resource']['handle'],
+                ':old' => $stats->schema->old['resource']['handle']
             ]);
         }
 
         // Remove old sync data:
         $statement = Symphony::Database()->prepare('
-            delete from `schemas` where
+            delete from `sync` where
                 `guid` = :guid
         ');
         $statement->execute([
-            ':guid' =>          $schema['guid']
+            ':guid' => $schema['guid']
         ]);
 
         // Create new sync data:
         $statement = Symphony::Database()->prepare('
-            insert into `schemas` set
-                `schema` = :handle,
+            insert into `sync` set
+                `handle` = :handle,
                 `guid` = :guid,
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' =>        $schema['resource']['handle'],
-            ':guid' =>          $schema['guid'],
-            ':object' =>        serialize($schema)
+            ':handle' => $schema['resource']['handle'],
+            ':guid' =>   $schema['guid'],
+            ':object' => serialize($schema)
         ]);
     }
 }

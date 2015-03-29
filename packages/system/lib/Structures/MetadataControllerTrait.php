@@ -104,7 +104,7 @@ trait MetadataControllerTrait
 
         // Use the stored file name:
         else if (isset($object['resource']['uri'])) {
-            $file = $object['resource']['uri'];
+            $file = DOCROOT . '/' . $object['resource']['uri'];
         }
 
         // No file name to be had:
@@ -121,9 +121,9 @@ trait MetadataControllerTrait
         if (
             $result
             && isset($object['resource']['uri'])
-            && $file !== $object['resource']['uri']
+            && $file !== DOCROOT . '/' . $object['resource']['uri']
         ) {
-            return unlink($object['resource']['uri']);
+            return unlink(DOCROOT . '/' . $object['resource']['uri']);
         }
 
         return $result;
@@ -136,7 +136,7 @@ trait MetadataControllerTrait
      */
     public static function delete(MetadataInterface $object)
     {
-        $file = $object['resource']['uri'];
+        $file = DOCROOT . '/' . $object['resource']['uri'];
 
         return unlink($file);
     }

@@ -14,5 +14,6 @@ class Resource implements MetadataInterface
     {
         $this['uri'] = urldecode($xml->ownerDocument->documentURI);
         $this['handle'] = basename($this['uri'], '.xml');
+        $this['uri'] = str_replace(DOCROOT . '/', '', $this['uri']);
     }
 }

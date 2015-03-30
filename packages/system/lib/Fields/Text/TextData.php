@@ -4,15 +4,19 @@ namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Fields\Controller;
 use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Fields\Controller;
+use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\Guid;
+use Embark\CMS\Structures\Integer;
 use Context;
 use Entry;
 use Extension;
+use Lang;
 use MessageStack;
 use Symphony;
 use SymphonyDOMElement;
@@ -29,6 +33,11 @@ class TextData implements FieldDataInterface
 
     public function __construct()
     {
+        $this->setSchema([
+            'required' => [
+                'filter' =>   new Boolean()
+            ]
+        ]);
     }
 
     public function prepare(EntryInterface $entry, FieldInterface $field, $new = null, $old = null)
@@ -64,7 +73,7 @@ class TextData implements FieldDataInterface
 
         // Generate the handle:
         if (isset($result->value) && isset($result->handle) === false) {
-            $result->handle = strtolower($new);
+            $result->handle = Lang::createHandle($new);
         }
 
         return $result;
@@ -72,18 +81,27 @@ class TextData implements FieldDataInterface
 
     public function validate(EntryInterface $entry, FieldInterface $field, $data)
     {
-        // TODO: Throw an exception if $field['schema'] is unset.
+        // Field is required but no value was set:
         if (
-            $field->settings()->required === 'yes'
+            $this['required']
             && (
                 isset($data->value) === false
                 || trim($data->value) == false
             )
         ) {
-            throw new \Exception("'{$field->settings()->handle}' is a required field.");
+            throw new FieldRequiredException('Value is required.');
         }
 
-        yield true;
+        // The value is longer than max-length:
+        if (
+            isset($this['max-length'], $data->value)
+            && $this['max-length'] > 0
+            && strlen($data->value) > $this['max-length']
+        ) {
+            throw new TextLengthException('Value is longer than allowed.');
+        }
+
+        return true;
     }
 
     public function read(SchemaInterface $section, EntryInterface $entry, FieldInterface $field)

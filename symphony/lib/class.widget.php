@@ -281,5 +281,18 @@
 
 		}
 
-	}
+		public static function Error($element, $message=null){
+			$div = Widget::$Symphony->createElement('div');
+			$div->setAttributeArray(array('id' => 'error', 'class' => 'invalid'));
+			$element->parentNode->replaceChild($div, $element);
+			$div->appendChild($element);
 
+			if (!is_null($message)) {
+				$div->appendChild(
+					Widget::$Symphony->createElement('p', $message)
+				);
+			}
+
+			return $div;
+		}
+	}

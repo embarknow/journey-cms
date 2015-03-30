@@ -19,6 +19,9 @@ class SectionView implements MetadataInterface
             ],
             'table' => [
                 'type' =>   new SectionTableView($this)
+            ],
+            'form' => [
+                'type' =>   new SectionFormView($this)
             ]
         ]);
     }
@@ -28,9 +31,14 @@ class SectionView implements MetadataInterface
 
     }
 
+    public function prepareForm()
+    {
+        // $this['form']->prepareForm($this, $page);
+    }
+
     public function viewIndex($page)
     {
-        $page->setTitle(__('%1$s &ndash; %2$s', array(__('Symphony'), $this['name'])));
+        $page->setTitle(__('%1$s &ndash; %2$s', [__('Symphony'), $this['name']]));
 
         $page->appendSubheading(
             $this['name'],

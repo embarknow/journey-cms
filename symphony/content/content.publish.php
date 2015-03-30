@@ -10,22 +10,28 @@ class ContentPublish extends AdministrationPage
 
 	public function __switchboard($type = 'view')
 	{
-		$method = $type . ucfirst($this->_context['page']);
-
-		if (false === isset($this->section)) {
-			$this->section = SectionController::read($this->_context['section_handle']);
+		if (false === isset($section)) {
+			$section = SectionController::read($this->_context['section_handle']);
 		}
 
-		switch ($type) {
-			case 'prepare':
-				$this->section->{$method}();
-				break;
-			case 'view':
-				$this->section->{$method}($this);
-				break;
-			default:
-				var_dump($type); exit;
+		if ($type === 'view') {
+			$this->{'__view' . $this->_context['page']}($section);
 		}
+	}
+
+	public function __viewIndex($section)
+	{
+
+	}
+
+	public function __viewNew($section)
+	{
+		$section['form']->appendForm($this, $section, new Entry());
+	}
+
+	public function __viewEdit($section)
+	{
+		$section['form']->appendForm($this, $section, new Entry());
 	}
 }
 

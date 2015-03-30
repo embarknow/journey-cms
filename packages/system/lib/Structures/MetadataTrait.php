@@ -11,8 +11,45 @@ trait MetadataTrait
     protected $metadata = [];
     private $metadataSchema = [];
 
+    public function fromMetadata(MetadataInterface $object)
+    {
+        foreach ($object->findAll() as $name => $value) {
+            // Already exists:
+            if (isset($this->metadata[$name])) {
+                // Merge metadata:
+                if (
+                    $this->metadata[$name] instanceof MetadataInterface
+                    && $value instanceof MetadataInterface
+                ) {
+                    $this->metadata[$name]->fromMetadata($value);
+                }
+
+                // Replace it:
+                else {
+                    $this->metadata[$name] = $value;
+                }
+            }
+
+            // Add it:
+            else {
+                $this->metadata[$name] = $value;
+            }
+        }
+    }
+
     public function fromXML(DOMElement $xml)
     {
+        // The default name given to unamed/numeric items:
+        $itemName = 'item';
+
+        // Check to see if an alternative name is defined:
+        foreach ($this->metadataSchema as $schemaName => $schema) {
+            if (isset($schema['list']) && $schema['list']) {
+                $itemName = $schemaName;
+                break;
+            }
+        }
+
         // Give the root metadata information about where it came from:
         if ($xml === $xml->ownerDocument->documentElement) {
             $this['resource'] = new Resource($xml);
@@ -48,8 +85,8 @@ trait MetadataTrait
                 $value = $this->valueFromXML($name, $node->nodeValue);
             }
 
-            // Treat 'item' as an item in a list:
-            if ('item' === $name) {
+            // Treat as an item in a list:
+            if ($name === $itemName) {
                 $this->metadata[] = $value;
             }
 
@@ -122,6 +159,17 @@ trait MetadataTrait
 
     public function toXML(DOMElement $xml)
     {
+        // The default name given to unamed/numeric items:
+        $itemName = 'item';
+
+        // Check to see if an alternative name is defined:
+        foreach ($this->metadataSchema as $schemaName => $schema) {
+            if (isset($schema['list']) && $schema['list']) {
+                $itemName = $schemaName;
+                break;
+            }
+        }
+
         foreach ($this->metadata as $name => $value) {
             // Do not output resource information:
             if ($value instanceof Resource) {
@@ -129,10 +177,12 @@ trait MetadataTrait
             }
 
             if (is_integer($name)) {
-                $node = $xml->ownerDocument->createElement('item');
+                $node = $xml->ownerDocument->createElement($itemName);
                 $xml->appendChild($node);
-                $name = 'item';
-            } else {
+                $name = $itemName;
+            }
+
+            else {
                 $node = $xml->ownerDocument->createElement($name);
                 $xml->appendChild($node);
             }

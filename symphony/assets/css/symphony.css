@@ -352,6 +352,18 @@
 		font-size: 11pt;
 		padding: 15px 30px 20px;
 	}
+	h2.breadcrumb > span:after {
+		content: '‣';
+		display: inline-block;
+		margin: 0 0.5ex;
+	}
+	h2.breadcrumb > span:last-child:after {
+		display: none;
+	}
+	h2.breadcrumb > span:last-child a {
+		color: #000000;
+		text-decoration: none;
+	}
 	h2 select {
 		font-size: 9pt;
 		margin: 0 1ex;
@@ -763,6 +775,11 @@
 	form .label em {
 		float: right;
 		opacity: 0.5;
+	}
+	form label em + em:after,
+	form .label em + em:after {
+		content: '–';
+		margin: 0 0.4ex;
 	}
 	form label input,
 	form .label input,

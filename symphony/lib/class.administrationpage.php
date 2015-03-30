@@ -224,6 +224,29 @@ use Embark\CMS\Structures\MenuItem;
 			$this->Form->appendChild($h2);
 		}
 
+		public function appendBreadcrumb($item)
+		{
+			if ($this->evaluate('boolean(h2)', $this->Form)) {
+				$h2 = $this->xpath('h2', $this->Form)->item(0);
+			}
+
+			else {
+				$h2 = $this->createElement('h2', $string);
+				$h2->addClass('breadcrumb');
+				$this->Form->appendChild($h2);
+			}
+
+			if (!($item instanceof DOMElement)) {
+				$h2->appendChild($this->createElement('span', $item));
+			}
+
+			else {
+				$span = $this->createElement('span');
+				$span->appendChild($item);
+				$h2->appendChild($span);
+			}
+		}
+
 		public function appendNavigation(){
 
 			$nav = $this->getNavigationArray();

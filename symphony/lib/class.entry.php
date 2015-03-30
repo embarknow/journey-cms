@@ -5,7 +5,7 @@ use Embark\CMS\Database\ResultIterator;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\SystemDateTime;
 
-	class EntryResult extends ResultIterator implements EntryInterface {
+	class EntryResult extends ResultIterator {
 		public $schema = array();
 
 		public function current(){
@@ -45,7 +45,7 @@ use Embark\CMS\SystemDateTime;
 
 	Class EntryException extends Exception {}
 
-	Class Entry{
+	Class Entry implements EntryInterface{
 
 		const STATUS_OK = 0;
 		const STATUS_ERROR = 1;

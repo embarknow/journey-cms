@@ -2,24 +2,26 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
-use SymphonyDOMElement;
 use Exception;
+use HTMLDocument;
+use SymphonyDOMElement;
 use Widget;
 
-class TextInputForm implements MetadataInterface
+class TextInputForm implements FieldFormInterface
 {
     use MetadataTrait;
 
     protected $label;
     protected $input;
 
-    public function appendHeaders($page, FieldInterface $field, array &$headersAppended)
+    public function appendHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended)
     {
         // Make sure we only append our headers once:
         if (!in_array(get_class($field), $headersAppended)) {
@@ -63,14 +65,14 @@ class TextInputForm implements MetadataInterface
         }
     }
 
-    public function setData(FieldInterface $field, $data)
+    public function setData(EntryInterface $entry, FieldInterface $field, $data)
     {
         if (isset($data->value)) {
             $this->input->setAttribute('value', $data->value);
         }
     }
 
-    public function setError(FieldInterface $field, Exception $error)
+    public function setError(EntryInterface $entry, FieldInterface $field, Exception $error)
     {
         // Field was not filled in:
         if ($error instanceof FieldRequiredException) {

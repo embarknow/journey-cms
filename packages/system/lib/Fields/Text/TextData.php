@@ -16,6 +16,7 @@ use Embark\CMS\Structures\Integer;
 use Context;
 use Entry;
 use Extension;
+use General;
 use Lang;
 use MessageStack;
 use Symphony;
@@ -23,6 +24,7 @@ use SymphonyDOMElement;
 use TextFormatter;
 use TextFormatterIterator;
 use Widget;
+use PDO;
 
 /**
  * Used to access field data.
@@ -40,46 +42,45 @@ class TextData implements FieldDataInterface
         ]);
     }
 
-    public function prepare(EntryInterface $entry, FieldInterface $field, $new = null, $old = null)
+    public function prepare(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $new = null, $old = null)
     {
         // TODO: Throw an exception if $field['schema'] is unset.
         // Start with the old value:
-        if (isset($old->value)) {
+        if (isset($old->value, $new->handle)) {
             $result = $old;
         }
 
         else {
             $result = (object)[
                 'handle' =>     null,
-                'value' =>      null
+                'value' =>      null,
+                'formatted' =>  null
             ];
         }
 
         // Import the new value on top:
-        if (isset($new->value, $new->handle)) {
+        if (isset($new->value, $new->handle, $new->formatted)) {
             $result->handle = $new->handle;
             $result->value = $new->value;
+            $result->formatted = $new->formatted;
         }
 
         else if (isset($new->value)) {
-            $result->handle = null;
+            $result->handle = Lang::createHandle($new->value);
             $result->value = $new->value;
+            $result->formatted = General::sanitize($new->value);
         }
 
         else if (isset($new)) {
-            $result->handle = null;
-            $result->value = $new;
-        }
-
-        // Generate the handle:
-        if (isset($result->value) && isset($result->handle) === false) {
             $result->handle = Lang::createHandle($new);
+            $result->value = $new;
+            $result->formatted = General::sanitize($new);
         }
 
         return $result;
     }
 
-    public function validate(EntryInterface $entry, FieldInterface $field, $data)
+    public function validate(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $data)
     {
         // Field is required but no value was set:
         if (
@@ -104,33 +105,30 @@ class TextData implements FieldDataInterface
         return true;
     }
 
-    public function read(SchemaInterface $section, EntryInterface $entry, FieldInterface $field)
+    public function read(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
     {
         // TODO: Throw an exception if $field['schema'] is unset.
-        $rows = Symphony::Database()->query(
-            "SELECT * FROM `data_%s_%s` WHERE `entry_id` = %s ORDER BY `id` ASC",
-            array(
-                $entry->section,
-                $this->{'element-name'},
-                $entry->id
-            )
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $field['schema']['handle'],
+            $field['schema']['guid']
         );
 
-        $statement = Symphony::Database()->prepare(sprintf(
-            'select * from `data_%s_%s` where `entry_id` = ?',
-            $section['resource']['handle'],
-            $field['handle']
-        ));
-        $statement->bindValue(1, $entry->getId(), PDO::PARAM_INT);
+        $statement = Symphony::Database()->prepare("
+            select * from `$table` where
+                `entry_id` = :entryId
+        ");
+        $statement->bindValue(':entryId', $entry->id, PDO::PARAM_INT);
+        $data = null;
 
-        if (false === $statement->execute()) {
-            return false;
+        if ($statement->execute()) {
+            $data = $this->prepare($schema, $entry, $field, $statement->fetch());
         }
 
-        var_dump($statement); exit;
+        return $data;
     }
 
-    public function write(SchemaInterface $section, EntryInterface $entry, FieldInterface $field, $data)
+    public function write(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $data)
     {
         // TODO: Throw an exception if $field['schema'] is unset.
         $table = Symphony::Database()->createDataTableName(
@@ -140,18 +138,20 @@ class TextData implements FieldDataInterface
         );
         $statement = Symphony::Database()->prepare("
             insert into `{$table}` set
-                entryId = :entryId,
+                entry_id = :entryId,
                 handle = :handle,
                 value = :value,
                 formatted = :formatted
             on duplicate key update
+                handle = :updatedHandle,
                 value = :updateValue,
                 formatted = :updateFormatted
         ");
 
         return $statement->execute([
-            ':entryId' =>           $entry->getId(),
+            ':entryId' =>           $entry->id,
             ':handle' =>            $data->handle,
+            ':updatedHandle' =>     $data->handle,
             ':value' =>             $data->value,
             ':updateValue' =>       $data->value,
             ':formatted' =>         $data->formatted,

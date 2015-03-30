@@ -9,11 +9,11 @@ use Entry;
 
 interface FieldDataInterface extends MetadataInterface
 {
-    public function prepare(EntryInterface $entry, FieldInterface $field, $new = null, $old = null);
+    public function prepare(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $new = null, $old = null);
 
-    public function validate(EntryInterface $entry, FieldInterface $field, $data);
+    public function validate(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $data);
 
-    public function read(SchemaInterface $section, EntryInterface $entry, FieldInterface $field);
+    public function read(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field);
 
-    public function write(SchemaInterface $section, EntryInterface $entry, FieldInterface $field, $data);
+    public function write(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $data);
 }

@@ -21,7 +21,7 @@ class ContentPublish extends AdministrationPage
 
 	public function __viewIndex($section)
 	{
-
+		// $section['table']->appendTable($this, $section, new Entry());
 	}
 
 	public function __viewNew($section)
@@ -31,7 +31,7 @@ class ContentPublish extends AdministrationPage
 
 	public function __viewEdit($section)
 	{
-		$section['form']->appendForm($this, $section, new Entry());
+		$section['form']->appendForm($this, $section, Entry::loadFromId($this->_context['entry_id']));
 	}
 }
 

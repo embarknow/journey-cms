@@ -29,6 +29,21 @@ class Connection
         );
     }
 
+    public function beginTransaction()
+    {
+        return $this->connection->beginTransaction();
+    }
+
+    public function commit()
+    {
+        return $this->connection->commit();
+    }
+
+    public function rollBack()
+    {
+        return $this->connection->rollBack();
+    }
+
     public function connect()
     {
         // Already connected:
@@ -41,14 +56,13 @@ class Connection
             PDO::ATTR_ERRMODE =>                    PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE =>         PDO::FETCH_OBJ,
             PDO::ATTR_PERSISTENT =>                 false,
-            // PDO::MYSQL_ATTR_INIT_COMMAND =>          'SET NAMES utf8; SET time_zone = '+00:00'; SET storage_engine=MYISAM;',
             PDO::MYSQL_ATTR_USE_BUFFERED_QUERY =>   true,
             PDO::ATTR_EMULATE_PREPARES =>           false
         ]);
 
         $this->execute('SET NAMES utf8');
         $this->execute('SET time_zone = "+00:00"');
-        $this->execute('SET storage_engine = "MYISAM"');
+        $this->execute('SET storage_engine = "InnoDB"');
 
         return true;
     }

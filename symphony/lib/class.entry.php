@@ -16,24 +16,24 @@ use Embark\CMS\SystemDateTime;
 				$entry->$key = $value;
 			}
 
-			// Load the section
-			try {
-				$section = Section::loadFromHandle($entry->section);
-			}
+			// // Load the section
+			// try {
+			// 	$section = Section::loadFromHandle($entry->section);
+			// }
 
-			catch (SectionException $e) {
-				throw new EntryException('Section specified, "'.$entry->section.'", in Entry object is invalid.');
-			}
+			// catch (SectionException $e) {
+			// 	throw new EntryException('Section specified, "'.$entry->section.'", in Entry object is invalid.');
+			// }
 
-			catch (Exception $e) {
-				throw new EntryException('The following error occurred: ' . $e->getMessage());
-			}
+			// catch (Exception $e) {
+			// 	throw new EntryException('The following error occurred: ' . $e->getMessage());
+			// }
 
-			foreach ($section->fields as $field) {
-				if(!empty($this->schema) && !in_array($field->{'element-name'}, $this->schema)) continue;
+			// foreach ($section->fields as $field) {
+			// 	if(!empty($this->schema) && !in_array($field->{'element-name'}, $this->schema)) continue;
 
-				$entry->data()->{$field->{'element-name'}} = $field->loadDataFromDatabase($entry);
-			}
+			// 	$entry->data()->{$field->{'element-name'}} = $field->loadDataFromDatabase($entry);
+			// }
 
 			return $entry;
 		}
@@ -59,8 +59,8 @@ use Embark\CMS\SystemDateTime;
 			$this->data = new StdClass;
 			$this->meta = (object)array(
 				'id' =>						null,
-				'section' =>				null,
-				'user' =>				null,
+				'schema' =>					null,
+				'user' =>					null,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			);
@@ -90,7 +90,6 @@ use Embark\CMS\SystemDateTime;
 
 		public static function loadFromID($id, $schema = array()) {
 			$result = Symphony::Database()->query("SELECT * FROM `entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
-
 			$result->setSchema($schema);
 
 			if (!$result->valid()) return null;
@@ -157,15 +156,20 @@ use Embark\CMS\SystemDateTime;
 
 		public static function save(self $entry, MessageStack &$errors){
 
-			if(!isset($entry->section) || strlen(trim($entry->section)) == 0){
-				throw new EntryException('A section must be specified before attempting to save.');
+			if(!isset($entry->schema) || strlen(trim($entry->schema)) == 0){
+				throw new EntryException('A schema must be specified before attempting to save.');
 			}
 
 			// Create a new ID if one is not already set
 			$purge_meta_on_error = false;
-			if(!isset($entry->id) || is_null($entry->id)){
+
+			if (!isset($entry->user)) {
+				$entry->user = Symphony::User()->id;
+			}
+
+			if (!isset($entry->id) || is_null($entry->id)) {
 				$purge_meta_on_error = true;
-				$entry->id = self::generateID($entry->section, $entry->user);
+				$entry->id = self::generateID($entry->schema, $entry->user);
 			}
 
 			// Update the modification details
@@ -268,7 +272,7 @@ use Embark\CMS\SystemDateTime;
 			return $status;
 		}
 
-		public static function generateID($section, $user = null)
+		public static function generateID($schema, $user = null)
 		{
 			$date = new SystemDateTime();
 
@@ -277,8 +281,8 @@ use Embark\CMS\SystemDateTime;
 			}
 
 			return Symphony::Database()->insert('entries', [
-				'section' =>				$section,
-				'user' =>				$user,
+				'schema' =>					$schema,
+				'user' =>					$user,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			]);

@@ -24,17 +24,6 @@ class TextSchema implements FieldSchemaInterface
 {
     use MetadataTrait;
 
-    public function __construct()
-    {
-        $this->setSchema([
-            'guid' => [
-                'required' =>   true,
-                'filter' =>     new Guid(),
-                'default' =>    uniqid()
-            ]
-        ]);
-    }
-
     public function create(SchemaInterface $schema, FieldInterface $field)
     {
         // TODO: Throw an exception if $field['data'] is unset.
@@ -46,12 +35,12 @@ class TextSchema implements FieldSchemaInterface
         $statement = Symphony::Database()->prepare("
             create table if not exists `{$table}` (
                 `id` int(11) unsigned not null auto_increment,
-                `entryId` int(11) unsigned not null,
+                `entry_id` int(11) unsigned not null,
                 `handle` varchar(255) default null,
                 `value` text default null,
                 `formatted` text default null,
                 primary key (`id`),
-                unique key `entryId` (`entryId`),
+                unique key `entry_id` (`entry_id`),
                 fulltext key `value` (`value`),
                 fulltext key `formatted` (`formatted`)
             )

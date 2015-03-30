@@ -3,6 +3,7 @@
 namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
@@ -51,17 +52,30 @@ class SectionFormView implements MetadataInterface
         // Set page title and breadcrumb:
         if ($page instanceof AdministrationPage) {
             $page->Form->setAttribute('enctype', 'multipart/form-data');
-            $page->setTitle(__('%1$s &ndash; %2$s', [__('Symphony'), $view['name']]));
 
-            $page->appendBreadcrumb(Widget::Anchor($view['name'], $url));
+            $title = __('Create new');
 
             if ($editing) {
-                $page->appendBreadcrumb(Widget::Anchor(__('Edit entry'), $url . '/edit/' . $entry->id));
+                $title = __('Edit entry');
+
+                if (isset($view['form']['title']) && $view['form']['title'] instanceof FieldInterface) {
+                    $field = $schema->findFieldByGuid($view['form']['title']['schema']['guid']);
+
+                    if ($field instanceof FieldInterface) {
+                        $data = $field['data']->read($schema, $entry, $field);
+
+                        if (isset($data->value)) {
+                            $title = $data->value;
+                        }
+                    }
+                }
             }
 
-            else {
-                $page->appendBreadcrumb(Widget::Anchor(__('Create new'), $url . '/new'));
-            }
+            $page->setTitle(__('%1$s &ndash; %2$s &ndash; %3$s', [
+                __('Symphony'), $view['name'], $title
+            ]));
+            $page->appendBreadcrumb(Widget::Anchor($view['name'], $url));
+            $page->appendBreadcrumb(Widget::Anchor($title, $url . '/edit/' . $entry->id));
         }
 
         // Build basic form layout:
@@ -103,8 +117,6 @@ class SectionFormView implements MetadataInterface
 
             // Load the data:
             $data = $field['data']->read($schema, $entry, $field);
-
-            // var_dump($data);
 
             // Validate the field data:
             if ($saving) {

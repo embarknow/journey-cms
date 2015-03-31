@@ -45,12 +45,15 @@ class SectionFormFieldset implements MetadataInterface
 
         foreach ($this->findAll() as $item) {
             if ($item instanceof FieldInterface) {
-                $field = $schema->findFieldByGuid($item['schema']['guid']);
+                if (isset($item['schema']['guid'])) {
+                    $field = $schema->findFieldByGuid($item['schema']['guid']);
 
-                if ($field instanceof FieldInterface) {
-                    $item->fromMetadata($field);
-                    $item['form']->appendPublishForm($fieldset, $item);
+                    if ($field instanceof FieldInterface) {
+                        $item->fromMetadata($field);
+                    }
                 }
+
+                $item['form']->appendPublishForm($fieldset, $item);
             }
         }
     }

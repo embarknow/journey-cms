@@ -3,6 +3,7 @@
 namespace Embark\CMS\Actors\Section;
 
 use Embark\CMS\Actors\DatasourceInterface;
+use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Schemas\Schema;
@@ -13,6 +14,15 @@ use Section;
 
 class DatasourceOutputElements implements MetadataInterface {
     use MetadataTrait;
+
+    public function __construct()
+    {
+        $this->setSchema([
+            'field' => [
+                'list' =>   true
+            ]
+        ]);
+    }
 
     public function appendSchema(array &$schema, Schema $section)
     {
@@ -27,12 +37,22 @@ class DatasourceOutputElements implements MetadataInterface {
         }
     }
 
-    public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Schema $section, Entry $entry)
+    public function appendElements(DOMElement $wrapper, DatasourceInterface $datasource, Schema $schema, Entry $entry)
     {
         $document = $wrapper->ownerDocument;
 
         foreach ($this->findAll() as $item) {
-            $item->appendElement($wrapper, $datasource, $section, $entry);
+            if ($item instanceof FieldInterface && isset($item['element'])) {
+                if (isset($item['schema']['guid'])) {
+                    $field = $schema->findFieldByGuid($item['schema']['guid']);
+
+                    if ($field instanceof FieldInterface) {
+                        $item->fromMetadata($field);
+                    }
+                }
+
+                $item['element']->appendElement($wrapper, $datasource, $schema, $entry, $item);
+            }
         }
     }
 

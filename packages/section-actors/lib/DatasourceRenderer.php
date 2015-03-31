@@ -6,7 +6,7 @@ use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\Structures\Sorting;
-use Embark\CMS\Schemas\Controller;
+use Embark\CMS\Schemas\Controller as SchemaController;
 use Context;
 use Field;
 use Profiler;
@@ -38,9 +38,9 @@ class DatasourceRenderer
         $result->appendChild($result->createElement($this->datasource['resource']['handle']));
         $root = $result->documentElement;
 
-        // Grab the section
-        $section = Controller::read($this->datasource['section']);
-        $root->setAttribute('section', $section['resource']['handle']);
+        // Grab the schema
+        $schema = SchemaController::read($this->datasource['schema']);
+        $root->setAttribute('schema', $schema['resource']['handle']);
 
         if ($this->datasource['pagination'] instanceof Pagination) {
             $pagination = $this->datasource['pagination']->replaceParameters($parameter_output);
@@ -80,7 +80,7 @@ class DatasourceRenderer
 
                 // Section field:
                 else {
-                    $field = $section->findField($sorting['field']);
+                    $field = $schema->findField($sorting['field']);
                     $join = null;
 
                     if (
@@ -90,7 +90,7 @@ class DatasourceRenderer
                     ) {
                         $field->buildSortingQuery($join, $order);
 
-                        $joins .= sprintf($join, $section['resource']['handle'], $field['handle']);
+                        $joins .= sprintf($join, $schema['resource']['handle'], $field['handle']);
                         $order = sprintf($order, $sorting['direction']);
                     }
                 }
@@ -123,7 +123,7 @@ class DatasourceRenderer
         //      }
 
         //      else {
-        //          $field = $section->fetchFieldByHandle($filter['element-name']);
+        //          $field = $schema->fetchFieldByHandle($filter['element-name']);
 
         //          if ($field instanceof Field) {
         //              $field->buildFilterQuery($filter, $joins, $where, $parameter_output);
@@ -153,17 +153,17 @@ class DatasourceRenderer
         $o_joins = $joins;
         $o_order = $order;
         $query = sprintf('
-            %1$s e.id, e.section, e.user, e.creation_date, e.modification_date
+            %1$s e.id, e.schema, e.user, e.creation_date, e.modification_date
             FROM `entries` AS `e`
             %2$s
-            WHERE `section` = "%3$s"
+            WHERE `schema` = "%3$s"
             %4$s
             ORDER BY %5$s
             LIMIT %6$d, %7$d',
 
             implode($select_keywords, ' '),
             $o_joins,
-            $section['resource']['handle'],
+            $schema['resource']['handle'],
             is_array($o_where) && !empty($o_where) ? 'AND (' . implode(($filter_operation_type == 1 ? ' AND ' : ' OR '), $o_where) . ')' : NULL,
             $o_order,
             $pagination['record-start'],
@@ -206,8 +206,8 @@ class DatasourceRenderer
             Profiler::begin('Executing query');
 
             $entries = Symphony::Database()->query($query, [
-                    $section['resource']['handle'],
-                    $section->{'publish-order-handle'}
+                    $schema['resource']['handle'],
+                    $schema->{'publish-order-handle'}
                 ], __NAMESPACE__ . '\\DatasourceResultIterator'
             );
 
@@ -218,7 +218,7 @@ class DatasourceRenderer
                 Profiler::begin('Creating entry data');
 
                 $parameters = [];
-                $schema = [];
+                $fields = [];
                 $ids = [];
                 $data = [];
 
@@ -228,19 +228,19 @@ class DatasourceRenderer
 
                 // Figure out what fields to fetch, so we don't have to fetch them all:
                 if ($this->datasource['elements'] instanceof DatasourceOutputElements) {
-                    $this->datasource['elements']->appendSchema($schema, $section);
+                    $this->datasource['elements']->appendSchema($fields, $schema);
                 }
 
                 if ($this->datasource['parameters'] instanceof DatasourceOutputParameters) {
-                    $this->datasource['parameters']->appendSchema($schema, $section);
+                    $this->datasource['parameters']->appendSchema($fields, $schema);
                 }
 
                 // Load entry data:
-                foreach ($schema as $field => $instance) {
-                    $data[$field] = $instance->loadDataFromDatabaseEntries($section['resource']['handle'], $ids);
+                foreach ($fields as $field => $instance) {
+                    $data[$field] = $instance->loadDataFromDatabaseEntries($schema['resource']['handle'], $ids);
                 }
 
-                $entries->setSchema($schema);
+                $entries->setSchema($fields);
                 $entries->setData($data);
 
                 Profiler::end();
@@ -269,11 +269,11 @@ class DatasourceRenderer
 
                     // If there are included elements, need an entry element.
                     if ($this->datasource['elements'] instanceof DatasourceOutputElements) {
-                        $this->datasource['elements']->appendElements($wrapper, $this->datasource, $section, $entry);
+                        $this->datasource['elements']->appendElements($wrapper, $this->datasource, $schema, $entry);
                     }
 
                     if ($this->datasource['parameters'] instanceof DatasourceOutputParameters) {
-                        $this->datasource['parameters']->appendParameters($parameters, $this->datasource, $section, $entry);
+                        $this->datasource['parameters']->appendParameters($parameters, $this->datasource, $schema, $entry);
                     }
                 }
 

@@ -4,6 +4,7 @@ namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Entries\EntryInterface;
+use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\MetadataTrait;
@@ -23,17 +24,13 @@ trait ElementTrait
         ]);
     }
 
-    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry)
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
     {
-        $field = $schema->findField($this['field']);
-
-        if (false === $field) return;
-
         $document = $wrapper->ownerDocument;
-        $data = $entry->data()->{$this['field']};
+        $data = $field['data']->read($schema, $entry, $field);
 
         if (isset($data->value) || isset($data->value_formatted)) {
-            $element = $document->createElement($this['field']);
+            $element = $document->createElement($field['schema']['handle']);
             $wrapper->appendChild($element);
 
             try {

@@ -5,7 +5,7 @@ namespace Embark\CMS\Actors\Section;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Fields\Parameter;
+// use Embark\CMS\Fields\Parameter;
 use Embark\CMS\Schemas\Schema;
 use Entry;
 use Field;
@@ -18,7 +18,7 @@ class DatasourceOutputParameters implements MetadataInterface {
     {
         $this->setSchema([
             'item' => [
-                'type' =>       new Parameter()
+                // 'type' =>       new Parameter()
             ]
         ]);
     }

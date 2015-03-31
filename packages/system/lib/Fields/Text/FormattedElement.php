@@ -16,7 +16,7 @@ class FormattedElement implements FieldElementInterface
         $document = $element->ownerDocument;
         $fragment = $document->createDocumentFragment();
         $element->setAttribute('mode', 'formatted');
-        $value = $field->repairEntities($data->value_formatted);
+        $value = $field->repairEntities($data->formatted);
 
         try {
             $fragment->appendXML($value);

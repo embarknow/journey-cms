@@ -56,6 +56,24 @@ class Controller
     }
 
     /**
+     * Get the stored object data
+     * @return array
+     */
+    public function stored()
+    {
+        return $this->stored;
+    }
+
+    /**
+     * Get the fresh object data
+     * @return array
+     */
+    public function fresh()
+    {
+        return $this->fresh;
+    }
+
+    /**
      * Synchronise the objects
      * @return void
      */

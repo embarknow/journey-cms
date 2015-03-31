@@ -2,10 +2,11 @@
 
 namespace Embark\CMS\Views\Section;
 
+use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\MenuItem;
-use Widget;
+use HTMLDocument;
 
 class SectionView implements MetadataInterface
 {
@@ -26,32 +27,13 @@ class SectionView implements MetadataInterface
         ]);
     }
 
-    public function prepareIndex()
+    public function appendIndexView(HTMLDocument $page)
     {
-
+        $this['table']->appendTable($page, $this);
     }
 
-    public function prepareForm()
+    public function appendFormView(HTMLDocument $page, EntryInterface $entry)
     {
-        // $this['form']->prepareForm($this, $page);
-    }
-
-    public function viewIndex($page)
-    {
-        $page->setTitle(__('%1$s &ndash; %2$s', [__('Symphony'), $this['name']]));
-
-        $page->appendSubheading(
-            $this['name'],
-            Widget::Anchor(
-                __('Create New'),
-                sprintf('%s/publish/%s/new', ADMIN_URL, $this['resource']['handle']),
-                [
-                    'title' => __('Create a new entry'),
-                    'class' => 'create button'
-                ]
-            )
-        );
-
-        $this['table']->appendView($page->Form);
+        $this['form']->appendForm($page, $this, $entry);
     }
 }

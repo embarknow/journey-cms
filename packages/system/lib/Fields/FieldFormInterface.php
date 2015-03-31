@@ -23,15 +23,15 @@ interface FieldFormInterface extends MetadataInterface
      *  headers to the page. Add your own checks to prevent
      *  adding the same headers to a page multiple times.
      */
-    public function appendHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended);
+    public function appendPublishHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended);
 
     /**
-     * Append the field interface to the form.
+     * Append the field interface to the publishing form.
      *
      * @param   DOMElement      $wrapper
      * @param   FieldInterface  $field
      */
-    public function appendForm(DOMElement $wrapper, FieldInterface $field);
+    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field);
 
     /**
      * Update the field interface to include the provided field data.

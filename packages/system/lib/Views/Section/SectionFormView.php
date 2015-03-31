@@ -5,12 +5,14 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\SystemDateTime;
 use AdministrationPage;
 use DOMElement;
 use Entry;
+use HTMLDocument;
 use MessageStack;
 use Symphony;
 use Widget;
@@ -40,51 +42,39 @@ class SectionFormView implements MetadataInterface
         }
     }
 
-    public function appendForm($page, SectionView $view, EntryInterface $entry)
+    protected function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-        $schema = SchemaController::read($view['schema']);
-        $saving = isset($_POST['fields']);
-        $editing = isset($entry->id);
-        $headersAppended = [];
-        $success = true;
+        $title = __('Create new');
+        $link = $url . '/new';
 
-        // Set page title and breadcrumb:
-        if ($page instanceof AdministrationPage) {
-            $page->Form->setAttribute('enctype', 'multipart/form-data');
+        if (isset($entry->id)) {
+            $title = __('Edit entry');
 
-            $title = __('Create new');
+            if (isset($view['form']['title']) && $view['form']['title'] instanceof FieldInterface) {
+                $field = $schema->findFieldByGuid($view['form']['title']['schema']['guid']);
 
-            if ($editing) {
-                $title = __('Edit entry');
+                if ($field instanceof FieldInterface) {
+                    $data = $field['data']->read($schema, $entry, $field);
 
-                if (isset($view['form']['title']) && $view['form']['title'] instanceof FieldInterface) {
-                    $field = $schema->findFieldByGuid($view['form']['title']['schema']['guid']);
-
-                    if ($field instanceof FieldInterface) {
-                        $data = $field['data']->read($schema, $entry, $field);
-
-                        if (isset($data->value)) {
-                            $title = $data->value;
-                        }
+                    if (isset($data->value)) {
+                        $title = $data->value;
+                        $url . '/edit/' . $entry->id;
                     }
                 }
             }
-
-            $page->setTitle(__('%1$s &ndash; %2$s &ndash; %3$s', [
-                __('Symphony'), $view['name'], $title
-            ]));
-            $page->appendBreadcrumb(Widget::Anchor($view['name'], $url));
-            $page->appendBreadcrumb(Widget::Anchor($title, $url . '/edit/' . $entry->id));
         }
 
-        // Build basic form layout:
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormRow) {
-                $item->appendRow($page->Form);
-            }
-        }
+        $page->setTitle(__('%1$s &ndash; %2$s &ndash; %3$s', [
+            __('Symphony'), $view['name'], $title
+        ]));
+        $page->appendBreadcrumb(Widget::Anchor($view['name'], $url));
+        $page->appendBreadcrumb(Widget::Anchor($title, $link));
+        $page->Form->setAttribute('enctype', 'multipart/form-data');
+    }
 
+    public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    {
         $div = $page->createElement('div');
         $div->setAttribute('class', 'actions');
         $div->appendChild(Widget::Submit(
@@ -95,6 +85,28 @@ class SectionFormView implements MetadataInterface
             ]
         ));
         $page->Form->appendChild($div);
+    }
+
+    public function appendForm(HTMLDocument $page, SectionView $view, EntryInterface $entry)
+    {
+        $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
+        $schema = SchemaController::read($view['schema']);
+        $saving = isset($_POST['fields']);
+        $editing = isset($entry->id);
+        $headersAppended = [];
+        $success = true;
+
+        // Set page title and breadcrumb:
+        $this->appendHeader($page, $view, $schema, $entry);
+
+        // Build basic form layout:
+        foreach ($this->findAll() as $item) {
+            if ($item instanceof SectionFormRow) {
+                $item->appendRow($page->Form);
+            }
+        }
+
+        $this->appendFooter($page, $view, $schema, $entry);
 
         if ($saving) {
             // Begin a transaction to commit all of the field changes:
@@ -113,7 +125,7 @@ class SectionFormView implements MetadataInterface
             $handle = $field['schema']['handle'];
 
             // Add headers to the page:
-            $field['form']->appendHeaders($page, $entry, $field, $headersAppended);
+            $field['form']->appendPublishHeaders($page, $entry, $field, $headersAppended);
 
             // Load the data:
             $data = $field['data']->read($schema, $entry, $field);

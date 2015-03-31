@@ -21,7 +21,7 @@ class TextInputForm implements FieldFormInterface
     protected $label;
     protected $input;
 
-    public function appendHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended)
+    public function appendPublishHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended)
     {
         // Make sure we only append our headers once:
         if (!in_array(get_class($field), $headersAppended)) {
@@ -32,7 +32,13 @@ class TextInputForm implements FieldFormInterface
         }
     }
 
-    public function appendForm(DOMElement $wrapper, FieldInterface $field)
+    protected function appendInput(DOMElement $wrapper)
+    {
+        $this->input = Widget::Input("fields[{$handle}]");
+        $wrapper->appendChild($this->input);
+    }
+
+    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field)
     {
         $handle = $field['schema']['handle'];
         $document = $wrapper->ownerDocument;
@@ -45,8 +51,7 @@ class TextInputForm implements FieldFormInterface
         $this->label->setValue($this['name']);
         $div->appendChild($this->label);
 
-        $this->input = Widget::Input("fields[{$handle}]");
-        $this->label->appendChild($this->input);
+        $this->appendInput($this->label);
 
         // Show maximum text length label:
         if ($field['data']['max-length'] > 0) {

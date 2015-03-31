@@ -49,7 +49,7 @@ class SectionFormFieldset implements MetadataInterface
 
                 if ($field instanceof FieldInterface) {
                     $item->fromMetadata($field);
-                    $item['form']->appendForm($fieldset, $item);
+                    $item['form']->appendPublishForm($fieldset, $item);
                 }
             }
         }

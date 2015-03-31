@@ -14,6 +14,7 @@ class SectionFormColumn implements MetadataInterface
     {
         $this->setSchema([
             'fieldset' => [
+                'list' =>   true,
                 'type' =>   new SectionFormFieldset($view)
             ]
         ]);

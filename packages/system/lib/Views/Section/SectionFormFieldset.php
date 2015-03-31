@@ -45,6 +45,7 @@ class SectionFormFieldset implements MetadataInterface
 
         foreach ($this->findAll() as $item) {
             if ($item instanceof FieldInterface) {
+                // If this item references a field in the schema, import that field data:
                 if (isset($item['schema']['guid'])) {
                     $field = $schema->findFieldByGuid($item['schema']['guid']);
 

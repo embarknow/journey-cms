@@ -20,8 +20,8 @@ class Sorting implements MetadataInterface
             'append' => [
                 'filter' => new Boolean()
             ],
-            'direction' => [
-                'filter' => new SortingDirection()
+            'field' => [
+                'list' =>   true
             ]
         ]);
     }

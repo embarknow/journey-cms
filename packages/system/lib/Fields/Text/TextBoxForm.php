@@ -28,7 +28,7 @@ class TextBoxForm extends TextInputForm
         ]);
     }
 
-    protected function appendInput(DOMElement $wrapper)
+    protected function appendInput(DOMElement $wrapper, $handle)
     {
         $this->input = Widget::Textarea("fields[{$handle}]");
         $wrapper->appendChild($this->input);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Actors\Section;
+namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Fields\FieldInterface;

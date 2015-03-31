@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Actors\Section;
+namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Database\Exception as DatabaseException;
@@ -8,7 +8,6 @@ use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
-use Embark\CMS\Structures\Sorting;
 use Embark\CMS\SystemDateTime;
 use Administration;
 use Context;
@@ -34,10 +33,10 @@ class Datasource implements DatasourceInterface
     {
         $this->setSchema([
             'pagination' => [
-                'type' =>       new Pagination()
+                'type' =>       new DatasourcePaginationQuery()
             ],
             'sorting' => [
-                'type' =>       new Sorting()
+                'type' =>       new DatasourceSortingQuery()
             ],
             'elements' => [
                 'type' =>       new DatasourceOutputElements()

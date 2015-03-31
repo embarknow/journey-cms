@@ -32,7 +32,7 @@ class TextInputForm implements FieldFormInterface
         }
     }
 
-    protected function appendInput(DOMElement $wrapper)
+    protected function appendInput(DOMElement $wrapper, $handle)
     {
         $this->input = Widget::Input("fields[{$handle}]");
         $wrapper->appendChild($this->input);
@@ -51,7 +51,7 @@ class TextInputForm implements FieldFormInterface
         $this->label->setValue($this['name']);
         $div->appendChild($this->label);
 
-        $this->appendInput($this->label);
+        $this->appendInput($this->label, $handle);
 
         // Show maximum text length label:
         if ($field['data']['max-length'] > 0) {

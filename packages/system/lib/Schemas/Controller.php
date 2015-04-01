@@ -6,10 +6,12 @@ use Embark\CMS\Schemas\FieldsList;
 use Embark\CMS\Structures\MetadataControllerInterface;
 use Embark\CMS\Structures\MetadataControllerTrait;
 use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Syncable\Controller as SyncController;
+use Embark\CMS\Syncable\SyncableControllerInterface;
 use Symphony;
 use PDO;
 
-class Controller implements MetadataControllerInterface
+class Controller implements MetadataControllerInterface, SyncableControllerInterface
 {
     use MetadataControllerTrait {
         MetadataControllerTrait::delete as deleteFile;
@@ -17,6 +19,8 @@ class Controller implements MetadataControllerInterface
 
     const DIR = '/workspace/schemas';
     const FILE_EXTENSION = '.xml';
+
+    protected $syncController;
 
     public static function delete(MetadataInterface $object)
     {
@@ -52,51 +56,39 @@ class Controller implements MetadataControllerInterface
         return false;
     }
 
-    public static function syncStats(Schema $newSchema) {
-        $new = $old = [];
-        $result = (object)[
-            'synced'    => true,
-            'schema'   => (object)[
-                'create'    => false,
-                'rename'    => false,
-                'old'       => $newSchema,
-                'new'       => $newSchema
+    /**
+     * Get statistics for a schema
+     * @return object
+     */
+    protected static function syncStats(SyncController $syncController) {
+        $fresh = $syncController->fresh();
+        $stored = $syncController->stored();
+
+        $newFields = $oldFields = [];
+        $result = (object) [
+            'schema' => (object) [
+                'create' => false,
+                'rename' => false,
+                'stored' => $fresh->object,
+                'fresh'  => $fresh->object
             ],
-            'remove'    => [],
-            'rename'    => [],
-            'create'    => [],
-            'update'    => []
+            'remove' => [],
+            'rename' => [],
+            'create' => [],
+            'update' => []
         ];
 
-        // Fetch the currently active schema:
-        $statement = Symphony::Database()->prepare('
-            SELECT
-                s.object
-            FROM
-                `sync` AS s
-            WHERE
-                s.guid = ?
-        ');
-        $statement->bindValue(1, $newSchema['guid'], PDO::PARAM_STR);
-
-        // We found it:
-        if ($statement->execute()) {
-            $oldSchema = unserialize($statement->fetch()->object);
-            $statement->closeCursor();
-        }
-
-        if ($oldSchema) {
-            if ($oldSchema['resource']['handle'] !== $newSchema['resource']['handle']) {
-                $result->synced = false;
+        if (isset($stored->object)) {
+            if ($fresh->object['resource']['handle'] !== $stored->object['resource']['handle']) {
                 $result->schema->rename = true;
-                $result->schema->old = $oldSchema;
+                $result->schema->stored = $stored->object;
             }
 
-            if ($oldSchema['fields'] instanceof FieldsList) {
-                foreach ($oldSchema['fields']->findAll() as $field) {
-                    $old[$field['schema']['guid']] = (object)[
-                        'raw' =>    iterator_to_array($field['schema']->findAll()),
-                        'type' =>   get_class($field),
+            if ($stored->object['fields'] instanceof FieldsList) {
+                foreach ($stored->object['fields']->findAll() as $field) {
+                    $oldFields[$field['schema']['guid']] = (object) [
+                        'raw'   =>  iterator_to_array($field['schema']->findAll()),
+                        'type'  =>  get_class($field),
                         'field' =>  $field
                     ];
                 }
@@ -105,24 +97,23 @@ class Controller implements MetadataControllerInterface
 
         // Compare to the new version:
         else {
-            $oldSchema = $newSchema;
-            $result->synced = false;
+            $stored = $fresh;
             $result->schema->create = true;
         }
 
-        if ($newSchema['fields'] instanceof FieldsList) {
-            foreach ($newSchema['fields']->findAll() as $field) {
-                $new[$field['schema']['guid']] = (object)[
-                    'raw' =>    iterator_to_array($field['schema']->findAll()),
-                    'type' =>   get_class($field),
+        if ($fresh->object['fields'] instanceof FieldsList) {
+            foreach ($fresh->object['fields']->findAll() as $field) {
+                $newFields[$field['schema']['guid']] = (object) [
+                    'raw'   =>  iterator_to_array($field['schema']->findAll()),
+                    'type'  =>  get_class($field),
                     'field' =>  $field
                 ];
             }
         }
 
-        foreach ($new as $guid => $data) {
+        foreach ($newFields as $guid => $data) {
             // Field is being created:
-            if (false === isset($old[$guid])) {
+            if (false === isset($oldFields[$guid])) {
                 $result->create[$guid] = $data;
                 continue;
             }
@@ -130,45 +121,47 @@ class Controller implements MetadataControllerInterface
             // Field is being renamed:
             if (
                 $result->schema->rename
-                || $old[$guid]->raw['handle'] !== $data->raw['handle']
+                || $oldFields[$guid]->raw['handle'] !== $data->raw['handle']
             ) {
-                if ($old[$guid]->type === $data->type) {
-                    $result->rename[$guid] = (object)[
-                        'handle'    => $data->raw['handle'],
-                        'old'       => $old[$guid],
-                        'new'       => $data
+                if ($oldFields[$guid]->type === $data->type) {
+                    $result->rename[$guid] = (object) [
+                        'handle' => $data->raw['handle'],
+                        'old'    => $oldFields[$guid],
+                        'new'    => $data
                     ];
                 }
 
                 // Type has changed:
                 else {
-                    $result->remove[$guid] = $old[$guid];
+                    $result->remove[$guid] = $oldFields[$guid];
                     $result->create[$guid] = $data;
                     continue;
                 }
             }
 
             // Field definition has changed:
-            if ($old[$guid]->raw != $data->raw) {
-                if ($old[$guid]->type === $data->type) {
-                    $result->update[$guid] = (object)[
+            if ($oldFields[$guid]->raw != $data->raw) {
+                if ($oldFields[$guid]->type === $data->type) {
+                    $result->update[$guid] = (object) [
                         'handle' => $data->raw['handle'],
-                        'old' =>    $old[$guid],
-                        'new' =>    $data
+                        'old'    => $oldFields[$guid],
+                        'new'    => $data
                     ];
                 }
 
                 // Type has changed:
                 else {
-                    $result->remove[$guid] = $old[$guid];
+                    $result->remove[$guid] = $oldFields[$guid];
                     $result->create[$guid] = $data;
                     continue;
                 }
             }
         }
 
-        foreach ($old as $guid => $data) {
-            if (isset($new[$guid])) continue;
+        foreach ($oldFields as $guid => $data) {
+            if (isset($newFields[$guid])) {
+                continue;
+            }
 
             $result->remove[$guid] = $data;
         }
@@ -181,62 +174,56 @@ class Controller implements MetadataControllerInterface
             && empty($result->update)
         );
 
+        var_dump($result);die;
         return $result;
     }
 
-    public static function sync(Schema $schema)
+    /**
+     * Synchronize Schema data
+     * @param  Schema $schema
+     * @return void
+     */
+    public static function sync(MetadataInterface $object)
     {
-        $stats = static::syncStats($schema);
+        $schema = $object;
 
-        // Remove fields:
-        foreach ($stats->remove as $guid => $data) {
-            $data->field['schema']->delete($schema, $data->field);
+        $syncController = new SyncController(Symphony::Database());
+        $syncController->setObject($schema);
+
+        if (!$syncController->status()) {
+            $stats = static::syncStats($syncController);
+            $stored = $syncController->stored();
+
+            // Remove fields:
+            foreach ($stats->remove as $guid => $data) {
+                $data->field['schema']->delete($schema, $data->field);
+            }
+
+            // Rename fields:
+            foreach ($stats->rename as $guid => $data) {
+                $data->new->field['schema']->rename($schema, $data->new->field, $stats->schema->stored, $data->old->field);
+            }
+
+            // Create fields:
+            foreach ($stats->create as $guid => $data) {
+                $data->field['schema']->create($schema, $data->field);
+            }
+
+            // Move entries to the new schema:
+            if ($stats->schema->rename) {
+                $statement = Symphony::Database()->prepare('
+                    update `entries` set
+                        `schema` = :new
+                    where
+                        `schema` = :old
+                ');
+                $statement->execute([
+                    ':new' => $stats->schema->fresh['resource']['handle'],
+                    ':old' => $stats->schema->stored['resource']['handle']
+                ]);
+            }
+
+            $syncController->sync();
         }
-
-        // Rename fields:
-        foreach ($stats->rename as $guid => $data) {
-            $data->new->field['schema']->rename($schema, $data->new->field, $stats->schema->old, $data->old->field);
-        }
-
-        // Create fields:
-        foreach ($stats->create as $guid => $data) {
-            $data->field['schema']->create($schema, $data->field);
-        }
-
-        // Move entries to the new schema:
-        if ($stats->schema->rename) {
-            $statement = Symphony::Database()->prepare('
-                update `entries` set
-                    `schema` = :new
-                where
-                    `schema` = :old
-            ');
-            $statement->execute([
-                ':new' => $stats->schema->new['resource']['handle'],
-                ':old' => $stats->schema->old['resource']['handle']
-            ]);
-        }
-
-        // Remove old sync data:
-        $statement = Symphony::Database()->prepare('
-            delete from `sync` where
-                `guid` = :guid
-        ');
-        $statement->execute([
-            ':guid' => $schema['guid']
-        ]);
-
-        // Create new sync data:
-        $statement = Symphony::Database()->prepare('
-            insert into `sync` set
-                `handle` = :handle,
-                `guid` = :guid,
-                `object` = :object
-        ');
-        $statement->execute([
-            ':handle' => $schema['resource']['handle'],
-            ':guid' =>   $schema['guid'],
-            ':object' => serialize($schema)
-        ]);
     }
 }

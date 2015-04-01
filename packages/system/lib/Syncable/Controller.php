@@ -2,7 +2,10 @@
 
 namespace Embark\CMS\Syncable;
 
+use StdClass;
+use PDO;
 use Embark\CMS\Database\Connection;
+use Embark\CMS\Structures\MetadataInterface;
 
 class Controller
 {
@@ -10,19 +13,19 @@ class Controller
      * Data for the new version of the object to synchronisze
      * @var array
      */
-    protected $fresh = [];
+    protected $fresh;
 
     /**
      * Data for the stored version of the object to synchronize
      * @var array
      */
-    protected $stored = [];
+    protected $stored;
 
     /**
      * Backup of a performed synchronization
      * @var array
      */
-    protected $backup = [];
+    protected $backup;
 
     /**
      * Construct an instance by providing an instance of a metadata object
@@ -31,15 +34,18 @@ class Controller
     public function __construct(Connection $database)
     {
         $this->database = $database;
+        $this->fresh = new StdClass;
+        $this->stored = new StdClass;
     }
 
     /**
      * Set the object to be synchronized
      * @param MetadataInterface $object
      */
-    public function setObject(MetadataInterface $object) {
-        $this->fresh['hash'] = sha1(serialize($object));
-        $this->fresh['object'] = $object;
+    public function setObject(MetadataInterface $object)
+    {
+        $this->fresh->hash = sha1(serialize($object));
+        $this->fresh->object = $object;
         $this->fetchStoredObject($object['guid']);
     }
 
@@ -49,9 +55,13 @@ class Controller
      */
     public function status()
     {
+        if (!isset($this->stored->object)) {
+            return false;
+        }
+
         return (
-            $this->stored['hash'] === $this->fresh['hash']
-            && $this->stored['object'] == $this->fresh['object']
+            $this->stored->hash === $this->fresh->hash
+            && $this->stored->object == $this->fresh->object
         );
     }
 
@@ -85,7 +95,7 @@ class Controller
             where `guid` = :guid
         ');
         $statement->execute([
-            ':guid' => $this->stored['object']['guid']
+            ':guid' => $this->stored->object['guid']
         ]);
 
         // Create the new sync data:
@@ -96,9 +106,9 @@ class Controller
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' => $this->fresh['object']['resource']['handle'],
-            ':guid'   => $this->fresh['object']['guid'],
-            ':object' => serialize($this->fresh['object'])
+            ':handle' => $this->fresh->object['resource']['handle'],
+            ':guid'   => $this->fresh->object['guid'],
+            ':object' => serialize($this->fresh->object)
         ]);
 
         // Swap the instance data around
@@ -118,7 +128,7 @@ class Controller
             where `guid` = :guid
         ');
         $statement->execute([
-            ':guid' => $this->stored['object']['guid']
+            ':guid' => $this->stored->object['guid']
         ]);
 
         // Recreate the old sync data:
@@ -129,13 +139,13 @@ class Controller
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' => $this->backup['object']['resource']['handle'],
-            ':guid'   => $this->backup['object']['guid'],
-            ':object' => serialize($this->backup['object'])
+            ':handle' => $this->backup->object['resource']['handle'],
+            ':guid'   => $this->backup->object['guid'],
+            ':object' => serialize($this->backup->object)
         ]);
 
         $this->stored = $this->backup;
-        $this->backup = [];
+        $this->backup = null;
     }
 
     /**
@@ -163,13 +173,8 @@ class Controller
 
         // If there is an object result, then store it
         if ($object) {
-            $this->stored['hash'] = sha1($object);
-            $this->stored['object'] = unserialize($object);
-        }
-
-        // Otherwise store the new one again
-        else {
-            $this->stored = $this->fresh;
+            $this->stored->hash = sha1($object);
+            $this->stored->object = unserialize($object);
         }
     }
 }

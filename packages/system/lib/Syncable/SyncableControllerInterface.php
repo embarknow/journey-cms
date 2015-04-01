@@ -1,6 +1,8 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Syncable;
+
+use Embark\CMS\Structures\MetadataInterface;
 
 /**
  * Syncable Controller Interface

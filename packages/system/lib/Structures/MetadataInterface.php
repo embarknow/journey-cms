@@ -3,6 +3,7 @@
 namespace Embark\CMS\Structures;
 
 use ArrayAccess;
+use DOMElement;
 
 /**
  * Interface to define the use of metadata files to create class structures describing data
@@ -34,5 +35,5 @@ interface MetadataInterface extends ArrayAccess
      *
      * @return void
      */
-    public function toXML(MetadataInterface $object);
+    public function toXML(DOMElement $xml);
 }

@@ -3,12 +3,12 @@
 namespace Embark\CMS\Structures;
 
 use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\SanitizedMetadataInterface;
+use Embark\CMS\Structures\SanitizedMetadataValueInterface;
 
 /**
  * Implements MetadataValueInterface for an integer metadata value
  */
-class Integer implements MetadataValueInterface, SanitizedMetadataInterface
+class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
     /**
      * Set an integer value to XML

@@ -3,12 +3,12 @@
 namespace Embark\CMS\Structures;
 
 use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\SanitizedMetadataInterface;
+use Embark\CMS\Structures\SanitizedMetadataValueInterface;
 
 /**
  * Implements MetadataValueInterface for a maximum tested integer metadata value
  */
-class MaxInteger implements MetadataValueInterface, SanitizedMetadataInterface
+class MaxInteger implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
     /**
      * Default max value for this instance

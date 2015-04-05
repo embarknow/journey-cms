@@ -16,7 +16,7 @@ interface SanitizedMetadataValueInterface
      * @return string
      *  sanitized string value
      */
-    public function sanitize($value)
+    public function sanitize($value);
 
     /**
      * Reverse sanitizes a metadata value
@@ -27,5 +27,5 @@ interface SanitizedMetadataValueInterface
      * @return mixed
      *  sanitized mixed type value
      */
-    public function reverseSanitize($value)
+    public function reverseSanitize($value);
 }

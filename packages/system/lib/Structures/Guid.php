@@ -3,12 +3,12 @@
 namespace Embark\CMS\Structures;
 
 use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\SanitizedMetadataInterface;
+use Embark\CMS\Structures\SanitizedMetadataValueInterface;
 
 /**
  * Implements MetadataValueInterface for a unique GUID metadata value
  */
-class Guid implements MetadataValueInterface, SanitizedMetadataInterface
+class Guid implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
     /**
      * Set a GUID value to XML

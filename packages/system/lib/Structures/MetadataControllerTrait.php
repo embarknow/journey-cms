@@ -8,6 +8,8 @@ use DOMDocument;
 
 /**
  * Trait implementing MetadataControllerInterface
+ *
+ * @see MetadataControllerInterface
  */
 trait MetadataControllerTrait
 {

@@ -6,11 +6,33 @@ use DOMElement;
 use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataInterface;
 
+/**
+ * Trait implementing MetadataInterface
+ *
+ * @see MetadataInterface
+ */
 trait MetadataTrait
 {
+    /**
+     * Array of metadata
+     * @var array
+     */
     protected $metadata = [];
+
+    /**
+     * Schema for metadata
+     * @var array
+     */
     private $metadataSchema = [];
 
+    /**
+     * Gets metadata from a MetadataInterface instance and adds it to a store
+     *
+     * @param  MetadataInterface $object
+     *  instance to get the data from
+     *
+     * @return void
+     */
     public function fromMetadata(MetadataInterface $object)
     {
         foreach ($object->findAll() as $name => $value) {
@@ -37,6 +59,14 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Get metadata from XML
+     *
+     * @param  DOMElement  $xml
+     *  An element to create a class structure from describing metadata
+     *
+     * @return void
+     */
     public function fromXML(DOMElement $xml)
     {
         // The default name given to unamed/numeric items:
@@ -70,7 +100,7 @@ trait MetadataTrait
                 $value->setDefaults();
             }
 
-            // // An default type has been provided:
+            // An default type has been provided:
             else if (
                 isset($this->metadataSchema[$name]['type'])
                 && $this->metadataSchema[$name]['type'] instanceof MetadataInterface
@@ -97,6 +127,11 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Set defaults defined in the schema array
+     *
+     * @return void
+     */
     public function setDefaults()
     {
         foreach ($this->metadataSchema as $name => $schema) {
@@ -121,6 +156,11 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Find all metadata
+     * @return array
+     *  yeilds an iteratable array of key => value pairs
+     */
     public function findAll()
     {
         foreach ($this->metadata as $name => $value) {
@@ -128,11 +168,17 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * @see ArrayAccess
+     */
     public function offsetExists($name)
     {
         return isset($this->metadata[$name]);
     }
 
+    /**
+     * @see ArrayAccess
+     */
     public function offsetGet($name)
     {
         if (false === isset($this->metadata[$name])) {
@@ -142,21 +188,40 @@ trait MetadataTrait
         return $this->metadata[$name];
     }
 
+    /**
+     * @see ArrayAccess
+     */
     public function offsetSet($name, $value)
     {
         return $this->metadata[$name] = $this->valueFromXML($name, $value);
     }
 
+    /**
+     * @see ArrayAccess
+     */
     public function offsetUnset($name)
     {
         unset($this->metadata[$name]);
     }
 
+    /**
+     * Set the schema definition for this metadata
+     * @param array $schema
+     *  array describing the expected schema definition that a metadata file describes
+     */
     public function setSchema(array $schema)
     {
         $this->metadataSchema = $schema;
     }
 
+    /**
+     * Save metadata to an element
+     *
+     * @param  DOMElement $xml
+     *  an element to save to
+     *
+     * @return void
+     */
     public function toXML(DOMElement $xml)
     {
         // The default name given to unamed/numeric items:
@@ -211,18 +276,18 @@ trait MetadataTrait
         }
     }
 
-    protected function valueToXML($name, $value)
-    {
-        if (
-            isset($this->metadataSchema[$name]['filter'])
-            && $this->metadataSchema[$name]['filter'] instanceof MetadataValueInterface
-        ) {
-            return $this->metadataSchema[$name]['filter']->toXML($value);
-        }
-
-        return $value;
-    }
-
+    /**
+     * Gets a value from xml by running a MetadataInterface fromXML
+     *
+     * @param  string $name
+     *  name for the value
+     *
+     * @param  mixed $value
+     *  value for the name
+     *
+     * @return mixed
+     *  the value returned from a fromXML function
+     */
     protected function valueFromXML($name, $value)
     {
         if (
@@ -230,6 +295,30 @@ trait MetadataTrait
             && $this->metadataSchema[$name]['filter'] instanceof MetadataValueInterface
         ) {
             return $this->metadataSchema[$name]['filter']->fromXML($value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Sets a value to xml by running a MetadataInterface toXML
+     *
+     * @param  string $name
+     *  name for the value
+     *
+     * @param  mixed $value
+     *  value for the name
+     *
+     * @return mixed
+     *  the value returned from a toXML function
+     */
+    protected function valueToXML($name, $value)
+    {
+        if (
+            isset($this->metadataSchema[$name]['filter'])
+            && $this->metadataSchema[$name]['filter'] instanceof MetadataValueInterface
+        ) {
+            return $this->metadataSchema[$name]['filter']->toXML($value);
         }
 
         return $value;

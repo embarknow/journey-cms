@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS `forgotpass` (
 SQL;
 
 $queries[] = <<<SQL
-CREATE TABLE IF NOT EXISTS `schemas` (
-  `schema` varchar(64) NOT NULL,
-  `guid` varchar(13) NOT NULL,
+CREATE TABLE IF NOT EXISTS `sync` (
+  `handle` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `guid` varchar(13) COLLATE utf8_unicode_ci NOT NULL,
   `object` text,
   PRIMARY KEY (`guid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE utf8_unicode_ci;
 SQL;
 
 $queries[] = <<<SQL

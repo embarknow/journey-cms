@@ -51,13 +51,13 @@ CREATE TABLE `forgotpass` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sections_sync`
+-- Table structure for table `sync`
 --
-
-CREATE TABLE `sections_sync` (
-  `section` varchar(32) NOT NULL DEFAULT '',
-  `xml` text,
-  PRIMARY KEY (`section`)
+CREATE TABLE `sync` (
+  `handle` varchar(255) NOT NULL DEFAULT '',
+  `guid` varchar(13) NOT NULL,
+  `object` text,
+  PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------

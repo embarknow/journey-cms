@@ -14,7 +14,7 @@ interface MetadataInterface extends ArrayAccess
      *
      * @return void
      */
-    public function setDefaults()
+    public function setDefaults();
 
     /**
      * Get metadata from XML

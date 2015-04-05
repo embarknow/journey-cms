@@ -277,7 +277,7 @@ trait MetadataTrait
     }
 
     /**
-     * Gets a value from xml by running a MetadataInterface fromXML
+     * Gets a value from xml by running a MetadataValueInterface fromXML
      *
      * @param  string $name
      *  name for the value
@@ -301,7 +301,7 @@ trait MetadataTrait
     }
 
     /**
-     * Sets a value to xml by running a MetadataInterface toXML
+     * Sets a value to xml by running a MetadataValueInterface toXML
      *
      * @param  string $name
      *  name for the value

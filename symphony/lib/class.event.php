@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 use Embark\CMS\SystemDateTime;
 
 	Class EventException extends Exception {}

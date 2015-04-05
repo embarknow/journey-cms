@@ -2,6 +2,7 @@
 
 use Embark\CMS\Datasource\Exception as DatabaseException;
 use Embark\CMS\Database\Connection;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	require_once(LIB . '/class.textformatter.php');
 

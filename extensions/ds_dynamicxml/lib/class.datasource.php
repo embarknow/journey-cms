@@ -1,6 +1,7 @@
 <?php
 
 use Embark\CMS\SystemDateTime;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	require_once LIB . '/class.cache.php';
 	require_once LIB . '/class.xslproc.php';

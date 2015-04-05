@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	require_once(LIB . '/class.messagestack.php');
 
 	class XSLProcException extends Exception {

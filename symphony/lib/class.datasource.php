@@ -2,6 +2,7 @@
 
 use Embark\CMS\SystemDateTime;
 use Embark\CMS\Actors\Controller as ActorController;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	// Class DataSourceException extends Exception {}
 

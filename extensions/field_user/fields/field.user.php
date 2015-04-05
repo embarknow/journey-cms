@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	Class fieldUser extends Field {
 		function __construct(){
 			parent::__construct();

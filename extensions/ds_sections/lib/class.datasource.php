@@ -3,6 +3,7 @@
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Database\ResultIterator;
 use Embark\CMS\SystemDateTime;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	require_once LIB . '/class.datasource.php';
 	require_once LIB . '/class.entry.php';

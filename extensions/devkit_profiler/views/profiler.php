@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	if (!defined('BITTER_LANGUAGE_PATH')) {
 		define('BITTER_LANGUAGE_PATH', EXTENSIONS . '/devkit_debug/lib/bitter/languages');
 	}

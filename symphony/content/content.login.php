@@ -220,11 +220,11 @@ use Embark\CMS\SystemDateTime;
 							AND
 								user = %d
 							",
-							$date->format(DateTime::W3C),
-							$user->id
+							[$date->format(DateTime::W3C),
+							$user->id]
 						);
 
-						if($token->valid()){
+						if(!$token->valid()){
 							$token = substr(md5(time() . rand(0, 200)), 0, 6);
 							$date->setTimestamp(time() + (120 * 60));
 
@@ -237,7 +237,7 @@ use Embark\CMS\SystemDateTime;
 							);
 						}
 
-						$this->_email_sent = General::sendEmail($user['email'],
+						$this->_email_sent = General::sendEmail($user->email,
 									'noreply@' . HTTP_HOST,
 									__('Symphony Concierge'),
 									__('New Symphony Account Password'),
@@ -265,7 +265,7 @@ use Embark\CMS\SystemDateTime;
 
 						$user = User::load($user);
 
-						$user->set('password', md5(Symphony::Database()->escape($_POST['password'])));
+						$user->password= md5(Symphony::Database()->escape($_POST['password']));
 
 						if(!User::save($user) || !Administration::instance()->login($user->username, $_POST['password'])){
 							redirect(URL . "symphony/system/users/edit/{$user}/error/");

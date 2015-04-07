@@ -6,32 +6,13 @@ use Embark\CMS\ClosureFilterIterator;
 use DirectoryIterator;
 use DOMDocument;
 
+/**
+ * Trait implementing MetadataControllerInterface
+ *
+ * @see MetadataControllerInterface
+ */
 trait MetadataControllerTrait
 {
-    /**
-     * Save a new object.
-     *
-     * @param   MetadataInterface   $object
-     * @param   string              $handleOrFile
-     *  If a handle is provided the object will be saved to
-     *  the default location, if a file name is provided that
-     *  will be used instead.
-     */
-    public static function create(MetadataInterface $object, $handleOrFile)
-    {
-        $file = $handleOrFile;
-
-        // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
-        }
-
-        $document = static::toXML($object);
-        $document->formatOutput = true;
-
-        return $document->save($file);
-    }
-
     /**
      * Locate an object.
      *
@@ -39,6 +20,13 @@ trait MetadataControllerTrait
      *  If a handle is provided the object will be loaded from
      *  the default location, if a file name is provided that
      *  will be used instead.
+     *
+     * @uses  DOCROOT
+     *  to locate the file from the document root
+     * @uses static::FILE_EXTENSION
+     *  to define the file extension
+     * @uses static::DIR
+     *  to locate the file in a directory
      *
      * @return  string|false
      *  The file name of the object or false on failure.
@@ -60,12 +48,49 @@ trait MetadataControllerTrait
     }
 
     /**
+     * Save a new object.
+     *
+     * @param   MetadataInterface   $object
+     * @param   string              $handleOrFile
+     *  If a handle is provided the object will be saved to
+     *  the default location, if a file name is provided that
+     *  will be used instead.
+     *
+     * @uses  DOCROOT
+     *  to locate the file from the document root
+     * @uses static::FILE_EXTENSION
+     *  to define the file extension
+     * @uses static::DIR
+     *  to locate the file in a directory
+     *
+     * @return int|false
+     *  Number of bytes written or false if an error occurred
+     */
+    public static function create(MetadataInterface $object, $handleOrFile)
+    {
+        $file = $handleOrFile;
+
+        // Does not have a file extension, assume it is a handle
+        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
+            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        }
+
+        $document = static::toXML($object);
+        $document->formatOutput = true;
+
+        return $document->save($file);
+    }
+
+    /**
      * Read an object.
      *
      * @param   string              $handleOrFile
      *  If a handle is provided the object will be loaded from
      *  the default location, if a file name is provided that
      *  will be used instead.
+     *
+     * @return object
+     *  Class structure defined by the metadata document
      */
     public static function read($handleOrFile)
     {
@@ -89,6 +114,16 @@ trait MetadataControllerTrait
      *  If a handle is provided the object will be saved to
      *  the default location, if a file name is provided that
      *  will be used instead.
+     *
+     * @uses  DOCROOT
+     *  to locate the file from the document root
+     * @uses static::FILE_EXTENSION
+     *  to define the file extension
+     * @uses static::DIR
+     *  to locate the file in a directory
+     *
+     * @return int|boolean
+     *  Number of bytes written, true if the file was deleted, or false if an error occured
      */
     public static function update(MetadataInterface $object, $handleOrFile = null)
     {
@@ -133,6 +168,12 @@ trait MetadataControllerTrait
      * Delete an object.
      *
      * @param   MetadataInterface   $object
+     *
+     * @uses  DOCROOT
+     *  to locate the file from the document root
+     *
+     * @return boolean
+     *  True on success or False on failure, from unlink
      */
     public static function delete(MetadataInterface $object)
     {
@@ -142,18 +183,28 @@ trait MetadataControllerTrait
     }
 
     /**
-     * Shortcut for read
+     * Alias for read
      *
-     * @param   string              $handleOrFile
-     *  If a handle is provided the object will be loaded from
-     *  the default location, if a file name is provided that
-     *  will be used instead.
+     * @see static::read
      */
     public static function find($handleOrFile)
     {
         return static::read($handleOrFile);
     }
 
+    /**
+     * Find all metadata in a directory
+     *
+     * @uses  DOCROOT
+     *  to locate the file from the document root
+     * @uses static::FILE_EXTENSION
+     *  to define the file extension
+     * @uses static::DIR
+     *  to locate the file in a directory
+     *
+     * @return array
+     *  Yields an iteratable array of key => value pairs
+     */
     public static function findAll()
     {
         $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::DIR), function ($item) {
@@ -176,7 +227,12 @@ trait MetadataControllerTrait
 
     /**
      * Get metadata from XML
+     *
      * @param  DOMDocument $document
+     *  A document to create a class structure from describing metadata
+     *
+     * @return object
+     *  Class structure defined by the metadata document
      */
     public static function fromXML(DOMDocument $document)
     {
@@ -190,8 +246,12 @@ trait MetadataControllerTrait
     }
 
     /**
-     * Set metadata to XML
+     * Save metadata to DOMDocument XML
+     *
      * @param  MetadataInterface $object
+     *
+     * @return DOMDocument
+     *  instance of DOMDocument containing metadata as XML structure
      */
     public static function toXML(MetadataInterface $object)
     {

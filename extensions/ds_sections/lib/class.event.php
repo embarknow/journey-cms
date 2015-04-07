@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	require_once LIB . '/class.duplicator.php';
 	require_once LIB . '/class.entry.php';
 	require_once LIB . '/class.event.php';

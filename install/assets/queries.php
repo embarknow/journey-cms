@@ -27,10 +27,10 @@ create table if not exists `forgotpass` (
 SQL;
 
 $queries[] = <<<SQL
-create table if not exists `schemas` (
-  `schema_id` varchar(64) not null,
+create table if not exists `sync` (
+  `object_id` varchar(64) not null,
   `object` text,
-  primary key (`schema_id`)
+  primary key (`object_id`)
 );
 SQL;
 

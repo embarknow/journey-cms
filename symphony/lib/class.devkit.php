@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	require_once LIB . '/class.htmldocument.php';
 	require_once LIB . '/class.view.php';
 	require_once LIB . '/class.urlwriter.php';

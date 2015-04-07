@@ -2,6 +2,7 @@
 
 use Embark\CMS\Actors\Controller;
 use Embark\CMS\Actors\DatasourceInterface;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	require_once(LIB . '/class.event.php');
 	require_once(LIB . '/class.documentheaders.php');

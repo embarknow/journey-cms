@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Structures\ParameterPool as Context;
+
 	class GenericExceptionHandler {
 		public static $enabled;
 		protected static $log;

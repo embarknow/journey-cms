@@ -1,6 +1,7 @@
 <?php
 
 use Embark\CMS\UserDateTime;
+use Embark\CMS\Structures\ParameterPool as Context;
 
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');

@@ -2,7 +2,6 @@
 
 namespace Embark\CMS\Actors\Schemas;
 
-use Embark\CMS\Database\TableAliasIndex;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Boolean;
@@ -23,7 +22,7 @@ class DatasourceSortingQuery implements MetadataInterface
         ]);
     }
 
-    public function buildQuery(SchemaInterface $schema, TableAliasIndex $tables, array &$joins, array &$sorts)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema)
     {
         foreach ($this->findAll() as $item) {
             if ($item instanceof FieldInterface) {
@@ -36,12 +35,8 @@ class DatasourceSortingQuery implements MetadataInterface
                     }
                 }
 
-                $item['sorting']->buildQuery($schema, $item, $tables, $joins, $sorts);
+                $item['sorting']->appendQuery($query, $schema, $item);
             }
-        }
-
-        if (empty($sorts)) {
-            $sorts[] = $tables['entries'] . '.id asc';
         }
     }
 

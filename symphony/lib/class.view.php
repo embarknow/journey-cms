@@ -530,7 +530,7 @@ use Embark\CMS\Actors\DatasourceInterface;
 						Profiler::store('location', $reflection->getFileName(), 'system/resource action/executed');
 
 						if ($renderer->canExecute()) {
-							$fragment = $renderer->execute($outputParameters);
+							$fragment = $renderer->execute();
 						}
 
 						Profiler::end();

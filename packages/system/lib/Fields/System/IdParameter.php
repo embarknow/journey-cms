@@ -20,6 +20,6 @@ class IdParameter implements FieldParameterInterface
             $parameters[$key] = [];
         }
 
-        $parameters[$key][] = $entry->id;
+        $parameters[$key][] = $entry->entry_id;
     }
 }

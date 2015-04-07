@@ -2,8 +2,7 @@
 
 namespace Embark\CMS\Fields\System;
 
-use Embark\CMS\Actors\DatasourceInterface;
-use Embark\CMS\Database\TableAliasIndex;
+use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
@@ -15,8 +14,8 @@ class RandomSortQuery implements MetadataInterface
 {
     use MetadataTrait;
 
-    public function buildQuery(SchemaInterface $schema, FieldInterface $field, TableAliasIndex $tables, array &$joins, array &$sorts)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field)
     {
-        $sorts[] = 'rand()';
+        $query->sortRandomly();
     }
 }

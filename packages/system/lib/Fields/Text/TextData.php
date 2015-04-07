@@ -118,7 +118,7 @@ class TextData implements FieldDataInterface
             select * from `$table` where
                 `entry_id` = :entryId
         ");
-        $statement->bindValue(':entryId', $entry->id, PDO::PARAM_INT);
+        $statement->bindValue(':entryId', $entry->entry_id, PDO::PARAM_INT);
         $data = null;
 
         if ($statement->execute()) {
@@ -149,7 +149,7 @@ class TextData implements FieldDataInterface
         ");
 
         return $statement->execute([
-            ':entryId' =>           $entry->id,
+            ':entryId' =>           $entry->entry_id,
             ':handle' =>            $data->handle,
             ':updatedHandle' =>     $data->handle,
             ':value' =>             $data->value,

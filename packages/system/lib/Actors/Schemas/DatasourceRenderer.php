@@ -3,12 +3,11 @@
 namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Database\Exception as DatabaseException;
-use Embark\CMS\Database\TableAliasIndex;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\Structures\Sorting;
-use Embark\CMS\Schemas\Controller as SchemaController;
 use Context;
 use Entry;
 use Field;
@@ -21,10 +20,12 @@ use XMLDocument;
 class DatasourceRenderer
 {
     protected $datasource;
+    protected $schema;
 
-    public function __construct(Datasource $datasource)
+    public function __construct(Datasource $datasource, SchemaInterface $schema)
     {
         $this->datasource = $datasource;
+        $this->schema = $schema;
     }
 
     public function canExecute()
@@ -32,18 +33,14 @@ class DatasourceRenderer
         return true;
     }
 
-    public function createQuery($schema, $joins = null, array $where = [], $filter_operation_type = 1)
+    public function createQuery()
     {
         Profiler::begin('Creating query');
 
-        $sqlJoins = [];
-        $sqlSorts = [];
+        $query = new DatasourceQuery();
 
-        $tables = new TableAliasIndex();
-        $tables['entries'] = 'e';
-
-        $this->datasource['sorting']->buildQuery($schema, $tables, $sqlJoins, $sqlSorts);
-        $this->datasource['pagination']->buildQuery($schema, $sqlLimits);
+        $this->datasource['sorting']->appendQuery($query, $this->schema);
+        $this->datasource['pagination']->appendQuery($query, $this->schema);
 
         // $output = Controller::toXML($this);
         // $output->formatOutput = true;
@@ -80,72 +77,27 @@ class DatasourceRenderer
         //  }
         // }
 
-        // Escape percent symbol:
-        $where = array_map(function($string) {
-            return str_replace('%', '%%', $string);
-        }, $where);
-
-        // Unoptimized select statement:
-        $selectKeywords = [
-            'select', 'distinct', 'sql_calc_found_rows'
-        ];
-
-        // Remove distinct keyword:
-        if ($this->datasource['query'] instanceof QueryOptions && false === $this->datasource['query']['distinct-select']) {
-            $selectKeywords = array_diff(
-                $selectKeywords, array('distinct')
-            );
-        }
-
-        $o_where = $where;
-        $query = sprintf(
-            "%s\n\t%s.id\nfrom\n\t`entries` as `%s`%s\nwhere\n\t`schema` = '%s'%s\norder by%s\nlimit %s",
-            implode(' ', $selectKeywords),
-            $tables['entries'],
-            $tables['entries'],
-            (
-                empty($sqlJoins)
-                    ? null
-                    : "\n" . implode("\n", $sqlJoins)
-            ),
-            $schema['resource']['handle'],
-            (
-                is_array($o_where) && !empty($o_where)
-                    ? "\nand (" . implode(($filter_operation_type == 1 ? ' and ' : ' or '), $o_where) . ')'
-                    : null
-            ),
-            (
-                empty($sqlSorts)
-                    ? null
-                    : "\n\t" . implode(",\n\t", $sqlSorts)
-            ),
-            $sqlLimits
-        );
-
         Profiler::end();
 
         return $query;
     }
 
-    public function execute(Context $parameter_output, $joins = null, array $where = [], $filter_operation_type = 1)
+    public function execute()
     {
         $result = new XMLDocument();
         $result->appendChild($result->createElement($this->datasource['resource']['handle']));
         $root = $result->documentElement;
-
-        $schema = SchemaController::read($this->datasource['schema']);
-        $root->setAttribute('schema', $schema['resource']['handle']);
+        $root->setAttribute('schema', $this->schema['resource']['handle']);
 
         $pagination = $this->datasource['pagination'];
-        $query = $this->createQuery($schema, $joins, $where, $filter_operation_type);
+        $query = $this->createQuery($this->schema);
+
+        // var_dump((string)$query); exit;
 
         try {
             Profiler::begin('Executing query');
 
-            $statement = Symphony::Database()->prepare($query, [
-                $schema['resource']['handle'],
-                $schema->{'publish-order-handle'}
-            ]);
+            $statement = Symphony::Database()->prepare($query);
             $valid = $statement->execute();
 
             Profiler::end();
@@ -154,18 +106,18 @@ class DatasourceRenderer
             if ($valid) {
                 Profiler::begin('Creating entry elements');
 
-                $statement->bindColumn('id', $entryId, PDO::PARAM_INT);
+                $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
 
                 while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
                     $entry = Entry::loadFromId($entryId);
 
                     $wrapper = $result->createElement('entry');
-                    $wrapper->setAttribute('id', $entry->id);
+                    $wrapper->setAttribute('id', $entry->entry_id);
                     $root->appendChild($wrapper);
 
                     // If there are included elements, need an entry element.
                     if ($this->datasource['elements'] instanceof DatasourceOutputElements) {
-                        $this->datasource['elements']->appendElements($wrapper, $this->datasource, $schema, $entry);
+                        $this->datasource['elements']->appendElements($wrapper, $this->datasource, $this->schema, $entry);
                     }
                 }
 

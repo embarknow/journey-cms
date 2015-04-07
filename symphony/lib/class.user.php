@@ -27,7 +27,7 @@ use Embark\CMS\SystemDateTime;
 		private $position;
 
 		public function __construct(){
-			$this->iterator = Symphony::Database()->query("SELECT * FROM `users` ORDER BY `id` ASC", array(), 'UserResult');
+			$this->iterator = Symphony::Database()->query("SELECT * FROM `users` ORDER BY `user_id` ASC", array(), 'UserResult');
 		}
 
 		public function current(){
@@ -74,7 +74,7 @@ use Embark\CMS\SystemDateTime;
 		public static function load($id) {
 			$user = new self();
 
-			$result = Symphony::Database()->query("SELECT * FROM `users` WHERE `id` = '%s' LIMIT 1", array($id));
+			$result = Symphony::Database()->query("SELECT * FROM `users` WHERE `user_id` = '%s' LIMIT 1", array($id));
 
 			if (!$result->valid()) return false;
 
@@ -135,17 +135,20 @@ use Embark\CMS\SystemDateTime;
 
 			if (strlen($token) == 6) {
 				$result = Symphony::Database()->query("
-						SELECT
-							`u`.id, `u`.username, `u`.password
-						FROM
-							`users` AS u, `forgotpass` AS f
-						WHERE
-							`u`.id = `f`.user
-						AND
-							`f`.expiry > '%s'
-						AND
-							`f`.token = '%s'
-						LIMIT 1
+						select
+							u.user_id,
+							u.username,
+							u.password
+						from
+							`users` as u
+						join
+							`forgotpass` as f
+							using (user_id)
+						where
+							u.user_id = f.user_id
+							AND f.expiry > '%s'
+							AND f.token = '%s'
+						limit 1
 					",
 					[
 						(new SystemDateTime)->format(DateTime::W3C),
@@ -157,7 +160,7 @@ use Embark\CMS\SystemDateTime;
 			else {
 				$result = Symphony::Database()->query("
 						SELECT
-							id, username, password
+							user_id, username, password
 						FROM
 							`users`
 						WHERE
@@ -173,7 +176,7 @@ use Embark\CMS\SystemDateTime;
 			if ($result->valid()) {
 				$row = $result->current();
 
-				return User::load($row->id);
+				return User::load($row->user_id);
 			}
 
 			return false;
@@ -226,15 +229,15 @@ use Embark\CMS\SystemDateTime;
 			elseif(!General::validateString($this->email, '/^[^@]+@[^\.@]+\.[^@]+$/i')) $errors->append('email', __('E-mail address entered is invalid'));
 
 			if(is_null($this->username)) $errors->append('username', __('Username is required'));
-			elseif($this->id){
-				$result = Symphony::Database()->query("SELECT `username` FROM `users` WHERE `id` = %d", array($this->id));
+			elseif($this->user_id){
+				$result = Symphony::Database()->query("SELECT `username` FROM `users` WHERE `user_id` = %d", array($this->user_id));
 				$current_username = $result->current()->username;
 
-				if($current_username != $this->username && Symphony::Database()->query("SELECT `id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid())
+				if($current_username != $this->username && Symphony::Database()->query("SELECT `user_id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid())
 					$errors->append('username', __('Username is already taken'));
 			}
 
-			elseif(Symphony::Database()->query("SELECT `id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid()){
+			elseif(Symphony::Database()->query("SELECT `user_id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid()){
 				$errors->append('username', __('Username is already taken'));
 			}
 
@@ -255,14 +258,14 @@ use Embark\CMS\SystemDateTime;
 			Symphony::Database()->update(
 				'users',
 				['last_seen' => (new SystemDateTime)->format('Y-m-d H:i:s')],
-				[$this->id],
-				"`id` = '%d'"
+				[$this->user_id],
+				"`user_id` = '%d'"
 			);
 
 			Symphony::Database()->delete(
 				'forgotpass',
-				[$this->id],
-				"`user` = %d"
+				[$this->user_id],
+				"`user_id` = %d"
 			);
 
 			return true;
@@ -279,30 +282,30 @@ use Embark\CMS\SystemDateTime;
 			unset($fields['id']);
 
 			try{
-				if(isset($user->id) && !is_null($user->id)){
-					Symphony::Database()->update('users', $fields, array($user->id), "`id` = %d");
+				if(isset($user->user_id) && !is_null($user->user_id)){
+					Symphony::Database()->update('users', $fields, array($user->user_id), "`user_id` = %d");
 				}
 				else{
-					$user->id = Symphony::Database()->insert('users', $fields);
+					$user->user_id = Symphony::Database()->insert('users', $fields);
 				}
 			}
 			catch(DatabaseException $e){
 				return false;
 			}
 
-			return $user->id;
+			return $user->user_id;
 		}
 
 		public static function delete($id){
-			return Symphony::Database()->delete('users', array($id), "`id` = %d");
+			return Symphony::Database()->delete('users', array($id), "`user_id` = %d");
 		}
 
 		public static function deactivateAuthToken($id){
-			return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'no' WHERE `id` = '%d' LIMIT 1", array($id));
+			return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'no' WHERE `user_id` = '%d' LIMIT 1", array($id));
 		}
 
 		public static function activateAuthToken($id){
-			return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'yes' WHERE `id` = '%d' LIMIT 1", array($id));
+			return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'yes' WHERE `user_id` = '%d' LIMIT 1", array($id));
 		}
 
 	}

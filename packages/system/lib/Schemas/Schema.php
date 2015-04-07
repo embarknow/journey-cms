@@ -4,6 +4,7 @@ namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Guid;
+use General;
 use Symphony;
 
 class Schema implements SchemaInterface
@@ -35,9 +36,9 @@ class Schema implements SchemaInterface
 					FROM
 						`entries` AS e
 					WHERE
-						e.schema = '%s'
+						e.schema_id = '%s'
 				",
-				[$this['resource']['handle']]
+				[$this['guid']]
 			);
 
 			if ($result->valid()) {

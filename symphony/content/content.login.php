@@ -202,13 +202,13 @@ use Embark\CMS\SystemDateTime;
 				##Reset of password requested
 				elseif($action == 'reset'):
 
-					$user = Symphony::Database()->query("SELECT id, email, first_name FROM `users` WHERE `email` = '%s'", array($_POST['email']));
+					$user = Symphony::Database()->query("SELECT user_id, email, first_name FROM `users` WHERE `email` = '%s'", array($_POST['email']));
 
-					if($user->valid()){
+					if ($user->valid()) {
 						$user = $user->current();
 						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C)), " `expiry` < '%s'");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C)), " `expires` <= '%s'");
 
 						$token = Symphony::Database()->query("
 							SELECT
@@ -216,23 +216,23 @@ use Embark\CMS\SystemDateTime;
 							FROM
 								`forgotpass`
 							WHERE
-								expiry > '%s'
+								expires > '%s'
 							AND
-								user = %d
+								user_id = %d
 							",
 							$date->format(DateTime::W3C),
-							$user->id
+							$user->user_id
 						);
 
-						if($token->valid()){
+						if ($token->valid()) {
 							$token = substr(md5(time() . rand(0, 200)), 0, 6);
 							$date->setTimestamp(time() + (120 * 60));
 
 							Symphony::Database()->insert('forgotpass',
 								array(
-									'user' =>	$user->id,
+									'user_id' =>	$user->user_id,
 									'token' =>		$token,
-									'expiry' =>		$date->format(DateTime::W3C)
+									'expires' =>	$date->format(DateTime::W3C)
 								)
 							);
 						}
@@ -261,7 +261,7 @@ use Embark\CMS\SystemDateTime;
 					}
 
 					else {
-						$user = Symphony::User()->id;
+						$user = Symphony::User()->user_id;
 
 						$user = User::load($user);
 
@@ -283,13 +283,15 @@ use Embark\CMS\SystemDateTime;
 
 				$user = Symphony::Database()->query("
 						SELECT
-							u.id, u.email, u.first_name
+							u.user_id,
+							u.email,
+							u.first_name
 						FROM
-							`users` as u, `forgotpass` as t2
+							`users` as u,
+							`forgotpass` as t2
 						WHERE
 							t2.`token` = '%s'
-						AND
-							u.`id` = t2.`user`
+							and u.`user_id` = t2.`user_id`
 						LIMIT 1
 					",
 					$_REQUEST['token']
@@ -309,8 +311,8 @@ use Embark\CMS\SystemDateTime;
 								'Best Regards,' . PHP_EOL .
 								'The Symphony Team');
 
-					Symphony::Database()->update('users', array('password' => md5($newpass)), array($user->id), "`id` = '%d'");
-					Symphony::Database()->delete('forgotpass', array($user->id), " `user` = '%d'");
+					Symphony::Database()->update('users', array('password' => md5($newpass)), array($user->user_id), "`user_id` = '%d'");
+					Symphony::Database()->delete('forgotpass', array($user->user_id), " `user_id` = '%d'");
 
 					$this->_alert = 'Password reset. Check your email';
 				}

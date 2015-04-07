@@ -2,12 +2,17 @@
 
 namespace Embark\CMS\Views\Section;
 
+use Embark\CMS\Actors\Schemas\DatasourceQuery;
+use Embark\CMS\Actors\Controller as ActorController;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
+use Entry;
 use HTMLDocument;
+use PDO;
+use Symphony;
 use Widget;
 
 class SectionTableView implements MetadataInterface
@@ -50,15 +55,10 @@ class SectionTableView implements MetadataInterface
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $schema = SchemaController::read($view['schema']);
+        $actor = ActorController::read($view['actor']);
+        $query = new DatasourceQuery();
 
-        $this->appendHeader($page, $view);
-
-        $table = $page->createElement('table');
-        $page->appendChild($table);
-
-        $head = $page->createElement('thead');
-        $table->appendChild($head);
-
+        // Prepare column fields by importing data from the schema:
         foreach ($this->findAll() as $item) {
             if ($item instanceof FieldInterface) {
                 if (isset($item['schema']['guid'])) {
@@ -68,20 +68,75 @@ class SectionTableView implements MetadataInterface
                         $item->fromMetadata($field);
                     }
                 }
+            }
+        }
 
-                $item['column']->appendHeader($head);
+        // Sort entries by the selected column:
+        if (isset($_GET['sort'], $_GET['direction'])) {
+            $field = $this->findColumnByName($_GET['sort']);
+
+            if ($field['sorting'] instanceof MetadataInterface) {
+                $field['sorting']['direction'] = $_GET['direction'];
+                $field['sorting']->appendQuery($query, $schema, $field);
+            }
+        }
+
+        // Sort entries by the default sorting:
+        foreach ($this->findAll() as $item) {
+            if ($item instanceof FieldInterface) {
+                if ($item['sorting'] instanceof MetadataInterface) {
+                    $item['sorting']->appendQuery($query, $schema, $item);
+                }
+            }
+        }
+
+        $this->appendHeader($page, $view);
+
+        // Build table header:
+        $table = $page->createElement('table');
+        $page->Form->appendChild($table);
+
+        $head = $page->createElement('thead');
+        $table->appendChild($head);
+
+        foreach ($this->findAll() as $item) {
+            if ($item instanceof FieldInterface) {
+                $item['column']->appendHeader($head, $schema, $item, $url);
+            }
+        }
+
+        if ($statement = $query->execute()) {
+            $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
+
+            while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
+                $entry = Entry::loadFromId($entryId);
+                $row = $page->createElement('tr');
+                $table->appendChild($row);
+
+                foreach ($this->findAll() as $item) {
+                    if ($item instanceof FieldInterface) {
+                        $item['column']->appendBody($row, $schema, $entry, $item, $url);
+                    }
+                }
+
+                $input = Widget::Input('entry[]', $entry->entry_id, 'checkbox');
+                $row->firstChild->appendChild($input);
             }
         }
 
         $this->appendFooter($page, $view);
+    }
 
-        // var_dump($this); exit;
+    public function findColumnByName($name)
+    {
+        foreach ($this->findAll() as $item) {
+            if ($item instanceof FieldInterface) {
+                if ($item['column']['name'] !== $name) continue;
 
-        // foreach ($this->findAll() as $column) {
-        //     if (isset($column['field']['column'])) {
-        //         // var_dump($column); exit;
-        //         $column->appendHeader($head);
-        //     }
-        // }
+                return $item;
+            }
+        }
+
+        return false;
     }
 }

@@ -11,6 +11,15 @@ trait MetadataTrait
     protected $metadata = [];
     private $metadataSchema = [];
 
+    public function __clone()
+    {
+        foreach ($this->metadata as $key => $value) {
+            if ($value instanceof MetadataInterface) {
+                $this->metadata[$key] = clone $value;
+            }
+        }
+    }
+
     public function fromMetadata(MetadataInterface $object)
     {
         foreach ($object->findAll() as $name => $value) {

@@ -34,13 +34,12 @@ class TextSchema implements FieldSchemaInterface
         );
         $statement = Symphony::Database()->prepare("
             create table if not exists `{$table}` (
-                `id` int(11) unsigned not null auto_increment,
                 `entry_id` int(11) unsigned not null,
                 `handle` varchar(255) default null,
                 `value` text default null,
                 `formatted` text default null,
-                primary key (`id`),
                 unique key `entry_id` (`entry_id`),
+                key `handle` (`entry_id`, `handle`),
                 fulltext key `value` (`value`),
                 fulltext key `formatted` (`formatted`)
             )

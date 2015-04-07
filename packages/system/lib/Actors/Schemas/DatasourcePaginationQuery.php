@@ -42,7 +42,7 @@ class DatasourcePaginationQuery implements MetadataInterface
         ]);
     }
 
-    public function buildQuery(SchemaInterface $schema, &$limits)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema)
     {
         $this['entries-per-page'] = $this['limit'];
         $this['current-page'] = $this['page'];
@@ -51,7 +51,7 @@ class DatasourcePaginationQuery implements MetadataInterface
             (max(1, $this['current-page']) - 1) * $this['entries-per-page']
         );
 
-        $limits = sprintf('%d, %d', $from, $this['entries-per-page']);
+        $query->limitTo($from, $this['entries-per-page']);
     }
 
     public function setTotal($total)

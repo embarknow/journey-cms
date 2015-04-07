@@ -199,7 +199,7 @@ use Embark\CMS\Structures\MenuItem;
 
 			$li = $this->createElement('li');
 			$li->appendChild(
-				Widget::Anchor(Symphony::User()->getFullName(), ADMIN_URL . '/system/users/edit/' . Symphony::User()->id . '/')
+				Widget::Anchor(Symphony::User()->getFullName(), ADMIN_URL . '/system/users/edit/' . Symphony::User()->user_id . '/')
 			);
 			$ul->appendChild($li);
 

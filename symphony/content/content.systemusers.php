@@ -51,7 +51,7 @@ use Embark\CMS\SystemDateTime;
 					## Setup each cell
 					$td1 = Widget::TableData(
 						Widget::Anchor(
-							$u->getFullName(), Administration::instance()->getCurrentPageURL() . '/edit/' . $u->id . '/', array(
+							$u->getFullName(), Administration::instance()->getCurrentPageURL() . '/edit/' . $u->user_id . '/', array(
 								'title' => $u->username
 							)
 						)
@@ -74,7 +74,7 @@ use Embark\CMS\SystemDateTime;
 						$td3 = Widget::TableData('Unknown', array('class' => 'inactive'));
 					}
 
-					$td3->appendChild(Widget::Input('items['.$u->id.']', NULL, 'checkbox'));
+					$td3->appendChild(Widget::Input('items['.$u->user_id.']', NULL, 'checkbox'));
 
 					## Add a row to the body array, assigning each cell to the row
 
@@ -107,7 +107,7 @@ use Embark\CMS\SystemDateTime;
 				$checked = array_keys($_POST['items']);
 
 				foreach($checked as $user){
-					if(Symphony::User()->id == $user) continue;
+					if(Symphony::User()->user_id == $user) continue;
 					User::delete($user);
 				}
 
@@ -199,7 +199,7 @@ use Embark\CMS\SystemDateTime;
 
 
 
-			if($this->_context[0] == 'edit' && $this->user->id == Symphony::User()->id) $isOwner = true;
+			if($this->_context[0] == 'edit' && $this->user->user_id == Symphony::User()->user_id) $isOwner = true;
 
 			$this->setTitle(__(($this->_context[0] == 'new' ? '%1$s &ndash; %2$s &ndash; Untitled' : '%1$s &ndash; %2$s &ndash; %3$s'), array(__('Symphony'), __('Users'), $this->user->getFullName())));
 			$this->appendSubheading(($this->_context[0] == 'new' ? __('New User') : $this->user->getFullName()));
@@ -380,7 +380,7 @@ use Embark\CMS\SystemDateTime;
 						# Description: Just after creation of a new User. The ID of the User is provided.
 						Extension::notify('PostCreate', '/system/users/new/', array('user' => $this->user));
 
-			  		   redirect(ADMIN_URL . "/system/users/edit/{$this->user->id}/:created/");
+			  		   redirect(ADMIN_URL . "/system/users/edit/{$this->user->user_id}/:created/");
 
 					}
 
@@ -410,7 +410,7 @@ use Embark\CMS\SystemDateTime;
 
 			    $this->user = User::load($user);
 
-				$this->user->id = $user;
+				$this->user->user_id = $user;
 
 				$this->user->email = $fields['email'];
 				$this->user->username = $fields['username'];
@@ -450,10 +450,10 @@ use Embark\CMS\SystemDateTime;
 					elseif(User::save($this->user)){
 						$date = new SystemDateTime();
 
-						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user), " `expiry` < '%s' OR `user` = %d ");
+						Symphony::Database()->delete('forgotpass', array($date->format(DateTime::W3C), $user), " `expires` < '%s' OR `user_id` = %d ");
 
 						// This is the logged in user, so update their session
-						if($user == Symphony::User()->id){
+						if($user == Symphony::User()->user_id){
 							Administration::instance()->login($this->user->username, $this->user->password, true);
 						}
 
@@ -462,7 +462,7 @@ use Embark\CMS\SystemDateTime;
 						# Description: Just after creation of a new User. The ID of the User is provided.
 						Extension::notify('PostSave', '/system/users/edit/', array('user' => $this->user));
 
-		  		    	redirect(ADMIN_URL . "/system/users/edit/{$this->user->id}/:saved/");
+		  		    	redirect(ADMIN_URL . "/system/users/edit/{$this->user->user_id}/:saved/");
 
 					}
 

@@ -4,25 +4,18 @@ namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Database\Exception as DatabaseException;
+use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\SystemDateTime;
-use Administration;
-use Context;
 use DOMElement;
-use Duplicator;
-use General;
-use Field;
-use Layout;
-use MessageStack;
-use Profiler;
+use Entry;
+use PDO;
 use Section;
-use SectionIterator;
 use Symphony;
-use SymphonyDOMElement;
-use XMLDocument;
 use Widget;
 
 class Datasource implements DatasourceInterface
@@ -64,7 +57,9 @@ class Datasource implements DatasourceInterface
 
     public function createRenderer()
     {
-        return new DatasourceRenderer($this);
+        $schema = SchemaController::read($this['schema']);
+
+        return new DatasourceRenderer($this, $schema);
     }
 
     public function appendColumns(DOMElement $wrapper)
@@ -91,5 +86,45 @@ class Datasource implements DatasourceInterface
 
         // Type:
         $wrapper->appendChild(Widget::TableData($this->getType()));
+    }
+
+    public function findEntries()
+    {
+        $query = new DatasourceQuery();
+        $schema = SchemaController::read($this['schema']);
+
+        $this['sorting']->appendQuery($query, $schema);
+        $this['pagination']->appendQuery($query, $schema);
+
+        // var_dump((string)$query); exit;
+
+        $statement = Symphony::Database()->prepare($query);
+        $valid = $statement->execute();
+
+        // Build Entry Records
+        if ($valid) {
+            $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
+
+            while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
+                yield Entry::loadFromId($entryId);
+            }
+        }
+    }
+
+    public function findSortingByField($field)
+    {
+        foreach ($this['sorting']->findAll() as $item) {
+            if (isset($field['schema']['guid'])) {
+                if ($item['schema']['guid'] !== $field['schema']['guid']) continue;
+            }
+
+            else {
+                if (get_class($item) !== get_class($field)) continue;
+            }
+
+            return $item;
+        }
+
+        return false;
     }
 }

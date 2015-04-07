@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Fields\Text;
 
-use Embark\CMS\Database\TableAliasIndex;
+use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataInterface;
@@ -23,19 +23,13 @@ class TextSortQuery implements MetadataInterface
         ]);
     }
 
-    public function buildQuery(SchemaInterface $schema, FieldInterface $field, TableAliasIndex $tables, array &$joins, array &$sorts)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field)
     {
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
             $field['schema']['guid']
         );
-
-        if (false === isset($tables[$table])) {
-            $tables[$table] = $tables->next();
-            $joins[] = "right join\n\t`{$table}` as `{$tables[$table]}`\n\ton ({$tables['entries']}.id = {$tables[$table]}.entry_id)";
-        }
-
-        $sorts[] = $tables[$table] . '.value ' . $this['direction'];
+        $query->sortBySubQuery("select entry_id, value as order_id from {$table}", $this['direction']);
     }
 }

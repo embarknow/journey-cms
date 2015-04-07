@@ -3,6 +3,7 @@
 namespace Embark\CMS\Structures;
 
 use Embark\CMS\Structures\MetadataInterface;
+use General;
 
 class Guid implements MetadataValueInterface
 {

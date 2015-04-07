@@ -31,16 +31,16 @@ class Controller implements MetadataControllerInterface
             // Delete entries:
             $statement = Symphony::Database()->prepare('
                 delete from `entries` where
-                    `schema` = :handle
+                    `schema_id` = :guid
             ');
             $statement->execute([
-                ':handle' => $object['resource']['handle']
+                ':guid' => $object['guid']
             ]);
 
             // Delete sync information:
             $statement = Symphony::Database()->prepare('
-                delete from `sync` where
-                    `guid` = :guid
+                delete from `schemas` where
+                    `schema_id` = :guid
             ');
             $statement->execute([
                 ':guid' => $object['guid']
@@ -73,9 +73,9 @@ class Controller implements MetadataControllerInterface
             SELECT
                 s.object
             FROM
-                `sync` AS s
+                `schemas` AS s
             WHERE
-                s.guid = ?
+                s.schema_id = ?
         ');
         $statement->bindValue(1, $newSchema['guid'], PDO::PARAM_STR);
 
@@ -203,24 +203,10 @@ class Controller implements MetadataControllerInterface
             $data->field['schema']->create($schema, $data->field);
         }
 
-        // Move entries to the new schema:
-        if ($stats->schema->rename) {
-            $statement = Symphony::Database()->prepare('
-                update `entries` set
-                    `schema` = :new
-                where
-                    `schema` = :old
-            ');
-            $statement->execute([
-                ':new' => $stats->schema->new['resource']['handle'],
-                ':old' => $stats->schema->old['resource']['handle']
-            ]);
-        }
-
         // Remove old sync data:
         $statement = Symphony::Database()->prepare('
-            delete from `sync` where
-                `guid` = :guid
+            delete from `schemas` where
+                `schema_id` = :guid
         ');
         $statement->execute([
             ':guid' => $schema['guid']
@@ -228,13 +214,11 @@ class Controller implements MetadataControllerInterface
 
         // Create new sync data:
         $statement = Symphony::Database()->prepare('
-            insert into `sync` set
-                `handle` = :handle,
-                `guid` = :guid,
+            insert into `schemas` set
+                `schema_id` = :guid,
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' => $schema['resource']['handle'],
             ':guid' =>   $schema['guid'],
             ':object' => serialize($schema)
         ]);

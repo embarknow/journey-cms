@@ -48,7 +48,7 @@ class SectionFormView implements MetadataInterface
         $title = __('Create new');
         $link = $url . '/new';
 
-        if (isset($entry->id)) {
+        if (isset($entry->entry_id)) {
             $title = __('Edit entry');
 
             if (isset($view['form']['title']) && $view['form']['title'] instanceof FieldInterface) {
@@ -59,7 +59,7 @@ class SectionFormView implements MetadataInterface
 
                     if (isset($data->value)) {
                         $title = $data->value;
-                        $url . '/edit/' . $entry->id;
+                        $url . '/edit/' . $entry->entry_id;
                     }
                 }
             }
@@ -92,7 +92,7 @@ class SectionFormView implements MetadataInterface
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $schema = SchemaController::read($view['schema']);
         $saving = isset($_POST['fields']);
-        $editing = isset($entry->id);
+        $editing = isset($entry->entry_id);
         $headersAppended = [];
         $success = true;
 
@@ -115,8 +115,8 @@ class SectionFormView implements MetadataInterface
             // Prepare a new entry:
             if (false === $editing) {
                 $entry->schema = $schema['resource']['handle'];
-                $entry->user = Symphony::User()->id;
-                $entry->id = Entry::generateID($entry->schema, $entry->user);
+                $entry->user = Symphony::User()->user_id;
+                $entry->entry_id = Entry::generateID($entry->schema, $entry->user);
             }
         }
 
@@ -163,11 +163,11 @@ class SectionFormView implements MetadataInterface
                     update `entries` set
                         modification_date = :date
                     where
-                        id = :entryId
+                        entry_id = :entryId
                 ");
 
                 $statement->execute([
-                    ':entryId' =>   $entry->id,
+                    ':entryId' =>   $entry->entry_id,
                     ':date' =>      $date->format(SystemDateTime::W3C)
                 ]);
 
@@ -175,7 +175,7 @@ class SectionFormView implements MetadataInterface
                 Symphony::Database()->commit();
 
                 // Go to the success page:
-                redirect($url . '/edit/' . $entry->id . (
+                redirect($url . '/edit/' . $entry->entry_id . (
                     $editing
                         ? '/:saved'
                         : '/:created'

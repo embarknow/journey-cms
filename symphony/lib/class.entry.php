@@ -58,9 +58,9 @@ use Embark\CMS\SystemDateTime;
 
 			$this->data = new StdClass;
 			$this->meta = (object)array(
-				'id' =>						null,
-				'schema' =>					null,
-				'user' =>					null,
+				'entry_id' =>				null,
+				'schema_id' =>				null,
+				'user_id' =>				null,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			);
@@ -89,7 +89,7 @@ use Embark\CMS\SystemDateTime;
 		}
 
 		public static function loadFromID($id, $schema = array()) {
-			$result = Symphony::Database()->query("SELECT * FROM `entries` WHERE `id` = %d LIMIT 1", array($id), 'EntryResult');
+			$result = Symphony::Database()->query("SELECT * FROM `entries` WHERE `entry_id` = %d LIMIT 1", array($id), 'EntryResult');
 			$result->setSchema($schema);
 
 			if (!$result->valid()) return null;
@@ -141,7 +141,7 @@ use Embark\CMS\SystemDateTime;
 				foreach($section->fields as $field){
 					Symphony::Database()->delete(
 						sprintf('data_%s_%s', $section->handle, $field->{'element-name'}),
-						array($entry->id),
+						array($entry->entry_id),
 						'`entry_id` = %d'
 					);
 				}
@@ -151,7 +151,7 @@ use Embark\CMS\SystemDateTime;
 				// TODO: Do something about fields that don't implement this correctly.
 			}
 
-			Symphony::Database()->delete('entries', array($entry->id), " `id` = %d LIMIT 1");
+			Symphony::Database()->delete('entries', array($entry->entry_id), " `entry_id` = %d LIMIT 1");
 		}
 
 		public static function save(self $entry, MessageStack &$errors){
@@ -164,12 +164,12 @@ use Embark\CMS\SystemDateTime;
 			$purge_meta_on_error = false;
 
 			if (!isset($entry->user)) {
-				$entry->user = Symphony::User()->id;
+				$entry->user = Symphony::User()->user_id;
 			}
 
-			if (!isset($entry->id) || is_null($entry->id)) {
+			if (!isset($entry->entry_id) || is_null($entry->entry_id)) {
 				$purge_meta_on_error = true;
-				$entry->id = self::generateID($entry->schema, $entry->user);
+				$entry->entry_id = self::generateID($entry->schema, $entry->user);
 			}
 
 			// Update the modification details
@@ -222,7 +222,7 @@ use Embark\CMS\SystemDateTime;
 
 			// Cleanup due to failure
 			if ($status != Field::STATUS_OK && $purge_meta_on_error == true){
-				Symphony::Database()->delete('entries', array(), " `id` = {$entry->id} LIMIT 1");
+				Symphony::Database()->delete('entries', array(), " `entry_id` = {$entry->entry_id} LIMIT 1");
 
 				return self::STATUS_ERROR;
 			}
@@ -277,12 +277,12 @@ use Embark\CMS\SystemDateTime;
 			$date = new SystemDateTime();
 
 			if (is_null($user)) {
-				$user = Symphony::Database()->query("SELECT `id` FROM `users` ORDER BY `id` ASC LIMIT 1")->current()->id;
+				$user = Symphony::Database()->query("SELECT `user_id` FROM `users` ORDER BY `user_id` ASC LIMIT 1")->current()->user_id;
 			}
 
 			return Symphony::Database()->insert('entries', [
-				'schema' =>					$schema,
-				'user' =>					$user,
+				'schema_id' =>				$schema,
+				'user_id' =>				$user,
 				'creation_date' =>			$date->format(DateTime::W3C),
 				'modification_date' =>		$date->format(DateTime::W3C)
 			]);

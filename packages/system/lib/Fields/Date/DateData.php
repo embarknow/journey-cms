@@ -105,7 +105,7 @@ class DateData implements DataInterface, MetadataInterface
             array(
                 $entry->section,
                 $this->{'element-name'},
-                $entry->id
+                $entry->entry_id
             )
         );
 

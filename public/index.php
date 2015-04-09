@@ -11,10 +11,16 @@ use Embark\Journey\MiddlewareStack;
 
 $container = new Container;
 
+/**
+ * The middleware stack allows components to be added to the application in a layered fashion. These middleware are allowed to affect the running and outcome of the application. For example, authentication can prevent the application from running in full.
+ */
 $container['middleware'] = function ($con) {
     return new MiddlewareStack;
 };
 
+/**
+ * The error handler takes any application exception and handles it gracefully
+ */
 $container['error-handler'] = function ($con) {
     return new ErrorHandler(
         __DIR__ . '/../lib/templates',
@@ -23,6 +29,9 @@ $container['error-handler'] = function ($con) {
     );
 };
 
+/**
+ * The server serves the application. Simples.
+ */
 $container['server'] = function ($con) {
     $application = $con['middleware'];
 

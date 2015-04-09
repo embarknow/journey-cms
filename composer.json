@@ -1,11 +1,17 @@
 {
+    "name": "embark/cms",
+    "description": "A new CMS from old Symphony ideas",
+    "minimum-stability": "dev",
     "require": {
-        "php": ">=5.5.0"
+        "php": ">=5.5.0",
+        "phly/http": "~1.0@dev",
+        "pimple/pimple": "~3.0@dev"
     },
     "require-dev": {
     },
     "autoload": {
         "psr-4": {
+            "Embark\\Journey\\": "lib/",
             "Embark\\CMS\\": "packages/system/lib/",
             "Embark\\CMS\\Actors\\Condition\\": "packages/condition-actors/lib/",
             "Embark\\CMS\\Actors\\Section\\": "packages/section-actors/lib/"

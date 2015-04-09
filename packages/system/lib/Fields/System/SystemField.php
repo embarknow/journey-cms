@@ -2,22 +2,14 @@
 
 namespace Embark\CMS\Fields\System;
 
-use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\Controller;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Structures\Integer;
-use Context;
+use Embark\CMS\Fields\FieldTrait;
 use DOMDocument;
-use Entry;
-use MessageStack;
-use Symphony;
-use SymphonyDOMElement;
-use Widget;
 
 class SystemField implements FieldInterface
 {
-    use MetadataTrait;
+    use FieldTrait;
 
     public function __construct()
     {

@@ -2,10 +2,7 @@
 
 namespace Embark\CMS\Fields;
 
-use DOMElement;
-use Embark\CMS\Structures\Resource;
-use Embark\CMS\Structures\MetadataReference;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Structures\ReferencedMetadataTrait;
 
 /**
  * Trait implementing ReferencedMetadataInterface
@@ -14,5 +11,5 @@ use Embark\CMS\Structures\MetadataTrait;
  */
 trait FieldTrait
 {
-    use MetadataTrait;
+    use ReferencedMetadataTrait;
 }

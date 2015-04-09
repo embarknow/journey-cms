@@ -2,10 +2,8 @@
 
 namespace Embark\CMS\Fields;
 
-use Embark\CMS\Schemas\Schema;
-use Embark\CMS\Structures\MetadataInterface;
-use Entry;
+use Embark\CMS\Structures\ReferencedMetadataInterface;
 
-interface FieldInterface extends MetadataInterface
+interface FieldInterface extends ReferencedMetadataInterface
 {
 }

@@ -50,6 +50,22 @@ class MetadataReference
         }
     }
 
+    public function toXML(DOMElement $xml)
+    {
+        $xml->setAttribute('controller', $this->controller);
+        $xml->setAttribute('handle', $this->handle);
+        $xml->setAttribute('reference', $this->reference);
+    }
+
+    /**
+     * Resolve the reference to metadata.
+     *
+     * @throws  Exception
+     *  When the metadata cannot be loaded.
+     *
+     * @return  MetadataInterface
+     *  A copy of the referenced metadata.
+     */
     public function resolve()
     {
         if (isset($this->object)) {

@@ -142,8 +142,9 @@ trait MetadataTrait
 
                 if ($value instanceof MetadataInterface) {
                     // Metadata with a unique GUID for reference:
-                    if ($node->hasAttribute('guid')) {
+                    if ($value instanceof ReferencedMetadataInterface && $node->hasAttribute('guid')) {
                         $guid = $node->getAttribute('guid');
+                        $value->setGuid($guid);
                         $references[$guid] = $value;
                     }
 
@@ -204,7 +205,9 @@ trait MetadataTrait
             if ($schema['type'] instanceof MetadataInterface) {
                 $schema['type']->setDefaults();
                 $this->metadata[$name] = $schema['type'];
-            } else {
+            }
+
+            else {
                 $this->metadata[$name] = $schema['default'];
             }
         }
@@ -329,6 +332,16 @@ trait MetadataTrait
             // The data has a type:
             else if ($value instanceof MetadataInterface) {
                 $node->setAttribute('type', get_class($value));
+
+                if ($value instanceof ReferencedMetadataInterface) {
+                    $node->setAttribute('guid', $value->getGuid());
+                }
+
+                $value->toXML($node);
+            }
+
+            // The data is a reference:
+            else if ($value instanceof MetadataReference) {
                 $value->toXML($node);
             }
 

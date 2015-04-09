@@ -31,7 +31,7 @@ interface FieldFormInterface extends MetadataInterface
      * @param   DOMElement      $wrapper
      * @param   FieldInterface  $field
      */
-    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field);
+    public function appendPublishForm(DOMElement $wrapper);
 
     /**
      * Update the field interface to include the provided field data.

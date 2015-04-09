@@ -20,11 +20,11 @@ class SectionFormRow implements MetadataInterface
         ]);
     }
 
-    public function findAllFields()
+    public function findAllForms()
     {
         foreach ($this->findAll() as $item) {
             if ($item instanceof SectionFormColumn) {
-                foreach ($item->findAllFields() as $field) {
+                foreach ($item->findAllForms() as $field) {
                     yield $field;
                 }
             }

@@ -6,6 +6,7 @@ use DOMElement;
 use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataInterface;
 use Exception;
+use ReflectionClass;
 
 class MetadataReference implements MetadataReferenceInterface
 {
@@ -20,19 +21,6 @@ class MetadataReference implements MetadataReferenceInterface
         $this->controller = $controller;
         $this->handle = $handle;
         $this->reference = $reference;
-    }
-
-    public function exists()
-    {
-        if (isset($this->object)) {
-            return true;
-        }
-
-        $controller = $this->controller;
-        $parent = $controller::read($this->handle);
-        $index = $parent->getReferenceIndex();
-
-        return isset($index[$this->reference]);
     }
 
     public function fromXML(DOMElement $xml, MetadataReferenceIndex $references = null)
@@ -93,6 +81,22 @@ class MetadataReference implements MetadataReferenceInterface
         }
 
         $this->object = $value;
+
+        return $value;
+    }
+
+    public function resolveInstanceOf($class)
+    {
+        $reflect = new ReflectionClass($class);
+        $value = $this->resolve();
+
+        if (false === $reflect->isInstance($value)) {
+            throw new \Exception(sprintf(
+                'Could not resolve an instance of %s to an instance of %s.',
+                $reflect->getName(),
+                $class
+            ));
+        }
 
         return $value;
     }

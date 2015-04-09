@@ -7,6 +7,7 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Structures\Boolean;
+use Embark\CMS\Structures\MetadataReferenceInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
 use Exception;
@@ -20,6 +21,15 @@ class TextInputForm implements FieldFormInterface
 
     protected $label;
     protected $input;
+
+    public function __construct()
+    {
+        $this->setSchema([
+            'data' => [
+                'type' =>   new TextData()
+            ]
+        ]);
+    }
 
     public function appendPublishHeaders(HTMLDocument $page, EntryInterface $entry, FieldInterface $field, array &$headersAppended)
     {
@@ -38,8 +48,11 @@ class TextInputForm implements FieldFormInterface
         $wrapper->appendChild($this->input);
     }
 
-    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field)
+    public function appendPublishForm(DOMElement $wrapper)
     {
+        $data = $this['data']->resolveInstanceOf(TextData::class);
+        $field = $this['field']->resolveInstanceOf(TextField::class);
+
         $handle = $field['schema']['handle'];
         $document = $wrapper->ownerDocument;
 
@@ -54,17 +67,17 @@ class TextInputForm implements FieldFormInterface
         $this->appendInput($this->label, $handle);
 
         // Show maximum text length label:
-        if ($field['data']['max-length'] > 0) {
+        if ($data['max-length'] > 0) {
             $optional = $document->createElement('em', __('$1 of $2 remaining'));
             $optional->addClass('maxlength');
             $this->label->prependChild($optional);
-            $this->input->setAttribute('maxlength', $field['data']['max-length']);
+            $this->input->setAttribute('maxlength', $data['max-length']);
         }
 
         // Mark field as optional:
         if (
-            false === isset($field['data']['required'])
-            || false === $field['data']['required']
+            false === isset($data['required'])
+            || false === $data['required']
         ) {
             $this->label->prependChild($document->createElement('em', __('Optional')));
         }

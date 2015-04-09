@@ -5,6 +5,7 @@ namespace Embark\CMS\Structures;
 use DOMElement;
 use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataInterface;
+use ReflectionClass;
 
 /**
  * Trait implementing MetadataInterface
@@ -234,6 +235,26 @@ trait MetadataTrait
                 yield $name => $value;
             }
         }
+    }
+
+    public function resolve()
+    {
+        return $this;
+    }
+
+    public function resolveInstanceOf($class)
+    {
+        $reflect = new ReflectionClass($class);
+
+        if (false === $reflect->isInstance($this)) {
+            throw new \Exception(sprintf(
+                'Could not resolve an instance of %s to an instance of %s.',
+                $reflect->getName(),
+                $class
+            ));
+        }
+
+        return $this;
     }
 
     /**

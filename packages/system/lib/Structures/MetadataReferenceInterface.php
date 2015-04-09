@@ -8,8 +8,6 @@ use Exception;
 
 interface MetadataReferenceInterface
 {
-    public function exists();
-
     public function fromXML(DOMElement $xml, MetadataReferenceIndex $references = null);
 
     public function toXML(DOMElement $xml);
@@ -24,4 +22,20 @@ interface MetadataReferenceInterface
      *  A copy of the referenced metadata.
      */
     public function resolve();
+
+    /**
+     * Resolve the reference to metadata and check that the
+     * result is an instance of the specified class.
+     *
+     * @param   string  $class
+     *  The class we expect an instance of
+     *
+     * @throws  Exception
+     *  When the metadata cannot be loaded or is not
+     *  an instance of the correct class.
+     *
+     * @return  MetadataInterface
+     *  A copy of the referenced metadata.
+     */
+    public function resolveInstanceOf($class);
 }

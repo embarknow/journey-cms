@@ -4,9 +4,11 @@ namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Structures\MetadataReferenceInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\SystemDateTime;
 use AdministrationPage;
@@ -31,11 +33,11 @@ class SectionFormView implements MetadataInterface
         ]);
     }
 
-    public function findAllFields()
+    public function findAllForms()
     {
         foreach ($this->findAll() as $item) {
             if ($item instanceof SectionFormRow) {
-                foreach ($item->findAllFields() as $field) {
+                foreach ($item->findAllForms() as $field) {
                     yield $field;
                 }
             }
@@ -51,15 +53,19 @@ class SectionFormView implements MetadataInterface
         if (isset($entry->entry_id)) {
             $title = __('Edit entry');
 
-            if (isset($view['form']['title']) && $view['form']['title'] instanceof FieldInterface) {
-                $field = $schema->findFieldByGuid($view['form']['title']['schema']['guid']);
+            if (isset($view['form']['title'])) {
+                $field = $view['form']['title'];
+
+                if ($view['form']['title'] instanceof MetadataReferenceInterface) {
+                    $field = $field->resolve();
+                }
 
                 if ($field instanceof FieldInterface) {
                     $data = $field['data']->read($schema, $entry, $field);
 
                     if (isset($data->value)) {
                         $title = $data->value;
-                        $url . '/edit/' . $entry->entry_id;
+                        $link = $url . '/edit/' . $entry->entry_id;
                     }
                 }
             }
@@ -121,14 +127,16 @@ class SectionFormView implements MetadataInterface
         }
 
         // Validate fields:
-        foreach ($this->findAllFields() as $field) {
+        foreach ($this->findAllForms() as $form) {
+            $data = $form['data']->resolveInstanceOf(FieldDataInterface::class);
+            $field = $form['field']->resolveInstanceOf(FieldInterface::class);
             $handle = $field['schema']['handle'];
 
             // Add headers to the page:
-            $field['form']->appendPublishHeaders($page, $entry, $field, $headersAppended);
+            $form->appendPublishHeaders($page, $entry, $field, $headersAppended);
 
             // Load the data:
-            $data = $field['data']->read($schema, $entry, $field);
+            $value = $data->read($schema, $entry, $field);
 
             // Validate the field data:
             if ($saving) {
@@ -137,20 +145,20 @@ class SectionFormView implements MetadataInterface
                         ? $_POST['fields'][$handle]
                         : null
                 );
-                $data = $field['data']->prepare($schema, $entry, $field, $post, $data);
+                $value = $data->prepare($schema, $entry, $field, $post, $value);
 
                 try {
-                    $field['data']->validate($schema, $entry, $field, $data);
-                    $field['data']->write($schema, $entry, $field, $data);
+                    $data->validate($schema, $entry, $field, $value);
+                    $data->write($schema, $entry, $field, $value);
                 }
 
                 catch (\Exception $error) {
-                    $field['form']->setError($entry, $field, $error);
+                    $form->setError($entry, $field, $error);
                     $success = false;
                 }
             }
 
-            $field['form']->setData($entry, $field, $data);
+            $form->setData($entry, $field, $value);
         }
 
         if ($saving) {

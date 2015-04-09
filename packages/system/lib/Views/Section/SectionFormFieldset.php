@@ -3,6 +3,7 @@
 namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Schemas\Controller;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
@@ -24,10 +25,10 @@ class SectionFormFieldset implements MetadataInterface
         ]);
     }
 
-    public function findAllFields()
+    public function findAllForms()
     {
         foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
+            if ($item instanceof FieldFormInterface) {
                 yield $item;
             }
         }
@@ -43,18 +44,9 @@ class SectionFormFieldset implements MetadataInterface
         $legend->setValue($this['name']);
         $fieldset->appendChild($legend);
 
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                // If this item references a field in the schema, import that field data:
-                if (isset($item['schema']['guid'])) {
-                    $field = $schema->findFieldByGuid($item['schema']['guid']);
-
-                    if ($field instanceof FieldInterface) {
-                        $item->fromMetadata($field);
-                    }
-                }
-
-                $item['form']->appendPublishForm($fieldset, $item);
+        foreach ($this->findAll() as $field) {
+            if ($field instanceof FieldFormInterface) {
+                $field->appendPublishForm($fieldset);
             }
         }
     }

@@ -22,6 +22,9 @@ class TextBoxForm extends TextInputForm
     public function __construct()
     {
         $this->setSchema([
+            'data' => [
+                'type' =>   new TextData()
+            ],
             'size' => [
                 'filter' =>     new Enum(['small', 'medium', 'large', 'huge'])
             ]

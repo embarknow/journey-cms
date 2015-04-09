@@ -48,7 +48,6 @@ class Element implements MetadataInterface
         //      $groups[$item->relation_id][] = $item;
         //  }
 
-        //  var_dump($data, $groups, $field['related-fields']); exit;
 
         //  foreach ($groups as $relations) {
         //      foreach ($relations as $relation) {

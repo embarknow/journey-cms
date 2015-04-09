@@ -96,8 +96,6 @@ class Datasource implements DatasourceInterface
         $this['sorting']->appendQuery($query, $schema);
         $this['pagination']->appendQuery($query, $schema);
 
-        // var_dump((string)$query); exit;
-
         $statement = Symphony::Database()->prepare($query);
         $valid = $statement->execute();
 

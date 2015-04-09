@@ -119,8 +119,6 @@ class DateData implements DataInterface, MetadataInterface
         if (false === $statement->execute()) {
             return false;
         }
-
-        var_dump($statement); exit;
     }
 
     public function write(Schema $section, Entry $entry, $field, $data)

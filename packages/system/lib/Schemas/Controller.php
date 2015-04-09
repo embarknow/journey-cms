@@ -174,7 +174,6 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
             && empty($result->update)
         );
 
-        var_dump($result);die;
         return $result;
     }
 

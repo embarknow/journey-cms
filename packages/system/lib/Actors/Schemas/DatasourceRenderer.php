@@ -46,7 +46,6 @@ class DatasourceRenderer
         // $output->formatOutput = true;
 
         // echo '<pre>', htmlentities($output->saveXML($output->documentElement)), '</pre>';
-        // var_dump($this); exit;
 
         // // Process Datasource Filters for each of the Fields
         // if (isset($this->datasource['filters'])) {
@@ -91,8 +90,6 @@ class DatasourceRenderer
 
         $pagination = $this->datasource['pagination'];
         $query = $this->createQuery($this->schema);
-
-        // var_dump((string)$query); exit;
 
         try {
             Profiler::begin('Executing query');

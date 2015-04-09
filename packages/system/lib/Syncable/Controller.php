@@ -92,7 +92,7 @@ class Controller
         // Remove old sync data:
         $statement = $this->database->prepare('
             delete from `sync`
-            where `guid` = :guid
+            where `object_id` = :guid
         ');
         $statement->execute([
             ':guid' => $this->stored->object['guid']
@@ -101,12 +101,10 @@ class Controller
         // Create the new sync data:
         $statement = $this->database->prepare('
             insert into `sync` set
-                `handle` = :handle,
-                `guid` = :guid,
+                `object_id` = :guid,
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' => $this->fresh->object['resource']['handle'],
             ':guid'   => $this->fresh->object['guid'],
             ':object' => serialize($this->fresh->object)
         ]);
@@ -125,7 +123,7 @@ class Controller
         // Remove new sync data:
         $statement = $this->database->prepare('
             delete from `sync`
-            where `guid` = :guid
+            where `object_id` = :guid
         ');
         $statement->execute([
             ':guid' => $this->stored->object['guid']
@@ -134,12 +132,10 @@ class Controller
         // Recreate the old sync data:
         $statement = $this->database->prepare('
             insert into `sync` set
-                `handle` = :handle,
-                `guid` = :guid,
+                `object_id` = :guid,
                 `object` = :object
         ');
         $statement->execute([
-            ':handle' => $this->backup->object['resource']['handle'],
             ':guid'   => $this->backup->object['guid'],
             ':object' => serialize($this->backup->object)
         ]);
@@ -160,7 +156,7 @@ class Controller
         $statement = $this->database->prepare('
             select `s`.`object`
             from `sync` as `s`
-            where `s`.`guid` = :guid
+            where `s`.`object_id` = :guid
         ');
 
         $statement->bindParam(':guid', $guid, PDO::PARAM_STR);

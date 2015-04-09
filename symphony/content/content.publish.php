@@ -1,5 +1,6 @@
 <?php
 
+use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Sections\Controller as SectionController;
 
 require_once LIB . '/class.administrationpage.php';
@@ -12,6 +13,8 @@ class ContentPublish extends AdministrationPage
 	{
 		if (false === isset($section)) {
 			$section = SectionController::read($this->_context['section_handle']);
+
+			var_dump($section); exit;
 		}
 
 		if ($type === 'view') {

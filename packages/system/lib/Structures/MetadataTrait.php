@@ -25,6 +25,12 @@ trait MetadataTrait
      */
     private $metadataSchema = [];
 
+    /**
+     * Index of available references in this object.
+     * @var MetadataReferenceIndex
+     */
+    private $metadataReferences;
+
     public function __clone()
     {
         foreach ($this->metadata as $key => $value) {
@@ -76,7 +82,7 @@ trait MetadataTrait
      *
      * @return void
      */
-    public function fromXML(DOMElement $xml)
+    public function fromXML(DOMElement $xml, MetadataReferenceIndex $references = null)
     {
         // The default name given to unamed/numeric items:
         $itemName = 'item';
@@ -94,6 +100,11 @@ trait MetadataTrait
             $this['resource'] = new Resource($xml);
         }
 
+        // No reference index provided, start a new one:
+        if (false === ($references instanceof MetadataReferenceIndex)) {
+            $this->references = $references = new MetadataReferenceIndex();
+        }
+
         foreach ($xml->childNodes as $node) {
             if (($node instanceof DOMElement) === false) {
                 continue;
@@ -102,21 +113,55 @@ trait MetadataTrait
             $name = $node->nodeName;
 
             // The data has a type:
-            if ($node->hasAttribute('type')) {
-                $type = '\\' . $node->getAttribute('type');
-                $value = new $type;
-                $value->fromXML($node);
-                $value->setDefaults();
-            }
-
-            // An default type has been provided:
-            else if (
-                isset($this->metadataSchema[$name]['type'])
-                && $this->metadataSchema[$name]['type'] instanceof MetadataInterface
+            if (
+                $node->hasAttribute('type')
+                || isset($this->metadataSchema[$name]['type'])
+                || (
+                    $node->hasAttribute('controller')
+                    && $node->hasAttribute('handle')
+                    && $node->hasAttribute('ref')
+                )
             ) {
-                $value = clone $this->metadataSchema[$name]['type'];
-                $value->fromXML($node);
-                $value->setDefaults();
+                $value = null;
+
+                // Is a reference:
+                if ($node->hasAttribute('ref')) {
+                    $value = new MetadataReference();
+                }
+
+                // Defines a type:
+                else if ($node->hasAttribute('type')) {
+                    $type = '\\' . $node->getAttribute('type');
+                    $value = new $type;
+                }
+
+                // Has a type in the schema:
+                else if (isset($this->metadataSchema[$name]['type'])) {
+                    $value = clone $this->metadataSchema[$name]['type'];
+                }
+
+                if ($value instanceof MetadataInterface) {
+                    // Metadata with a unique GUID for reference:
+                    if ($node->hasAttribute('guid')) {
+                        $guid = $node->getAttribute('guid');
+                        $references[$guid] = $value;
+                    }
+
+                    $value->fromXML($node, $references);
+                    $value->setDefaults();
+                }
+
+                // A reference to external metadata:
+                else if ($value instanceof MetadataReference) {
+                    $value->fromXML($node, $references);
+                }
+
+                else {
+                    throw new \Exception(sprintf(
+                        'Type %s must implement MetadataInterface or MetadataReference.',
+                        get_class($value)
+                    ));
+                }
             }
 
             // The data is a string:
@@ -165,6 +210,11 @@ trait MetadataTrait
         }
     }
 
+    public function getReferenceIndex()
+    {
+        return $this->references;
+    }
+
     /**
      * Find all metadata
      * @return array
@@ -173,7 +223,13 @@ trait MetadataTrait
     public function findAll()
     {
         foreach ($this->metadata as $name => $value) {
-            yield $name => $value;
+            if ($value instanceof MetadataReference) {
+                yield $name => $value->resolve();
+            }
+
+            else {
+                yield $name => $value;
+            }
         }
     }
 

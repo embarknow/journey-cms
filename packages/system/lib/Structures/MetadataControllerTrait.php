@@ -3,6 +3,7 @@
 namespace Embark\CMS\Structures;
 
 use Embark\CMS\ClosureFilterIterator;
+use ArrayAccess;
 use DirectoryIterator;
 use DOMDocument;
 
@@ -222,6 +223,15 @@ trait MetadataControllerTrait
             }
 
             yield $object['resource']['handle'] => $object;
+        }
+    }
+
+    /**
+     * Make sure all metadata are loaded so any references can be followed.
+     */
+    public static function loadAll()
+    {
+        foreach (static::findAll() as $schema) {
         }
     }
 

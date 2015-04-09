@@ -8,5 +8,4 @@ use Entry;
 
 interface FieldInterface extends MetadataInterface
 {
-    // public function getData();
 }

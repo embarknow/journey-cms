@@ -5,7 +5,7 @@ namespace Embark\CMS\Fields\Text;
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\Controller;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Fields\FieldTrait;
 use Embark\CMS\Structures\Integer;
 use Context;
 use DOMDocument;
@@ -20,7 +20,7 @@ use Widget;
  */
 class TextField implements FieldInterface
 {
-    use MetadataTrait;
+    use FieldTrait;
 
     public function __construct()
     {

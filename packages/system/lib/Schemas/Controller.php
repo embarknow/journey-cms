@@ -35,16 +35,16 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
             // Delete entries:
             $statement = Symphony::Database()->prepare('
                 delete from `entries` where
-                    `schema` = :handle
+                    `schema_id` = :guid
             ');
             $statement->execute([
-                ':handle' => $object['resource']['handle']
+                ':guid' => $object['guid']
             ]);
 
             // Delete sync information:
             $statement = Symphony::Database()->prepare('
                 delete from `sync` where
-                    `guid` = :guid
+                    `object_id` = :guid
             ');
             $statement->execute([
                 ':guid' => $object['guid']
@@ -207,20 +207,6 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
             // Create fields:
             foreach ($stats->create as $guid => $data) {
                 $data->field['schema']->create($schema, $data->field);
-            }
-
-            // Move entries to the new schema:
-            if ($stats->schema->rename) {
-                $statement = Symphony::Database()->prepare('
-                    update `entries` set
-                        `schema` = :new
-                    where
-                        `schema` = :old
-                ');
-                $statement->execute([
-                    ':new' => $stats->schema->fresh['resource']['handle'],
-                    ':old' => $stats->schema->stored['resource']['handle']
-                ]);
             }
 
             $syncController->sync();

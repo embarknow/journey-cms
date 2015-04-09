@@ -10,6 +10,8 @@ use Embark\CMS\Structures\SanitizedMetadataValueInterface;
  */
 class Guid implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
+    protected static $refs;
+
     /**
      * Set a GUID value to XML
      *

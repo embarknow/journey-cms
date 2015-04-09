@@ -62,7 +62,7 @@ class MaxInteger implements MetadataValueInterface, SanitizedMetadataValueInterf
      * @return mixed
      *  sanitized mixed type value
      */
-    public function sanitise($value)
+    public function sanitize($value)
     {
         return (string) max($this->max, (integer) $value);
     }

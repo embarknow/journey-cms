@@ -7,7 +7,7 @@ use Embark\CMS\Structures\Resource;
 use Embark\CMS\Structures\MetadataInterface;
 use Exception;
 
-class MetadataReference
+class MetadataReference implements MetadataReferenceInterface
 {
     protected $controller;
     protected $handle;

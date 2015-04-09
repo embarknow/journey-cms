@@ -3,56 +3,19 @@
 namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Entries\EntryInterface;
-use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldColumnInterface;
+use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
 use Widget;
 
-class TextHandleColumn implements MetadataInterface
+class TextHandleColumn implements FieldColumnInterface
 {
-    use MetadataTrait;
+    use FieldColumnTrait;
 
-    public function __construct()
+    public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
     {
-        $this->setSchema([
-            'editLink' => [
-                'filter' =>     new Boolean()
-            ]
-        ]);
-    }
-
-    public function appendHeader(DOMElement $wrapper, SchemaInterface $schema, FieldInterface $field, $url)
-    {
-        $document = $wrapper->ownerDocument;
-        $header = $document->createElement('th');
-        $header->addClass('col');
-        $wrapper->appendChild($header);
-
-        // Add sorting information:
-        if ($field['sorting'] instanceof MetadataInterface) {
-            $direction = (
-                'asc' === $field['sorting']['direction']
-                    ? 'desc'
-                    : 'asc'
-            );
-
-            $link = Widget::Anchor(
-                $this['name'],
-                $url . '?sort=' . $this['name'] . '&direction=' . $direction
-            );
-            $header->appendChild($link);
-        }
-
-        else {
-            $header->setValue($this['name']);
-        }
-    }
-
-    public function appendBody(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $url)
-    {
+        $field = $this['field']->resolve();
         $data = $field['data']->read($schema, $entry, $field);
         $document = $wrapper->ownerDocument;
         $body = $document->createElement('td');

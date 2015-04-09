@@ -3,36 +3,18 @@
 namespace Embark\CMS\Fields\System;
 
 use Embark\CMS\Entries\EntryInterface;
-use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldColumnInterface;
+use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\SystemDateTime;
 use DOMElement;
 use Widget;
 
-class CreationDateColumn implements MetadataInterface
+class CreationDateColumn implements FieldColumnInterface
 {
-    use MetadataTrait;
+    use FieldColumnTrait;
 
-    public function __construct()
-    {
-        $this->setSchema([
-            'editLink' => [
-                'filter' =>     new Boolean()
-            ]
-        ]);
-    }
-
-    public function appendHeader(DOMElement $wrapper)
-    {
-        $wrapper->appendChild(Widget::TableColumn([
-            $this['name'], 'col'
-        ]));
-    }
-
-    public function appendBody(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field, $url)
+    public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
     {
         $document = $wrapper->ownerDocument;
         $date = new SystemDateTime($entry->creation_date);

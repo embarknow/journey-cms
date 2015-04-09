@@ -153,13 +153,13 @@ trait MetadataTrait
                 }
 
                 // A reference to external metadata:
-                else if ($value instanceof MetadataReference) {
+                else if ($value instanceof MetadataReferenceInterface) {
                     $value->fromXML($node, $references);
                 }
 
                 else {
                     throw new \Exception(sprintf(
-                        'Type %s must implement MetadataInterface or MetadataReference.',
+                        'Type %s must implement MetadataInterface or MetadataReferenceInterface.',
                         get_class($value)
                     ));
                 }
@@ -226,7 +226,7 @@ trait MetadataTrait
     public function findAll()
     {
         foreach ($this->metadata as $name => $value) {
-            if ($value instanceof MetadataReference) {
+            if ($value instanceof MetadataReferenceInterface) {
                 yield $name => $value->resolve();
             }
 
@@ -341,7 +341,7 @@ trait MetadataTrait
             }
 
             // The data is a reference:
-            else if ($value instanceof MetadataReference) {
+            else if ($value instanceof MetadataReferenceInterface) {
                 $value->toXML($node);
             }
 

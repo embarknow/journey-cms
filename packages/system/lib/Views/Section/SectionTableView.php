@@ -5,6 +5,7 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Actors\Controller as ActorController;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
@@ -22,7 +23,7 @@ class SectionTableView implements MetadataInterface
     public function __construct(SectionView $view)
     {
         $this->setSchema([
-            'field' => [
+            'column' => [
                 'list' =>   true
             ]
         ]);
@@ -58,36 +59,16 @@ class SectionTableView implements MetadataInterface
         $actor = ActorController::read($view['actor']);
         $query = new DatasourceQuery();
 
-        // Prepare column fields by importing data from the schema:
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                if (isset($item['schema']['guid'])) {
-                    $field = $schema->findFieldByGuid($item['schema']['guid']);
-
-                    if ($field instanceof FieldInterface) {
-                        $item->fromMetadata($field);
-                    }
-                }
-            }
-        }
-
         // Sort entries by the selected column:
         if (isset($_GET['sort'], $_GET['direction'])) {
-            $field = $this->findColumnByName($_GET['sort']);
-
-            if ($field['sorting'] instanceof MetadataInterface) {
-                $field['sorting']['direction'] = $_GET['direction'];
-                $field['sorting']->appendQuery($query, $schema, $field);
-            }
+            $column = $this->findColumnByName($_GET['sort']);
+            $column->appendSortingQuery($query, $schema, $_GET['direction']);
         }
 
-        // Sort entries by the default sorting:
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                if ($item['sorting'] instanceof MetadataInterface) {
-                    $item['sorting']->appendQuery($query, $schema, $item);
-                }
-            }
+        // Sort entries by the first column:
+        else {
+            $column = $this->findFirstColumn();
+            $column->appendSortingQuery($query, $schema);
         }
 
         $this->appendHeader($page, $view);
@@ -99,10 +80,8 @@ class SectionTableView implements MetadataInterface
         $head = $page->createElement('thead');
         $table->appendChild($head);
 
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                $item['column']->appendHeader($head, $schema, $item, $url);
-            }
+        foreach ($this->findAllColumns() as $column) {
+            $column->appendHeaderElement($head, $url);
         }
 
         if ($statement = $query->execute()) {
@@ -113,10 +92,8 @@ class SectionTableView implements MetadataInterface
                 $row = $page->createElement('tr');
                 $table->appendChild($row);
 
-                foreach ($this->findAll() as $item) {
-                    if ($item instanceof FieldInterface) {
-                        $item['column']->appendBody($row, $schema, $entry, $item, $url);
-                    }
+                foreach ($this->findAllColumns() as $column) {
+                    $column->appendBodyElement($row, $schema, $entry, $url);
                 }
 
                 $input = Widget::Input('entry[]', $entry->entry_id, 'checkbox');
@@ -127,14 +104,30 @@ class SectionTableView implements MetadataInterface
         $this->appendFooter($page, $view);
     }
 
-    public function findColumnByName($name)
+    public function findAllColumns()
     {
         foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                if ($item['column']['name'] !== $name) continue;
-
-                return $item;
+            if ($item instanceof FieldColumnInterface) {
+                yield $item;
             }
+        }
+    }
+
+    public function findFirstColumn()
+    {
+        foreach ($this->findAllColumns() as $item) {
+            return $item;
+        }
+
+        return false;
+    }
+
+    public function findColumnByName($name)
+    {
+        foreach ($this->findAllColumns() as $item) {
+            if ($item['name'] !== $name) continue;
+
+            return $item;
         }
 
         return false;

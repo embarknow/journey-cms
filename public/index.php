@@ -11,6 +11,8 @@ use Embark\Journey\MiddlewareStack;
 
 $container = new Container;
 
+include_once __DIR__ . '/services.php';
+
 /**
  * The middleware stack allows components to be added to the application in a layered fashion. These middleware are allowed to affect the running and outcome of the application. For example, authentication can prevent the application from running in full.
  */

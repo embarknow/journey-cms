@@ -5,7 +5,8 @@
     "require": {
         "php": ">=5.5.0",
         "phly/http": "~1.0@dev",
-        "pimple/pimple": "~3.0@dev"
+        "pimple/pimple": "~3.0@dev",
+        "monolog/monolog": "~1.13@dev"
     },
     "require-dev": {
     },

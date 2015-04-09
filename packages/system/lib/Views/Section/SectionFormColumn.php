@@ -22,11 +22,9 @@ class SectionFormColumn implements MetadataInterface
 
     public function findAllForms()
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormFieldset) {
-                foreach ($item->findAllForms() as $field) {
-                    yield $field;
-                }
+        foreach ($this->findInstancesOf(SectionFormFieldset::class) as $item) {
+            foreach ($item->findAllForms() as $field) {
+                yield $field;
             }
         }
     }
@@ -38,10 +36,8 @@ class SectionFormColumn implements MetadataInterface
         $column->addClass('column ' . $this['size']);
         $wrapper->appendChild($column);
 
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormFieldset) {
-                $item->appendFieldset($column);
-            }
+        foreach ($this->findInstancesOf(SectionFormFieldset::class) as $item) {
+            $item->appendFieldset($column);
         }
     }
 }

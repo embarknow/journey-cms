@@ -22,11 +22,9 @@ class SectionFormRow implements MetadataInterface
 
     public function findAllForms()
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormColumn) {
-                foreach ($item->findAllForms() as $field) {
-                    yield $field;
-                }
+        foreach ($this->findInstancesOf(SectionFormColumn::class) as $item) {
+            foreach ($item->findAllForms() as $field) {
+                yield $field;
             }
         }
     }
@@ -38,10 +36,8 @@ class SectionFormRow implements MetadataInterface
         $row->addClass('columns');
         $wrapper->appendChild($row);
 
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormColumn) {
-                $item->appendColumn($row);
-            }
+        foreach ($this->findInstancesOf(SectionFormColumn::class) as $item) {
+            $item->appendColumn($row);
         }
     }
 }

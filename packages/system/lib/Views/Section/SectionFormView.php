@@ -106,10 +106,8 @@ class SectionFormView implements MetadataInterface
         $this->appendHeader($page, $view, $schema, $entry);
 
         // Build basic form layout:
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof SectionFormRow) {
-                $item->appendRow($page->Form);
-            }
+        foreach ($this->findInstancesOf(SectionFormRow::class) as $item) {
+            $item->appendRow($page->Form);
         }
 
         $this->appendFooter($page, $view, $schema, $entry);

@@ -237,6 +237,18 @@ trait MetadataTrait
         }
     }
 
+    public function findInstancesOf($class)
+    {
+        $reflect = new ReflectionClass($class);
+
+        foreach ($this->findAll() as $name => $value) {
+            if (false === is_object($value)) continue;
+            if (false === $reflect->isInstance($value)) continue;
+
+            yield $name => $value;
+        }
+    }
+
     public function resolve()
     {
         return $this;

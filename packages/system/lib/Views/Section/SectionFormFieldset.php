@@ -27,10 +27,8 @@ class SectionFormFieldset implements MetadataInterface
 
     public function findAllForms()
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldFormInterface) {
-                yield $item;
-            }
+        foreach ($this->findInstancesOf(FieldFormInterface::class) as $item) {
+            yield $item;
         }
     }
 
@@ -44,10 +42,8 @@ class SectionFormFieldset implements MetadataInterface
         $legend->setValue($this['name']);
         $fieldset->appendChild($legend);
 
-        foreach ($this->findAll() as $field) {
-            if ($field instanceof FieldFormInterface) {
-                $field->appendPublishForm($fieldset);
-            }
+        foreach ($this->findInstancesOf(FieldFormInterface::class) as $item) {
+            $item->appendPublishForm($fieldset);
         }
     }
 }

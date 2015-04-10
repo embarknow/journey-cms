@@ -9,6 +9,7 @@ use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
+use AlertStack;
 use DOMElement;
 use Entry;
 use HTMLDocument;
@@ -51,7 +52,7 @@ class SectionTableView implements MetadataInterface
     public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         // Delete entries and then redirect:
-        if (isset($_POST['entries'], $_POST['with-selected']) && 'delete' === $_POST['with-selected']) {
+        if (isset($_POST['entries'], $_POST['action']['delete'])) {
             $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
 
             Symphony::Database()->beginTransaction();
@@ -85,21 +86,29 @@ class SectionTableView implements MetadataInterface
             catch (\Exception $error) {
                 Symphony::Database()->rollBack();
 
-                throw $error;
+                $page->alerts()->append(
+                    __('An error occurred while deleting the selected entries. <a class="more">Show the error.</a>'),
+                    AlertStack::ERROR,
+                    $error
+                );
+
+                // Todo: Log this exception.
             }
         }
 
         $actions = $page->createElement('div');
-        $actions->setAttribute('class', 'actions');
+        $actions->addClass('actions with-selectable');
         $page->Form->appendChild($actions);
 
-        $options = [
-            array(NULL, false, __('With Selected...')),
-            array('delete', false, __('Delete'))
-        ];
-
-        $actions->appendChild(Widget::Select('with-selected', $options));
-        $actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
+        $actions->appendChild(
+            Widget::Submit(
+                'action[delete]', __('Delete'),
+                [
+                    'class' => 'confirm delete',
+                    'title' => __('Delete selected entries'),
+                ]
+            )
+        );
     }
 
     public function appendTable(HTMLDocument $page, SectionView $view, SchemaInterface $schema)

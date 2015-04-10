@@ -1000,6 +1000,31 @@
 		margin-right: 5px;
 	}
 
+	.actions.with-selectable {
+		position: relative;
+		transition: opacity 0.2s;
+		overflow: hidden;
+		opacity: 0;
+	}
+	.actions.with-selectable:before {
+		background: transparent;
+		bottom: 0;
+		content: '';
+		display: block;
+		left: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+		z-index: 1;
+	}
+	.selectable.selected ~ .actions.with-selectable {
+		transition: opacity 0.2s;
+		opacity: 1;
+	}
+	.selectable.selected ~ .actions.with-selectable:before {
+		display: none;
+	}
+
 /*-----------------------------------------------------------------------------
 	Content: XSLT Utilities
 -----------------------------------------------------------------------------*/

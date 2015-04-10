@@ -52,14 +52,14 @@
 				selection, deselection, first, last;
 
 			// Ignored elements
-			if(target.is(settings.ignore)) {
+			if (target.is(settings.ignore)) {
 				return true;
 			}
 
-			// Remove text ranges
-			if(window.getSelection) {
-				window.getSelection().removeAllRanges();
-			}
+			// // Remove text selection
+			// if(window.getSelection) {
+			// 	window.getSelection().removeAllRanges();
+			// }
 
 			// Range selection
 			if((event.shiftKey) && items.filter('.selected').length > 0 && !object.is('.single')) {
@@ -108,11 +108,20 @@
 				}
 			}
 
+			// Mark the object as selected:
+			if (objects.find(settings.items).hasClass('selected')) {
+				objects.addClass('selected');
+			}
+
+			else {
+				objects.removeClass('selected');
+			}
 		});
 
 		// Remove all selections by doubleclicking the body
-		$('body').bind('dblclick.selectable', function removeAllSelection() {
+		$('html').bind('dblclick.selectable', function removeAllSelection() {
 			objects.find(settings.items).removeClass('selected').trigger('deselect.selectable');
+			objects.removeClass('selected');
 		});
 
 	/*-------------------------------------------------------------------------

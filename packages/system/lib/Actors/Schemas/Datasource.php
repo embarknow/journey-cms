@@ -112,13 +112,8 @@ class Datasource implements DatasourceInterface
     public function findSortingByField($field)
     {
         foreach ($this['sorting']->findAll() as $item) {
-            if (isset($field['schema']['guid'])) {
-                if ($item['schema']['guid'] !== $field['schema']['guid']) continue;
-            }
-
-            else {
-                if (get_class($item) !== get_class($field)) continue;
-            }
+            if ($item->getGuid() !== $field->getGuid()) continue;
+            if (get_class($item) !== get_class($field)) continue;
 
             return $item;
         }

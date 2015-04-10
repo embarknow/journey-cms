@@ -32,7 +32,7 @@ class TextSortQuery implements FieldSortQueryInterface
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
-            $field['schema']['guid']
+            $field->getGuid()
         );
         $query->sortBySubQuery("select entry_id, value as order_id from {$table}", $this['direction']);
     }

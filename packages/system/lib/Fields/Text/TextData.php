@@ -111,7 +111,7 @@ class TextData implements FieldDataInterface
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
-            $field['schema']['guid']
+            $field->getGuid()
         );
 
         $statement = Symphony::Database()->prepare("
@@ -134,7 +134,7 @@ class TextData implements FieldDataInterface
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
-            $field['schema']['guid']
+            $field->getGuid()
         );
         $statement = Symphony::Database()->prepare("
             insert into `{$table}` set

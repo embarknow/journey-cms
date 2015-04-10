@@ -38,7 +38,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
                     `schema_id` = :guid
             ');
             $statement->execute([
-                ':guid' => $object['guid']
+                ':guid' => $object->getGuid()
             ]);
 
             // Delete sync information:
@@ -47,7 +47,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
                     `object_id` = :guid
             ');
             $statement->execute([
-                ':guid' => $object['guid']
+                ':guid' => $object->getGuid()
             ]);
 
             return true;
@@ -86,7 +86,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
 
             if ($stored->object['fields'] instanceof FieldsList) {
                 foreach ($stored->object['fields']->findAll() as $field) {
-                    $oldFields[$field['schema']['guid']] = (object) [
+                    $oldFields[$field->getGuid()] = (object) [
                         'raw'   =>  iterator_to_array($field['schema']->findAll()),
                         'type'  =>  get_class($field),
                         'field' =>  $field
@@ -103,7 +103,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
 
         if ($fresh->object['fields'] instanceof FieldsList) {
             foreach ($fresh->object['fields']->findAll() as $field) {
-                $newFields[$field['schema']['guid']] = (object) [
+                $newFields[$field->getGuid()] = (object) [
                     'raw'   =>  iterator_to_array($field['schema']->findAll()),
                     'type'  =>  get_class($field),
                     'field' =>  $field

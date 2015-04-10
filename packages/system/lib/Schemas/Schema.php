@@ -14,11 +14,6 @@ class Schema implements SchemaInterface
 	public function __construct()
 	{
 		$this->setSchema([
-			'guid' => [
-				'required' =>	true,
-				'filter' =>		new Guid(),
-				'default' =>	uniqid()
-			],
 			'fields' => [
 				'required' =>	true,
 				'type' =>		new FieldsList()
@@ -67,7 +62,7 @@ class Schema implements SchemaInterface
 	public function findFieldByGuid($guid)
 	{
 		foreach ($this['fields']->findAll() as $field) {
-			if ($field['schema']['guid'] !== $guid) continue;
+			if ($field->getGuid() !== $guid) continue;
 
 			return $field;
 		}

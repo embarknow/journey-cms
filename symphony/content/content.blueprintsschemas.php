@@ -199,13 +199,12 @@ use Embark\CMS\Schemas\FieldsList;
                 foreach ($_POST['fields'] as $index => $fieldData) {
                     $field = FieldController::read($fieldData['type']);
                     $schema['fields'][$index] = $field;
+                    $field->setGuid($fieldData['guid']);
 
                     unset($fieldData['type']);
 
                     // Apply data:
                     foreach ($fieldData as $name => $value) {
-                        if ($name === 'type') continue;
-
                         $field['schema'][$name] = $value;
                     }
 

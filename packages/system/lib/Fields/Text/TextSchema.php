@@ -30,7 +30,7 @@ class TextSchema implements FieldSchemaInterface
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
-            $field['schema']['guid']
+            $field->getGuid()
         );
         $statement = Symphony::Database()->prepare("
             create table if not exists `{$table}` (
@@ -54,12 +54,12 @@ class TextSchema implements FieldSchemaInterface
         $oldTable = Symphony::Database()->createDataTableName(
             $oldSchema['resource']['handle'],
             $oldField['schema']['handle'],
-            $oldField['schema']['guid']
+            $oldField->getGuid()
         );
         $newTable = Symphony::Database()->createDataTableName(
             $newSchema['resource']['handle'],
             $newField['schema']['handle'],
-            $newField['schema']['guid']
+            $newField->getGuid()
         );
         $statement = Symphony::Database()->prepare("
             alter table `{$oldTable}`
@@ -75,7 +75,7 @@ class TextSchema implements FieldSchemaInterface
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],
-            $field['schema']['guid']
+            $field->getGuid()
         );
         $statement = Symphony::Database()->prepare("
             drop table if exists `{$table}`

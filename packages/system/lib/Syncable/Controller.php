@@ -46,7 +46,7 @@ class Controller
     {
         $this->fresh->hash = sha1(serialize($object));
         $this->fresh->object = $object;
-        $this->fetchStoredObject($object['guid']);
+        $this->fetchStoredObject($object->getGuid());
     }
 
     /**
@@ -90,13 +90,15 @@ class Controller
     public function sync()
     {
         // Remove old sync data:
-        $statement = $this->database->prepare('
-            delete from `sync`
-            where `object_id` = :guid
-        ');
-        $statement->execute([
-            ':guid' => $this->stored->object['guid']
-        ]);
+        if (isset($this->stored->object)) {
+            $statement = $this->database->prepare('
+                delete from `sync`
+                where `object_id` = :guid
+            ');
+            $statement->execute([
+                ':guid' => $this->stored->object->getGuid()
+            ]);
+        }
 
         // Create the new sync data:
         $statement = $this->database->prepare('
@@ -105,7 +107,7 @@ class Controller
                 `object` = :object
         ');
         $statement->execute([
-            ':guid'   => $this->fresh->object['guid'],
+            ':guid'   => $this->fresh->object->getGuid(),
             ':object' => serialize($this->fresh->object)
         ]);
 
@@ -126,7 +128,7 @@ class Controller
             where `object_id` = :guid
         ');
         $statement->execute([
-            ':guid' => $this->stored->object['guid']
+            ':guid' => $this->stored->object->getGuid()
         ]);
 
         // Recreate the old sync data:
@@ -136,7 +138,7 @@ class Controller
                 `object` = :object
         ');
         $statement->execute([
-            ':guid'   => $this->backup->object['guid'],
+            ':guid'   => $this->backup->object->getGuid(),
             ':object' => serialize($this->backup->object)
         ]);
 

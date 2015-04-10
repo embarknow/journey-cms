@@ -276,7 +276,7 @@ trait MetadataControllerTrait
         $object->toXML($root);
 
         if ($object instanceof ReferencedMetadataInterface) {
-            $root->setAttribute('guid', $object);
+            $root->setAttribute('guid', $object->getGuid());
         }
 
         return $document;

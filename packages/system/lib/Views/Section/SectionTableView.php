@@ -50,6 +50,57 @@ class SectionTableView implements MetadataInterface
 
     protected function appendFooter(HTMLDocument $page, SectionView $view)
     {
+        // Delete entries and then redirect:
+        if (isset($_POST['entries'], $_POST['with-selected']) && 'delete' === $_POST['with-selected']) {
+            $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
+            $schema = SchemaController::read($view['schema']);
+
+            Symphony::Database()->beginTransaction();
+
+            try {
+                foreach ($_POST['entries'] as $entryId) {
+                    $entry = Entry::loadFromId($entryId);
+
+                    // Delete all field data:
+                    foreach ($schema->findAllFields() as $field) {
+                        $field['data']->delete($schema, $entry, $field);
+                    }
+
+                    // Delete the entry record:
+                    $statement = Symphony::Database()->prepare("
+                        delete from `entries` where
+                            entry_id = :entryId
+                    ");
+
+                    $statement->execute([
+                        ':entryId' =>   $entryId
+                    ]);
+                }
+
+                Symphony::Database()->commit();
+
+                redirect($url);
+            }
+
+            // Something went wrong, do not commit:
+            catch (\Exception $error) {
+                Symphony::Database()->rollBack();
+
+                throw $error;
+            }
+        }
+
+        $actions = $page->createElement('div');
+        $actions->setAttribute('class', 'actions');
+        $page->Form->appendChild($actions);
+
+        $options = [
+            array(NULL, false, __('With Selected...')),
+            array('delete', false, __('Delete'))
+        ];
+
+        $actions->appendChild(Widget::Select('with-selected', $options));
+        $actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
     }
 
     public function appendTable(HTMLDocument $page, SectionView $view)
@@ -99,7 +150,7 @@ class SectionTableView implements MetadataInterface
             $column->appendHeaderElement($head, $url);
         }
 
-        if ($statement = $query->execute()) {
+        if ($statement = $query->execute() and $statement->rowCount()) {
             $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
 
             while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
@@ -111,9 +162,22 @@ class SectionTableView implements MetadataInterface
                     $column->appendBodyElement($row, $schema, $entry, $url);
                 }
 
-                $input = Widget::Input('entry[]', $entry->entry_id, 'checkbox');
+                $input = Widget::Input('entries[]', $entry->entry_id, 'checkbox');
                 $row->firstChild->appendChild($input);
             }
+        }
+
+        else {
+            $colspan = count(iterator_to_array($this->findAllColumns()));
+
+            $row = $page->createElement('tr');
+            $table->appendChild($row);
+
+            $cell = $page->createElement('td');
+            $cell->setAttribute('colspan', $colspan);
+            $cell->setValue(__('No entries found. '));
+            $cell->appendChild(Widget::Anchor(__('Create an entry.'), $url . '/new'));
+            $row->appendChild($cell);
         }
 
         $this->appendFooter($page, $view);

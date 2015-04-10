@@ -105,6 +105,24 @@ class TextData implements FieldDataInterface
         return true;
     }
 
+    public function delete(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
+    {
+        // TODO: Throw an exception if $field['schema'] is unset.
+        $table = Symphony::Database()->createDataTableName(
+            $schema['resource']['handle'],
+            $field['schema']['handle'],
+            $field->getGuid()
+        );
+
+        $statement = Symphony::Database()->prepare("
+            delete from `$table` where
+                `entry_id` = :entryId
+        ");
+        $statement->bindValue(':entryId', $entry->entry_id, PDO::PARAM_INT);
+
+        return $statement->execute();
+    }
+
     public function read(SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
     {
         // TODO: Throw an exception if $field['schema'] is unset.

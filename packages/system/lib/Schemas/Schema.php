@@ -2,6 +2,7 @@
 
 namespace Embark\CMS\Schemas;
 
+use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Structures\ReferencedMetadataTrait;
 use Embark\CMS\Structures\Guid;
 use General;
@@ -46,6 +47,13 @@ class Schema implements SchemaInterface
 		}
 
 		return 0;
+	}
+
+	public function findAllFields()
+	{
+		foreach ($this['fields']->findInstancesOf(FieldInterface::class) as $name => $value) {
+			yield $name => $value;
+		}
 	}
 
 	public function findField($handle)

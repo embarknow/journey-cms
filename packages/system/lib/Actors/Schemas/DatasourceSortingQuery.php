@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Actors\Schemas;
 
-use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\MetadataInterface;
@@ -16,7 +16,7 @@ class DatasourceSortingQuery implements MetadataInterface
     public function __construct()
     {
         $this->setSchema([
-            'field' => [
+            'query' => [
                 'list' =>   true
             ]
         ]);
@@ -24,19 +24,8 @@ class DatasourceSortingQuery implements MetadataInterface
 
     public function appendQuery(DatasourceQuery $query, SchemaInterface $schema)
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldInterface) {
-                // If this item references a field in the schema, import that field data:
-                if (isset($item['schema']['guid'])) {
-                    $field = $schema->findFieldByGuid($item['schema']['guid']);
-
-                    if ($field instanceof FieldInterface) {
-                        $item->fromMetadata($field);
-                    }
-                }
-
-                $item['sorting']->appendQuery($query, $schema, $item);
-            }
+        foreach ($this->findInstancesOf(FieldSortQueryInterface::class) as $item) {
+            $item->appendQuery($query, $schema);
         }
     }
 

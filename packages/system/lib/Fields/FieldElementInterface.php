@@ -11,5 +11,5 @@ use DOMElement;
 
 interface FieldElementInterface extends MetadataInterface
 {
-    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $section, EntryInterface $entry, FieldInterface $field);
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $section, EntryInterface $entry, FieldInterface $field = null);
 }

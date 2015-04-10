@@ -252,6 +252,10 @@ trait MetadataControllerTrait
         $metadata->fromXML($element);
         $metadata->setDefaults();
 
+        if ($metadata instanceof ReferencedMetadataInterface) {
+            $metadata->setGuid($element->getAttribute('guid'));
+        }
+
         return $metadata;
     }
 
@@ -270,6 +274,10 @@ trait MetadataControllerTrait
         $root->setAttribute('type', get_class($object));
         $document->appendChild($root);
         $object->toXML($root);
+
+        if ($object instanceof ReferencedMetadataInterface) {
+            $root->setAttribute('guid', $object);
+        }
 
         return $document;
     }

@@ -4,13 +4,13 @@ namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\SortingDirection;
 use Symphony;
 
-class TextSortQuery implements MetadataInterface
+class TextSortQuery implements FieldSortQueryInterface
 {
     use MetadataTrait;
 
@@ -23,8 +23,12 @@ class TextSortQuery implements MetadataInterface
         ]);
     }
 
-    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field = null)
     {
+        if (false === isset($field)) {
+            $field = $this['field']->resolveInstanceOf(FieldInterface::class);
+        }
+
         $table = Symphony::Database()->createDataTableName(
             $schema['resource']['handle'],
             $field['schema']['handle'],

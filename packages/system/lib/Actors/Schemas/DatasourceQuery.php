@@ -35,6 +35,16 @@ class DatasourceQuery
     {
         $query = "select\n\tentries.entry_id\nfrom\n\tentries";
 
+        if (!empty($this->filterQueries)) {
+            foreach ($this->filterQueries as $index => $item) {
+                switch ($item->type) {
+                    case 'subquery':
+                        $query .= "\nright join\n\t({$item->query})\n\tas filter{$index} using (entry_id)";
+                        break;
+                }
+            }
+        }
+
         if (!empty($this->sortQueries)) {
             $order = [];
 
@@ -79,6 +89,14 @@ class DatasourceQuery
         }
 
         return false;
+    }
+
+    public function filterBySubQuery($query)
+    {
+        $this->filterQueries[] = (object)[
+            'type' =>       'subquery',
+            'query' =>      $query
+        ];
     }
 
     public function sortByMetadata($column, $direction)

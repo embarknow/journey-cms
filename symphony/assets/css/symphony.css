@@ -501,13 +501,27 @@
 		color: #666;
 		padding: 0 10px 8px 10px;
 	}
+	table thead tr th.small {
+		width: 4%;
+	}
+	table thead tr th.medium {
+		width: 8%;
+	}
+	table thead tr th.large {
+		width: 16%;
+	}
+	table thead tr th.huge {
+		width: 24%;
+	}
 	table tbody tr td {
+		overflow: hidden;
 		padding: 8px 10px;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 	table th:first-child,
 	table td:first-child {
 		padding-left: 30px;
-		width: 20%;
 	}
 	table th:last-child,
 	table td:last-child {

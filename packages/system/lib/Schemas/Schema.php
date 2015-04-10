@@ -2,14 +2,14 @@
 
 namespace Embark\CMS\Schemas;
 
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Structures\ReferencedMetadataTrait;
 use Embark\CMS\Structures\Guid;
 use General;
 use Symphony;
 
 class Schema implements SchemaInterface
 {
-	use MetadataTrait;
+	use ReferencedMetadataTrait;
 
 	public function __construct()
 	{

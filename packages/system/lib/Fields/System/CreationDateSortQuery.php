@@ -5,12 +5,12 @@ namespace Embark\CMS\Fields\System;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\SortingDirection;
 
-class CreationDateSortQuery implements MetadataInterface
+class CreationDateSortQuery implements FieldSortQueryInterface
 {
     use MetadataTrait;
 
@@ -23,7 +23,7 @@ class CreationDateSortQuery implements MetadataInterface
     	]);
     }
 
-    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field)
+    public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field = null)
     {
         $query->sortByMetadata('creation_date', $this['direction']);
     }

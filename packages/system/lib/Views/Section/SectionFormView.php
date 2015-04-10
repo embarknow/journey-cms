@@ -118,9 +118,9 @@ class SectionFormView implements MetadataInterface
 
             // Prepare a new entry:
             if (false === $editing) {
-                $entry->schema = $schema['resource']['handle'];
-                $entry->user = Symphony::User()->user_id;
-                $entry->entry_id = Entry::generateID($entry->schema, $entry->user);
+                $entry->schema_id = $schema->getGuid();
+                $entry->user_id = Symphony::User()->user_id;
+                $entry->entry_id = Entry::generateID($entry->schema_id, $entry->user_id);
             }
         }
 

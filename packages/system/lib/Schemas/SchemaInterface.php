@@ -2,9 +2,9 @@
 
 namespace Embark\CMS\Schemas;
 
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Structures\ReferencedMetadataInterface;
 
-interface SchemaInterface extends MetadataInterface
+interface SchemaInterface extends ReferencedMetadataInterface
 {
 	public function countEntries();
 

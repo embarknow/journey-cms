@@ -8,6 +8,7 @@ use Embark\CMS\Structures\MetadataTrait;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataReferenceInterface;
 use Embark\CMS\Structures\Boolean;
+use Embark\CMS\Structures\Enum;
 use DOMElement;
 use Widget;
 
@@ -20,6 +21,11 @@ trait FieldColumnTrait
         $this->setSchema([
             'editLink' => [
                 'filter' =>     new Boolean()
+            ],
+            'size' => [
+                'filter' =>     new Enum(['small', 'medium', 'large', 'huge']),
+                'default' =>    'medium',
+                'required' =>   true
             ]
         ]);
     }
@@ -46,6 +52,7 @@ trait FieldColumnTrait
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('th');
         $header->addClass('col');
+        $header->addClass($this['size']);
         $wrapper->appendChild($header);
 
         // Add sorting information:

@@ -56,13 +56,28 @@ class SectionTableView implements MetadataInterface
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $schema = SchemaController::read($view['schema']);
+        $handle = $view['resource']['handle'];
+        $guid = $schema->getGuid();
         $actor = ActorController::read($view['actor']);
         $query = new DatasourceQuery();
+
+        // Show only entries from this schema:
+        $query->filterBySubQuery("select entry_id from entries where schema_id = '{$guid}'");
 
         // Sort entries by the selected column:
         if (isset($_GET['sort'], $_GET['direction'])) {
             $column = $this->findColumnByName($_GET['sort']);
             $column->appendSortingQuery($query, $schema, $_GET['direction']);
+
+            $_SESSION["{$handle}.sort"] = $_GET['sort'];
+            $_SESSION["{$handle}.direction"] = $_GET['direction'];
+
+            redirect($url);
+        }
+
+        else if (isset($_SESSION["{$handle}.sort"], $_SESSION["{$handle}.direction"])) {
+            $column = $this->findColumnByName($_SESSION["{$handle}.sort"]);
+            $column->appendSortingQuery($query, $schema, $_SESSION["{$handle}.direction"]);
         }
 
         // Sort entries by the first column:

@@ -16,7 +16,7 @@ class CreationDateElement implements FieldElementInterface
 {
 	use MetadataTrait;
 
-    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field = null)
 	{
 		$document = $wrapper->ownerDocument;
 		$date = new SystemDateTime($entry->creation_date);

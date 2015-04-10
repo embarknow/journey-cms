@@ -24,8 +24,12 @@ trait ElementTrait
         ]);
     }
 
-    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field)
+    public function appendElement(DOMElement $wrapper, DatasourceInterface $datasource, SchemaInterface $schema, EntryInterface $entry, FieldInterface $field = null)
     {
+        if (false === isset($field)) {
+            $field = $this['field']->resolveInstanceOf(FieldInterface::class);
+        }
+
         $document = $wrapper->ownerDocument;
         $data = $field['data']->read($schema, $entry, $field);
 

@@ -642,28 +642,30 @@
 -----------------------------------------------------------------------------*/
 	th a,
 	th a:hover,
-	th a:hover:after {
+	th a:hover:before {
 		color: #665;
 		text-decoration: none;
 	}
-	th a:after {
+	th a:before {
 		color: #ccb;
 	}
 	th a:active,
 	th a.active,
-	th a.active:after {
+	th a.active:before {
 		color: #554;
 	}
-	th a:after,
-	th a.active:hover:after,
-	th a.active[href$=asc]:after {
-		margin-left: 3px;
-		content: "\2193"
+	th a:before,
+	th a.active:hover:before,
+	th a.active[href$=asc]:before {
+		margin-left: -1.5ex;
+		content: "▴";
+		display: inline-block;
+		width: 1.5ex;
 	}
-	th a.active:after,
-	th a[href$=asc]:after,
-	th a.active[href$=asc]:hover:after {
-		content: "\2191";
+	th a.active:before,
+	th a[href$=asc]:before,
+	th a.active[href$=asc]:hover:before {
+		content: "▾";
 	}
 
 /*-----------------------------------------------------------------------------

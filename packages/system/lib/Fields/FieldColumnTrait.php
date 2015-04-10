@@ -47,7 +47,7 @@ trait FieldColumnTrait
         }
     }
 
-    public function appendHeaderElement(DOMElement $wrapper, $url)
+    public function appendHeaderElement(DOMElement $wrapper, $active, $url)
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('th');
@@ -68,6 +68,10 @@ trait FieldColumnTrait
                 $url . '?sort=' . $this['name'] . '&direction=' . $direction
             );
             $header->appendChild($link);
+
+            if ($active) {
+                $link->addClass('active');
+            }
         }
 
         else {

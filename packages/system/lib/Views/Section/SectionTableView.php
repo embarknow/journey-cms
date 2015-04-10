@@ -6,7 +6,7 @@ use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Actors\Controller as ActorController;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
-use Embark\CMS\Schemas\Controller as SchemaController;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\MetadataInterface;
 use Embark\CMS\Structures\MetadataTrait;
 use DOMElement;
@@ -29,7 +29,7 @@ class SectionTableView implements MetadataInterface
         ]);
     }
 
-    protected function appendHeader(HTMLDocument $page, SectionView $view)
+    public function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
 
@@ -48,12 +48,11 @@ class SectionTableView implements MetadataInterface
         $page->Form->setAttribute('enctype', 'multipart/form-data');
     }
 
-    protected function appendFooter(HTMLDocument $page, SectionView $view)
+    public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         // Delete entries and then redirect:
         if (isset($_POST['entries'], $_POST['with-selected']) && 'delete' === $_POST['with-selected']) {
             $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-            $schema = SchemaController::read($view['schema']);
 
             Symphony::Database()->beginTransaction();
 
@@ -103,10 +102,9 @@ class SectionTableView implements MetadataInterface
         $actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
     }
 
-    public function appendTable(HTMLDocument $page, SectionView $view)
+    public function appendTable(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-        $schema = SchemaController::read($view['schema']);
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
         $actor = ActorController::read($view['actor']);
@@ -135,9 +133,9 @@ class SectionTableView implements MetadataInterface
         else {
             $column = $this->findFirstColumn();
             $column->appendSortingQuery($query, $schema);
-        }
 
-        $this->appendHeader($page, $view);
+            $_SESSION["{$handle}.sort"] = $_GET['sort'];
+        }
 
         // Build table header:
         $table = $page->createElement('table');
@@ -147,7 +145,13 @@ class SectionTableView implements MetadataInterface
         $table->appendChild($head);
 
         foreach ($this->findAllColumns() as $column) {
-            $column->appendHeaderElement($head, $url);
+            $active = false;
+
+            if (isset($_SESSION["{$handle}.sort"])) {
+                $active = $_SESSION["{$handle}.sort"] === $column['name'];
+            }
+
+            $column->appendHeaderElement($head, $active, $url);
         }
 
         if ($statement = $query->execute() and $statement->rowCount()) {
@@ -179,17 +183,11 @@ class SectionTableView implements MetadataInterface
             $cell->appendChild(Widget::Anchor(__('Create an entry.'), $url . '/new'));
             $row->appendChild($cell);
         }
-
-        $this->appendFooter($page, $view);
     }
 
     public function findAllColumns()
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldColumnInterface) {
-                yield $item;
-            }
-        }
+        return $this->findInstancesOf(FieldColumnInterface::class);
     }
 
     public function findFirstColumn()

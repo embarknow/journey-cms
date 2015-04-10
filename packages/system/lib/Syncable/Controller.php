@@ -5,7 +5,7 @@ namespace Embark\CMS\Syncable;
 use StdClass;
 use PDO;
 use Embark\CMS\Database\Connection;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 class Controller
 {

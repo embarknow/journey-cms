@@ -5,7 +5,7 @@ namespace Embark\CMS\Fields\Text;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldSchemaInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\Guid;
 use Context;
 use Entry;

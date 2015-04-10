@@ -5,7 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 use DOMElement;
 
 interface FieldColumnInterface extends MetadataInterface

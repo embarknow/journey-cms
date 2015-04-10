@@ -2,7 +2,9 @@
 
 namespace Embark\CMS\Database;
 
-class Exception extends \Exception
+use Exception;
+
+class Exception extends Exception
 {
     private $error;
 

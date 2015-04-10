@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Schemas;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class FieldsList implements MetadataInterface
 {

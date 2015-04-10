@@ -5,7 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 interface FieldSortQueryInterface extends MetadataInterface
 {

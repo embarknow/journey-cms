@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Structures;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class MenuItem implements MetadataInterface
 {

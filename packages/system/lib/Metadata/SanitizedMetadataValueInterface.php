@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
 
 /**
  * Interface to define a metadata value that needs sanitizing

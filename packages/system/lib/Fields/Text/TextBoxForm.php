@@ -7,7 +7,7 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Structures\Enum;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use DOMElement;
 use Exception;
 use HTMLDocument;

@@ -4,9 +4,9 @@ namespace Embark\CMS\Fields;
 
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataReferenceInterface;
+use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\Enum;
 use DOMElement;

@@ -1,6 +1,8 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
+
+use Embark\CMS\MetadataTrait;
 
 trait ReferencedMetadataTrait
 {

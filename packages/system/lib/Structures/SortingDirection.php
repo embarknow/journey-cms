@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Structures;
 
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 class SortingDirection implements MetadataValueInterface
 {

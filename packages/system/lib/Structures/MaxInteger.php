@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Structures;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\SanitizedMetadataValueInterface;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\SanitizedMetadataValueInterface;
 
 /**
  * Implements MetadataValueInterface for a maximum tested integer metadata value

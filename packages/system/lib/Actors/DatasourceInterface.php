@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Actors;
 
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 interface DatasourceInterface extends MetadataInterface
 {

@@ -6,7 +6,7 @@ use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\SortingDirection;
 use Symphony;
 

@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Sections;
 
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class Section implements SectionInterface
 {

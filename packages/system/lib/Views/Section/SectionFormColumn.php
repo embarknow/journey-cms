@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Views\Section;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use DOMElement;
 
 class SectionFormColumn implements MetadataInterface

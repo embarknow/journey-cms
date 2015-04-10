@@ -4,7 +4,7 @@ namespace Embark\CMS\Fields;
 
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 use DOMElement;
 use HTMLDocument;
 use Exception;

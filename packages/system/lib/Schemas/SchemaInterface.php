@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Schemas;
 
-use Embark\CMS\Structures\ReferencedMetadataInterface;
+use Embark\CMS\Metadata\ReferencedMetadataInterface;
 
 interface SchemaInterface extends ReferencedMetadataInterface
 {

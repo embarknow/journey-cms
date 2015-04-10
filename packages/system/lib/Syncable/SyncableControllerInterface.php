@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Syncable;
 
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 /**
  * Syncable Controller Interface

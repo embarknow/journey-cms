@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Fields;
 
-use Embark\CMS\Structures\ReferencedMetadataInterface;
+use Embark\CMS\Metadata\ReferencedMetadataInterface;
 
 interface FieldInterface extends ReferencedMetadataInterface
 {

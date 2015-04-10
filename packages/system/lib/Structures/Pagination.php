@@ -2,9 +2,11 @@
 
 namespace Embark\CMS\Structures;
 
-use Context;
-use Datasource;
 use DOMDocument;
+use Datasource;
+use Embark\CMS\Structures\ParameterPool as Context;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class Pagination implements MetadataInterface
 {

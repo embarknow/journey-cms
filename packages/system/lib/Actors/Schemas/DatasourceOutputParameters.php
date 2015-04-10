@@ -2,9 +2,10 @@
 
 namespace Embark\CMS\Actors\Schemas;
 
+use ReflectionObject;
 use Embark\CMS\Actors\DatasourceInterface;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 // use Embark\CMS\Fields\Parameter;
 use Embark\CMS\Schemas\Schema;
 use Entry;
@@ -45,7 +46,7 @@ class DatasourceOutputParameters implements MetadataInterface {
 
     public function containsInstanceOf($class) {
         foreach ($this->findAll() as $value) {
-            $reflect = new \ReflectionObject($value);
+            $reflect = new ReflectionObject($value);
 
             if ($class !== $reflect->getName()) continue;
 

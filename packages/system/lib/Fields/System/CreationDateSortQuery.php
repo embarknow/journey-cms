@@ -7,7 +7,7 @@ use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\SortingDirection;
 
 class CreationDateSortQuery implements FieldSortQueryInterface

@@ -47,7 +47,6 @@ class XMLElement extends DOMElement
     {
         $this->removeChildNodes();
 
-        //  TODO: Possibly might need to Remove existing Children before adding..
         if ($value instanceof DOMElement || $value instanceof DOMDocumentFragment) {
             $this->appendChild($value);
         }
@@ -59,7 +58,6 @@ class XMLElement extends DOMElement
         }
 
         elseif (!is_null($value) && is_string($value)) {
-            //$this->nodeValue = $value;
             $this->appendChild(new DOMText($value));
         }
     }
@@ -74,7 +72,6 @@ class XMLElement extends DOMElement
     {
         if (is_array($attributes) && !empty($attributes)) {
             foreach ($attributes as $key => $val) {
-                //  Temporary (I'd hope) ^BA
                 $val = utf8_encode($val);
                 $this->setAttribute($key, $val);
             }

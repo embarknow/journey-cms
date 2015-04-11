@@ -7,7 +7,29 @@ use Embark\CMS\Markup\XMLElement;
 
 class HTMLDocument extends XMLDocument
 {
+    /**
+     * The document DTD
+     * @var string
+     */
     protected $dtd = 'html';
+
+    /**
+     * HTML Element node
+     * @var XMLElement
+     */
+    protected $html;
+
+    /**
+     * Head Element node
+     * @var XMLElement
+     */
+    protected $head;
+
+    /**
+     * Body Element node
+     * @var XMLElement
+     */
+    protected $body;
 
     /**
     * These tags must always self-close.
@@ -129,15 +151,10 @@ class HTMLDocument extends XMLDocument
      */
     public function __toString()
     {
-        $doc = new XMLDocument;
-        $doc->formatOutput = true;
-
-        $doc->importNode($this, true);
-
         return sprintf(
             "<!doctype %s>\n%s",
             $this->dtd,
-            $doc->saveXHTML()
+            $this->saveXHTML()
         );
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use Embark\CMS\Sections\Controller;
-use Embark\CMS\Structures\MenuItem;
+use Embark\CMS\Metadata\Types\MenuItem;
 
 	require_once(LIB . '/class.htmldocument.php');
 	require_once(LIB . '/class.section.php');

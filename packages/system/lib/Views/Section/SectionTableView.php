@@ -2,13 +2,14 @@
 
 namespace Embark\CMS\Views\Section;
 
-use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Actors\Controller as ActorController;
+use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
-use Embark\CMS\Schemas\Controller as SchemaController;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use AlertStack;
 use DOMElement;
 use Entry;
 use HTMLDocument;
@@ -29,7 +30,7 @@ class SectionTableView implements MetadataInterface
         ]);
     }
 
-    protected function appendHeader(HTMLDocument $page, SectionView $view)
+    public function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
 
@@ -48,12 +49,11 @@ class SectionTableView implements MetadataInterface
         $page->Form->setAttribute('enctype', 'multipart/form-data');
     }
 
-    protected function appendFooter(HTMLDocument $page, SectionView $view)
+    public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         // Delete entries and then redirect:
-        if (isset($_POST['entries'], $_POST['with-selected']) && 'delete' === $_POST['with-selected']) {
+        if (isset($_POST['entries'], $_POST['action']['delete'])) {
             $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-            $schema = SchemaController::read($view['schema']);
 
             Symphony::Database()->beginTransaction();
 
@@ -86,27 +86,34 @@ class SectionTableView implements MetadataInterface
             catch (\Exception $error) {
                 Symphony::Database()->rollBack();
 
-                throw $error;
+                $page->alerts()->append(
+                    __('An error occurred while deleting the selected entries. <a class="more">Show the error.</a>'),
+                    AlertStack::ERROR,
+                    $error
+                );
+
+                // Todo: Log this exception.
             }
         }
 
         $actions = $page->createElement('div');
-        $actions->setAttribute('class', 'actions');
+        $actions->addClass('actions with-selectable');
         $page->Form->appendChild($actions);
 
-        $options = [
-            array(NULL, false, __('With Selected...')),
-            array('delete', false, __('Delete'))
-        ];
-
-        $actions->appendChild(Widget::Select('with-selected', $options));
-        $actions->appendChild(Widget::Input('action[apply]', __('Apply'), 'submit'));
+        $actions->appendChild(
+            Widget::Submit(
+                'action[delete]', __('Delete'),
+                [
+                    'class' => 'confirm delete',
+                    'title' => __('Delete selected entries'),
+                ]
+            )
+        );
     }
 
-    public function appendTable(HTMLDocument $page, SectionView $view)
+    public function appendTable(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-        $schema = SchemaController::read($view['schema']);
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
         $actor = ActorController::read($view['actor']);
@@ -135,35 +142,50 @@ class SectionTableView implements MetadataInterface
         else {
             $column = $this->findFirstColumn();
             $column->appendSortingQuery($query, $schema);
-        }
 
-        $this->appendHeader($page, $view);
+            $_SESSION["{$handle}.sort"] = $column['name'];
+        }
 
         // Build table header:
-        $table = $page->createElement('table');
+        $table = $page->createElement('section');
+        $table->addClass('entries table');
         $page->Form->appendChild($table);
 
-        $head = $page->createElement('thead');
-        $table->appendChild($head);
+        // $head = $page->createElement('thead');
+        // $table->appendChild($head);
 
-        foreach ($this->findAllColumns() as $column) {
-            $column->appendHeaderElement($head, $url);
-        }
+        // foreach ($this->findAllColumns() as $column) {
+        //     $active = false;
+
+        //     if (isset($_SESSION["{$handle}.sort"])) {
+        //         $active = $_SESSION["{$handle}.sort"] === $column['name'];
+        //     }
+
+        //     $column->appendHeaderElement($head, $active, $url);
+        // }
 
         if ($statement = $query->execute() and $statement->rowCount()) {
             $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
 
-            while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
+            while ($statement->fetch(PDO::FETCH_BOUND)) {
                 $entry = Entry::loadFromId($entryId);
-                $row = $page->createElement('tr');
-                $table->appendChild($row);
+                $article = $page->createElement('article');
+                $table->appendChild($article);
 
                 foreach ($this->findAllColumns() as $column) {
-                    $column->appendBodyElement($row, $schema, $entry, $url);
+                    $list = $page->createElement('dl');
+                    $article->appendChild($list);
+
+                    if (isset($_SESSION["{$handle}.sort"])) {
+                        $active = $_SESSION["{$handle}.sort"] === $column['name'];
+                    }
+
+                    $column->appendHeaderElement($list, $active, $url);
+                    $column->appendBodyElement($list, $schema, $entry, $url);
                 }
 
                 $input = Widget::Input('entries[]', $entry->entry_id, 'checkbox');
-                $row->firstChild->appendChild($input);
+                $article->prependChild($input);
             }
         }
 
@@ -179,17 +201,11 @@ class SectionTableView implements MetadataInterface
             $cell->appendChild(Widget::Anchor(__('Create an entry.'), $url . '/new'));
             $row->appendChild($cell);
         }
-
-        $this->appendFooter($page, $view);
     }
 
     public function findAllColumns()
     {
-        foreach ($this->findAll() as $item) {
-            if ($item instanceof FieldColumnInterface) {
-                yield $item;
-            }
-        }
+        return $this->findInstancesOf(FieldColumnInterface::class);
     }
 
     public function findFirstColumn()

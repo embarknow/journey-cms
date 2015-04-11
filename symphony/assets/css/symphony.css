@@ -492,6 +492,160 @@
 	Content: Table
 -----------------------------------------------------------------------------*/
 
+	section.table {
+		overflow: hidden;
+		padding: 3em 0 0 0;
+	}
+	section.table + .actions {
+		background: transparent;
+		border: none;
+		margin: 20px 30px;
+		padding: 0;
+	}
+	section.table article {
+		background-clip: padding-box;
+		border-top: 1px solid hsla(0, 0%, 0%, 0.05);
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.05);
+		display: flex;
+		line-height: 3em;
+		padding: 0 20px;
+		position: relative;
+		width: 100%;
+		white-space: nowrap;
+	}
+	section.table article:nth-child(odd) {
+		background: #f8f8f8;
+		background: linear-gradient(
+			to bottom,
+			hsla(0, 0%, 0%, 0.015),
+			hsla(0, 0%, 0%, 0.025)
+		);
+		background-clip: padding-box;
+	}
+	section.table article:first-of-type {
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+	}
+	section.table article:last-of-type {
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+	}
+	section.table article h1,
+	section.table article input[type = checkbox],
+	section.table article dt {
+		display: none;
+	}
+	section.table article + article {
+		margin-top: -1px;
+	}
+	section.table article.selected {
+		background-color: hsla(215, 80%, 25%, 0.75);
+		border-bottom-color: hsla(215, 80%, 20%, 0.75);
+		border-top-color: hsla(215, 80%, 20%, 0.75);
+	}
+	section.table article.selected dd {
+		text-shadow: 0 0 2px hsla(0, 0%, 0%, 0.75);
+	}
+	section.table article.selected + article {
+		border-top-color: transparent;
+	}
+	section.table article.selected,
+	section.table article.selected dd a {
+		color: #ffffff;
+	}
+
+	section.table dl {
+		flex: 0 1;
+	}
+	section.table article dl.small {
+		flex-basis: 5%;
+		min-width: 4em;
+	}
+	section.table article dl.medium {
+		flex-basis: 20%;
+		min-width: 8em;
+	}
+	section.table article dl.large {
+		flex-basis: 40%;
+		min-width: 12em;
+	}
+	section.table article dl.huge {
+		flex-basis: 60%;
+		min-width: 12em;
+	}
+	section.table article:first-child dt {
+		display: block;
+	}
+	section.table article dt,
+	section.table article dd {
+		padding: 0 10px;
+	}
+
+	/* Table header */
+	section.table article dt {
+		margin: -3em 0 0 0;
+	}
+	section.table article dt a {
+		display: block;
+		margin: 0 -10px;
+		padding: 0 10px;
+	}
+	section.table article dt a.active {
+		background:
+			linear-gradient(
+				to bottom,
+				hsl(0, 0%, 100%),
+				hsla(0, 0%, 100%, 0) 3em
+			),
+			linear-gradient(
+				to right,
+				hsla(0, 0%, 0%, 0.1),
+				hsla(0, 0%, 0%, 0.1) 1px,
+				transparent 1px
+			),
+			linear-gradient(
+				to left,
+				hsla(0, 0%, 0%, 0.1),
+				hsla(0, 0%, 0%, 0.1) 1px,
+				transparent 1px
+			);
+		background-color: hsla(0, 0%, 0%, 0.025);
+		margin-bottom: -100em;
+		padding-bottom: 100em;
+	}
+	section.table article dt a,
+	section.table article dt a:hover,
+	section.table article dt a:hover:after {
+		color: #665;
+		text-decoration: none;
+	}
+	section.table article dt a:after {
+		color: #ccb;
+	}
+	section.table article dt a:active,
+	section.table article dt a.active,
+	section.table article dt a.active:after {
+		color: #554;
+	}
+	section.table article dt a:after,
+	section.table article dt a.active:hover:after,
+	section.table article dt a.active[href$=asc]:after {
+		margin-left: 0.5ex;
+		content: "▴";
+		display: inline-block;
+		text-align: center;
+		width: 1em;
+	}
+	section.table article dt a.active:after,
+	section.table article dt a[href$=asc]:after,
+	section.table article dt a.active[href$=asc]:hover:after {
+		content: "▾";
+	}
+
+	/* Table cell */
+	section.table article dd {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
 	table {
 		border-spacing: 0;
 		table-layout: fixed;
@@ -635,35 +789,6 @@
 		margin: 0 -0.67em;
 		padding: 0.67em;
 		text-decoration: none;
-	}
-
-/*-----------------------------------------------------------------------------
-	Content: Table Sorting
------------------------------------------------------------------------------*/
-	th a,
-	th a:hover,
-	th a:hover:after {
-		color: #665;
-		text-decoration: none;
-	}
-	th a:after {
-		color: #ccb;
-	}
-	th a:active,
-	th a.active,
-	th a.active:after {
-		color: #554;
-	}
-	th a:after,
-	th a.active:hover:after,
-	th a.active[href$=asc]:after {
-		margin-left: 3px;
-		content: "\2193"
-	}
-	th a.active:after,
-	th a[href$=asc]:after,
-	th a.active[href$=asc]:hover:after {
-		content: "\2191";
 	}
 
 /*-----------------------------------------------------------------------------
@@ -996,6 +1121,31 @@
 	}
 	.actions select {
 		margin-right: 5px;
+	}
+
+	.actions.with-selectable {
+		position: relative;
+		transition: opacity 0.2s;
+		overflow: hidden;
+		opacity: 0;
+	}
+	.actions.with-selectable:before {
+		background: transparent;
+		bottom: 0;
+		content: '';
+		display: block;
+		left: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+		z-index: 1;
+	}
+	.selectable.selected ~ .actions.with-selectable {
+		transition: opacity 0.2s;
+		opacity: 1;
+	}
+	.selectable.selected ~ .actions.with-selectable:before {
+		display: none;
 	}
 
 /*-----------------------------------------------------------------------------

@@ -18,7 +18,8 @@ class TextValueColumn implements FieldColumnInterface
         $field = $this['field']->resolve();
         $data = $field['data']->read($schema, $entry, $field);
         $document = $wrapper->ownerDocument;
-        $body = $document->createElement('td');
+        $body = $document->createElement('dd');
+        $body->addClass($this['size']);
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {

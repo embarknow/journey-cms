@@ -19,7 +19,8 @@ class ModificationDateColumn implements FieldColumnInterface
         $document = $wrapper->ownerDocument;
         $date = new SystemDateTime($entry->modification_date);
         $date = $date->toUserDateTime();
-        $body = $document->createElement('td');
+        $body = $document->createElement('dd');
+        $body->addClass($this['size']);
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {

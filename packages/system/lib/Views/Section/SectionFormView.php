@@ -5,15 +5,16 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldDataInterface;
-use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\SystemDateTime;
 use AdministrationPage;
+use AlertStack;
 use DOMElement;
 use Entry;
+use General;
 use HTMLDocument;
 use MessageStack;
 use Symphony;
@@ -44,7 +45,7 @@ class SectionFormView implements MetadataInterface
         }
     }
 
-    protected function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $title = __('Create new');
@@ -77,40 +78,108 @@ class SectionFormView implements MetadataInterface
         $page->appendBreadcrumb(Widget::Anchor($view['name'], $url));
         $page->appendBreadcrumb(Widget::Anchor($title, $link));
         $page->Form->setAttribute('enctype', 'multipart/form-data');
+
+        if (isset($_GET['saved'])) {
+            $this->appendAlert($page, $url, 'Entry updated at %s. <a href="%s">Create another?</a> <a href="%s">View all Entries</a>');
+        }
+
+        else if (isset($_GET['created'])) {
+            $this->appendAlert($page, $url, 'Entry updated at %s. <a href="%s">Create another?</a> <a href="%s">View all Entries</a>');
+        }
     }
 
     public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
-        $div = $page->createElement('div');
-        $div->setAttribute('class', 'actions');
-        $div->appendChild(Widget::Submit(
+        $editing = isset($entry->entry_id);
+
+        $actions = $page->createElement('div');
+        $actions->setAttribute('class', 'actions');
+        $page->Form->appendChild($actions);
+
+        $actions->appendChild(Widget::Submit(
             'action[save]',
             __('Create Entry'),
             [
                 'accesskey' => 's'
             ]
         ));
-        $page->Form->appendChild($div);
+
+        if ($editing) {
+            $actions->appendChild(
+                Widget::Submit(
+                    'action[delete]', __('Delete'),
+                    [
+                        'class' => 'confirm delete',
+                        'title' => __('Delete this entry'),
+                    ]
+                )
+            );
+        }
     }
 
-    public function appendForm(HTMLDocument $page, SectionView $view, EntryInterface $entry)
+    public function appendAlert(HTMLDocument $page, $url, $message)
+    {
+        $page->alerts()->append(
+            __($message, [
+                General::getTimeAgo(__SYM_TIME_FORMAT__),
+                $url . '/new',
+                $url
+            ]),
+            AlertStack::SUCCESS
+        );
+    }
+
+    public function appendForm(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-        $schema = SchemaController::read($view['schema']);
         $saving = isset($_POST['fields']);
+        $deleting = isset($_POST['action']['delete']);
         $editing = isset($entry->entry_id);
         $headersAppended = [];
         $success = true;
 
-        // Set page title and breadcrumb:
-        $this->appendHeader($page, $view, $schema, $entry);
+        if ($deleting) {
+            Symphony::Database()->beginTransaction();
+
+            try {
+                // Delete all field data:
+                foreach ($schema->findAllFields() as $field) {
+                    $field['data']->delete($schema, $entry, $field);
+                }
+
+                // Delete the entry record:
+                $statement = Symphony::Database()->prepare("
+                    delete from `entries` where
+                        entry_id = :entryId
+                ");
+
+                $statement->execute([
+                    ':entryId' =>   $entry->entry_id
+                ]);
+
+                Symphony::Database()->commit();
+
+                redirect($url);
+            }
+
+            // Something went wrong, do not commit:
+            catch (\Exception $error) {
+                Symphony::Database()->rollBack();
+
+                $page->alerts()->append(
+                    __('An error occurred while deleting this entry. <a class="more">Show the error.</a>'),
+                    AlertStack::ERROR,
+                    $error
+                );
+
+                // Todo: Log this exception.
+            }
+        }
 
         // Build basic form layout:
         foreach ($this->findInstancesOf(SectionFormRow::class) as $item) {
             $item->appendRow($page->Form);
         }
-
-        $this->appendFooter($page, $view, $schema, $entry);
 
         if ($saving) {
             // Begin a transaction to commit all of the field changes:
@@ -183,8 +252,8 @@ class SectionFormView implements MetadataInterface
                 // Go to the success page:
                 redirect($url . '/edit/' . $entry->entry_id . (
                     $editing
-                        ? '/:saved'
-                        : '/:created'
+                        ? '?saved'
+                        : '?created'
                 ));
             }
 

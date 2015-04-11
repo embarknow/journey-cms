@@ -47,13 +47,13 @@ trait FieldColumnTrait
         }
     }
 
-    public function appendHeaderElement(DOMElement $wrapper, $url)
+    public function appendHeaderElement(DOMElement $wrapper, $active, $url)
     {
         $document = $wrapper->ownerDocument;
-        $header = $document->createElement('th');
+        $header = $document->createElement('dt');
         $header->addClass('col');
-        $header->addClass($this['size']);
         $wrapper->appendChild($header);
+        $wrapper->addClass($this['size']);
 
         // Add sorting information:
         if ($this['sorting'] instanceof MetadataInterface) {
@@ -68,6 +68,10 @@ trait FieldColumnTrait
                 $url . '?sort=' . $this['name'] . '&direction=' . $direction
             );
             $header->appendChild($link);
+
+            if ($active) {
+                $link->addClass('active');
+            }
         }
 
         else {

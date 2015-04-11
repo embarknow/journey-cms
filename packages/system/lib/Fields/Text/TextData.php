@@ -114,6 +114,12 @@ class TextData implements FieldDataInterface
             $field->getGuid()
         );
 
+        // But what if there's an error when deleting entries?...
+
+        // Because we're doing this inside of a transaction it is not possible to corrupt data by accident, and if you cannot delete any one of the entries selected, they will all still exist on page load.
+
+        // Guess who forgot to save...
+
         $statement = Symphony::Database()->prepare("
             delete from `$table` where
                 `entry_id` = :entryId

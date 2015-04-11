@@ -366,6 +366,35 @@ var Symphony;
 		$('.tags').symphonyTags();
 
 		$('table:has(input)').symphonySelectable();
+		$('section.table:has(input)').symphonySelectable({
+			'items':	'article:has(input)'
+		});
+
+		$('table tbody td')
+			.each(function() {
+				var $cell = $(this),
+					$text = $('<div class="text" />');
+
+				$text.html($cell.html());
+				$cell.empty();
+				$cell.append($text);
+			});
+
+		$(window)
+			.on('load resize', function() {
+				$('table td div.text')
+					.each(function() {
+						var $cell = $(this);
+
+						if (this.scrollWidth > $cell.outerWidth()) {
+							$cell.closest('td').attr('title', $cell.text());
+						}
+
+						else {
+							$cell.closest('td').removeAttr('title');
+						}
+					});
+			});
 	});
 
 /*-----------------------------------------------------------------------------

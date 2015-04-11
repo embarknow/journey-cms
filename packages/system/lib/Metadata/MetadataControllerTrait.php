@@ -4,7 +4,6 @@ namespace Embark\CMS\Metadata;
 
 use ArrayAccess;
 use DirectoryIterator;
-use DirectoryIterator;
 use DOMDocument;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\ReferencedMetadataInterface;

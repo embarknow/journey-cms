@@ -9,6 +9,6 @@ class Controller
 {
     use MetadataControllerTrait;
 
-    const DIR = '/workspace/sections';
+    const DIR = '/blueprints/sections';
     const FILE_EXTENSION = '.xml';
 }

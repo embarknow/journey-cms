@@ -9,6 +9,6 @@ class Controller implements MetadataControllerInterface
 {
     use MetadataControllerTrait;
 
-    const DIR = '/workspace/actors';
+    const DIR = '/blueprints/actors';
     const FILE_EXTENSION = '.xml';
 }

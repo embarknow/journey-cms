@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Metadata;
 
-use Embark\CMS\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 
 trait ReferencedMetadataTrait
 {

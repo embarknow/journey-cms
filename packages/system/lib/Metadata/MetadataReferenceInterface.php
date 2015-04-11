@@ -4,7 +4,6 @@ namespace Embark\CMS\Metadata;
 
 use DOMElement;
 use Embark\CMS\Metadata\MetadataInterface;
-use Exception;
 
 interface MetadataReferenceInterface
 {

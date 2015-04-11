@@ -4,10 +4,10 @@ namespace Embark\CMS\Metadata;
 
 use DOMElement;
 use Exception;
+use ReflectionClass;
 use Embark\CMS\Metadata\Resource;
 use Embark\CMS\Metadata\MetadataInterface;
-use Exception;
-use ReflectionClass;
+use Embark\CMS\Metadata\MetadataReferenceIndex;
 
 class MetadataReference implements MetadataReferenceInterface
 {

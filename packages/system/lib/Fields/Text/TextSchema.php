@@ -94,12 +94,12 @@ class TextSchema implements FieldSchemaInterface
         $wrapper->appendChild($column);
     }
 
-    public function appendSettings(SymphonyDOMElement $wrapper, MessageStack $errors)
+    public function appendSettings(SymphonyDOMElement $wrapper, MessageStack $errors, FieldInterface $field)
     {
         $this->appendHandleSettings($wrapper, $errors);
         $this->appendFormatterSettings($wrapper, $errors);
 
-        $wrapper->appendChild(Widget::Input('guid', $this['guid'], 'hidden'));
+        $wrapper->appendChild(Widget::Input('guid', $field->getGuid(), 'hidden'));
         $wrapper->appendChild(Widget::Input('type', 'text', 'hidden'));
     }
 

@@ -400,7 +400,7 @@ use Embark\CMS\Schemas\FieldsList;
             foreach (FieldController::findAll() as $field) {
                 if ($field['schema'] instanceof FieldSchemaInterface) {
                     $item = $duplicator->createTemplate($field['name']);
-                    $field['schema']->appendSettings($item, new MessageStack());
+                    $field['schema']->appendSettings($item, new MessageStack(), $field);
                 }
             }
 
@@ -415,7 +415,7 @@ use Embark\CMS\Schemas\FieldsList;
                     }
 
                     $item = $duplicator->createInstance($field['schema']['handle'], $field['name']);
-                    $field['schema']->appendSettings($item, $messages);
+                    $field['schema']->appendSettings($item, $messages, $field);
                 }
             }
 

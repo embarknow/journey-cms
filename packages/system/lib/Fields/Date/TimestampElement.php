@@ -2,12 +2,12 @@
 
 namespace Embark\CMS\Fields\Date;
 
+use DOMElement;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
-use DOMElement;
 use Entry;
 use Field;
 use General;
@@ -21,7 +21,9 @@ class TimestampElement implements MetadataInterface
     {
         $field = $section->findField($this['field']);
 
-        if (false === $field) return;
+        if (false === $field) {
+            return;
+        }
 
         $document = $wrapper->ownerDocument;
         $data = $entry->data()->{$this['field']};

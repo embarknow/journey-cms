@@ -2,12 +2,12 @@
 
 namespace Embark\CMS\Fields\System;
 
+use DOMElement;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\SystemDateTime;
-use DOMElement;
 use Widget;
 
 class CreationDateColumn implements FieldColumnInterface

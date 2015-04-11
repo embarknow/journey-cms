@@ -4,7 +4,7 @@ namespace Embark\CMS\Relationships;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\Guid;
+use Embark\CMS\Metadata\Filters\Guid;
 use Symphony;
 
 class List implements MetadataInterface

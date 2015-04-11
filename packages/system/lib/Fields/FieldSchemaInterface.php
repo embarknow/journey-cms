@@ -5,7 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
-use Embark\CMS\Structures\Guid;
+use Embark\CMS\Metadata\Filters\Guid;
 use Symphony;
 
 interface FieldSchemaInterface extends MetadataInterface

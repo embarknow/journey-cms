@@ -4,6 +4,7 @@ namespace Embark\CMS\Fields\Link;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Fields\Link\RelatedField;
 use Entry;
 use Symphony;
 

@@ -8,7 +8,7 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\SortingDirection;
+use Embark\CMS\Metadata\Filters\SortingDirection;
 
 class IdSortQuery implements FieldSortQueryInterface
 {

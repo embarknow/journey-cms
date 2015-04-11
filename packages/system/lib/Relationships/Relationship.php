@@ -6,7 +6,7 @@ use Embark\CMS\Relationships\SourcesList;
 use Embark\CMS\Relationships\TargetsList;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\Guid;
+use Embark\CMS\Metadata\Filters\Guid;
 
 class Relationship implements MetadataInterface
 {

@@ -4,7 +4,7 @@ namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Metadata\ReferencedMetadataTrait;
-use Embark\CMS\Structures\Guid;
+use Embark\CMS\Metadata\Filters\Guid;
 use General;
 use Symphony;
 

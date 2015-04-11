@@ -2,11 +2,11 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use DOMElement;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Schemas\SchemaInterface;
-use DOMElement;
 use Widget;
 
 class TextHandleColumn implements FieldColumnInterface

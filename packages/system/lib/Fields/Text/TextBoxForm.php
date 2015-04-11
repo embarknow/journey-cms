@@ -2,14 +2,14 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use DOMElement;
+use Exception;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
-use Embark\CMS\Structures\Enum;
 use Embark\CMS\Metadata\MetadataTrait;
-use DOMElement;
-use Exception;
+use Embark\CMS\Metadata\Filters\Enum;
 use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
@@ -26,7 +26,7 @@ class TextBoxForm extends TextInputForm
                 'type' =>   new TextData()
             ],
             'size' => [
-                'filter' =>     new Enum(['small', 'medium', 'large', 'huge'])
+                'filter' => new Enum(['small', 'medium', 'large', 'huge'])
             ]
         ]);
     }

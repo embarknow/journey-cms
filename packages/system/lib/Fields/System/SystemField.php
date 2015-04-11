@@ -2,10 +2,10 @@
 
 namespace Embark\CMS\Fields\System;
 
+use DOMDocument;
 use Embark\CMS\Fields\Controller;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldTrait;
-use DOMDocument;
 
 class SystemField implements FieldInterface
 {

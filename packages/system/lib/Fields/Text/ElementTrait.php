@@ -2,14 +2,14 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use DOMElement;
+use Exception;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Metadata\MetadataTrait;
-use DOMElement;
-use Exception;
+use Embark\CMS\Metadata\Filters\Boolean;
 
 trait ElementTrait
 {

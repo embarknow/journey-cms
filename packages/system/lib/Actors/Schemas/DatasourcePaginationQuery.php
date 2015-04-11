@@ -4,9 +4,9 @@ namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\Integer;
-use Embark\CMS\Structures\MaxInteger;
+use Embark\CMS\Metadata\Filters\Boolean;
+use Embark\CMS\Metadata\Filters\Integer;
+use Embark\CMS\Metadata\Filters\MaxInteger;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use DOMDocument;

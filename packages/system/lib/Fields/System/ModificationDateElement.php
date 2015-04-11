@@ -2,6 +2,7 @@
 
 namespace Embark\CMS\Fields\System;
 
+use DOMElement;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
@@ -9,7 +10,6 @@ use Embark\CMS\Fields\FieldElementInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\SystemDateTime;
-use DOMElement;
 use General;
 
 class ModificationDateElement implements FieldElementInterface

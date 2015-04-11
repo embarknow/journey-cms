@@ -2,15 +2,15 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use DOMElement;
+use Exception;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
-use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use DOMElement;
-use Exception;
+use Embark\CMS\Metadata\Filters\Boolean;
 use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;

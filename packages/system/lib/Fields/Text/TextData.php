@@ -2,6 +2,8 @@
 
 namespace Embark\CMS\Fields\Text;
 
+use Extension;
+use PDO;
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\Controller;
@@ -10,12 +12,11 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\Guid;
-use Embark\CMS\Structures\Integer;
+use Embark\CMS\Metadata\Filters\Boolean;
+use Embark\CMS\Metadata\Filters\Guid;
+use Embark\CMS\Metadata\Filters\Integer;
 use Context;
 use Entry;
-use Extension;
 use General;
 use Lang;
 use MessageStack;
@@ -24,7 +25,6 @@ use SymphonyDOMElement;
 use TextFormatter;
 use TextFormatterIterator;
 use Widget;
-use PDO;
 
 /**
  * Used to access field data.

@@ -2,14 +2,14 @@
 
 namespace Embark\CMS\Fields\Link;
 
+use DOMElement;
+use DOMXPath;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Schemas\Controller;
 use Embark\CMS\Schemas\Schema;
 use Embark\CMS\SystemDateTime;
-use DOMElement;
-use DOMXPath;
 use Entry;
 use Field;
 use General;

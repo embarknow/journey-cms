@@ -4,7 +4,8 @@ namespace Embark\CMS\Fields\Text;
 
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Entries\EntryInterface;
-use Embark\CMS\Fields\Controller;
+use Embark\CMS\Formatters\Controller as FormatterController;
+use Embark\CMS\Fields\Controller as FieldController;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Fields\FieldTrait;
@@ -18,8 +19,6 @@ use MessageStack;
 use PDO;
 use Symphony;
 use SymphonyDOMElement;
-use TextFormatter;
-use TextFormatterIterator;
 use Widget;
 
 /**
@@ -36,7 +35,7 @@ class TextField implements FieldInterface
 
         // Load defaults from disk:
         $document = new DOMDocument();
-        $document->load(Controller::locate('text'));
+        $document->load(FieldController::locate('text'));
         $this->fromXML($document->documentElement);
     }
 
@@ -123,41 +122,6 @@ class TextField implements FieldInterface
         return $statement->execute();
     }
 
-    public function appendDataFormatterSettings(SymphonyDOMElement $wrapper, MessageStack $errors, MetadataInterface $settings)
-    {
-        require_once LIB . '/class.textformatter.php';
-
-        $document = $wrapper->ownerDocument;
-        $iterator = new TextFormatterIterator();
-        $label = Widget::Label(__('Text Formatter'));
-        $options = [
-            [null, false, __('None')]
-        ];
-
-        if ($iterator->valid()) {
-            foreach ($iterator as $pathname) {
-                $handle = TextFormatter::getHandleFromFilename(basename($pathname));
-                $tf = TextFormatter::load($pathname);
-
-                $options[] = [
-                    $handle,
-                    ($settings['formatter'] == $handle),
-                    constant(sprintf('%s::NAME', get_class($tf)))
-                ];
-            }
-
-            $label->appendChild(Widget::Select('formatter', $options));
-        }
-
-        else {
-            $select = Widget::Select('formatter', $options);
-            $select->setAttribute('disabled', 'disabled');
-            $label->appendChild($select);
-        }
-
-        $wrapper->appendChild($label);
-    }
-
     public function prepareData(SchemaInterface $schema, EntryInterface $entry, MetadataInterface $settings, $new = null, $old = null)
     {
         // Start with the old value:
@@ -183,16 +147,27 @@ class TextField implements FieldInterface
         else if (isset($new->value)) {
             $result->handle = Lang::createHandle($new->value);
             $result->value = $new->value;
-            $result->formatted = General::sanitize($new->value);
+            $result->formatted = $this->formatValue($settings, $new->value);
         }
 
         else if (isset($new)) {
             $result->handle = Lang::createHandle($new);
             $result->value = $new;
-            $result->formatted = General::sanitize($new);
+            $result->formatted = $this->formatValue($settings, $new);
         }
 
         return $result;
+    }
+
+    protected function formatValue(MetadataInterface $settings, $value)
+    {
+        if (isset($settings['formatter'])) {
+            $formatter = FormatterController::read($settings['formatter']);
+
+            return $formatter->format($value);
+        }
+
+        return General::sanitize($value);
     }
 
     public function validateData(SchemaInterface $schema, EntryInterface $entry, MetadataInterface $settings, $data)
@@ -289,34 +264,5 @@ class TextField implements FieldInterface
             ':formatted' =>         $data->formatted,
             ':updateFormatted' =>   $data->formatted
         ]);
-    }
-
-    public function repairEntities($value)
-    {
-        return preg_replace('/&(?!(#[0-9]+|#x[0-9a-f]+|amp|lt|gt);)/i', '&amp;', trim($value));
-    }
-
-    public function repairMarkup($value)
-    {
-        $tidy = new Tidy();
-        $tidy->parseString(
-            $value, array(
-                'drop-font-tags'                => true,
-                'drop-proprietary-attributes'   => true,
-                'enclose-text'                  => true,
-                'enclose-block-text'            => true,
-                'hide-comments'                 => true,
-                'numeric-entities'              => true,
-                'output-xhtml'                  => true,
-                'wrap'                          => 0,
-
-                // HTML5 Elements:
-                'new-blocklevel-tags'           => 'section nav article aside hgroup header footer figure figcaption ruby video audio canvas details datagrid summary menu',
-                'new-inline-tags'               => 'time mark rt rp output progress meter',
-                'new-empty-tags'                => 'wbr source keygen command'
-            ), 'utf8'
-        );
-
-        return $tidy->body()->value;
     }
 }

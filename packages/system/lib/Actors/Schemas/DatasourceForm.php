@@ -2,9 +2,9 @@
 
 namespace Embark\CMS\Actors\Schemas;
 
-use Embark\CMS\Structures\Pagination;
-use Embark\CMS\Structures\QueryOptions;
-use Embark\CMS\Structures\Sorting;
+use Embark\CMS\Metadata\Types\Pagination;
+use Embark\CMS\Metadata\Types\QueryOptions;
+use Embark\CMS\Metadata\Types\Sorting;
 use Administration;
 use Context;
 use Duplicator;

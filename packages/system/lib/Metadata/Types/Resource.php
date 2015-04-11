@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Types;
 
 use DOMElement;
 use Embark\CMS\Metadata\MetadataInterface;

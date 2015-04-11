@@ -5,13 +5,13 @@ namespace Embark\CMS\Metadata;
 use DOMElement;
 use Exception;
 use ReflectionClass;
-use Embark\CMS\Structures\Resource;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReference;
 use Embark\CMS\Metadata\MetadataReferenceIndex;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\ReferencedMetadataInterface;
 use Embark\CMS\Metadata\MetadataValueInterface;
+use Embark\CMS\Metadata\Types\Resource;
 
 /**
  * Trait implementing MetadataInterface

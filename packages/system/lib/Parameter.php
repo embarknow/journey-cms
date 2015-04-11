@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS;
 
 /**
  * A parameter key and value for xslt

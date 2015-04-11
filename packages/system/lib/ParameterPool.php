@@ -1,15 +1,16 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS;
 
+use Countable;
 use Exception;
 use Iterator;
-use Embark\CMS\Structures\Parameter;
+use Embark\CMS\Parameter;
 
 /**
  * Provides a parameter pool for xslt
  */
-final class ParameterPool implements Iterator
+final class ParameterPool implements Iterator, Countable
 {
     /**
      * Array of Parameter instances
@@ -161,12 +162,9 @@ final class ParameterPool implements Iterator
     }
 
     /**
-     * Get the count of this context
-     *
-     * @return int
-     *  the count of parameters in this context
+     * @see  Countable
      */
-    public function length()
+    public function count()
     {
         return count($this->parameters);
     }

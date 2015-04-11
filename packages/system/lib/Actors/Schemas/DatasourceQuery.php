@@ -4,9 +4,9 @@ namespace Embark\CMS\Actors\Schemas;
 
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Structures\Pagination;
-use Embark\CMS\Structures\QueryOptions;
-use Embark\CMS\Structures\Sorting;
+use Embark\CMS\Metadata\Types\Pagination;
+use Embark\CMS\Metadata\Types\QueryOptions;
+use Embark\CMS\Metadata\Types\Sorting;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Context;
 use Entry;

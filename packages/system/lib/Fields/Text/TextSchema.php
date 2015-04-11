@@ -6,7 +6,7 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldSchemaInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\Guid;
+use Embark\CMS\Metadata\Filters\Guid;
 use Context;
 use Entry;
 use Extension;

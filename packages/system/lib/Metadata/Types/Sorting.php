@@ -1,12 +1,13 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Types;
 
 use Context;
 use Datasource;
 use DOMDocument;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\Filters\Boolean;
 
 class Sorting implements MetadataInterface
 {

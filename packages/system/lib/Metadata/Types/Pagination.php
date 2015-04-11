@@ -1,12 +1,15 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Types;
 
 use DOMDocument;
 use Datasource;
-use Embark\CMS\Structures\ParameterPool as Context;
+use Embark\CMS\ParameterPool;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\Filters\Boolean;
+use Embark\CMS\Metadata\Filters\Integer;
+use Embark\CMS\Metadata\Filters\MaxInteger;
 
 class Pagination implements MetadataInterface
 {
@@ -39,7 +42,7 @@ class Pagination implements MetadataInterface
         ]);
     }
 
-    public function replaceParameters(Context $outputParameters)
+    public function replaceParameters(ParameterPool $outputParameters)
     {
         $this['entries-per-page'] = Datasource::replaceParametersInString($this['limit'], $outputParameters);
         $this['current-page'] = Datasource::replaceParametersInString($this['page'], $outputParameters);

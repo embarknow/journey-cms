@@ -6,7 +6,7 @@ use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Structures\MenuItem;
+use Embark\CMS\Metadata\Types\MenuItem;
 use HTMLDocument;
 
 class SectionView implements MetadataInterface

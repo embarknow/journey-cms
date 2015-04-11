@@ -7,7 +7,7 @@ use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Structures\Resource;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\Pagination;
 use Embark\CMS\Structures\QueryOptions;
 use Embark\CMS\SystemDateTime;

@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Sections;
 
-use Embark\CMS\Structures\MetadataControllerTrait;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataControllerTrait;
+use Embark\CMS\Metadata\MetadataInterface;
 
 class Controller
 {

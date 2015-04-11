@@ -1,9 +1,9 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
 
 use DOMDocument;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataInterface;
 
 /**
  * Interface to define the use of metadata files to create class structures describing data

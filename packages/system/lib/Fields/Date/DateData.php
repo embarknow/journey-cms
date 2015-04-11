@@ -2,12 +2,13 @@
 
 namespace Embark\CMS\Fields\Date;
 
+use Exception;
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\DataInterface;
 use Embark\CMS\Fields\Controller;
 use Embark\CMS\Schemas\Schema;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\Guid;
 use Embark\CMS\Structures\Integer;
 use Context;
@@ -92,7 +93,7 @@ class DateData implements DataInterface, MetadataInterface
                 || trim($data->value) == false
             )
         ) {
-            throw new \Exception("'{$field->settings()->handle}' is a required field.");
+            throw new Exception("'{$field->settings()->handle}' is a required field.");
         }
 
         yield true;

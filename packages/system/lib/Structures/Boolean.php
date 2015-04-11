@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Structures;
 
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataValueInterface;
 
 /**
  * Implements MetadataValueInterface for a boolean metadata value

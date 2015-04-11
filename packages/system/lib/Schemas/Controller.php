@@ -3,9 +3,9 @@
 namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Schemas\FieldsList;
-use Embark\CMS\Structures\MetadataControllerInterface;
-use Embark\CMS\Structures\MetadataControllerTrait;
-use Embark\CMS\Structures\MetadataInterface;
+use Embark\CMS\Metadata\MetadataControllerInterface;
+use Embark\CMS\Metadata\MetadataControllerTrait;
+use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Syncable\Controller as SyncController;
 use Embark\CMS\Syncable\SyncableControllerInterface;
 use Symphony;

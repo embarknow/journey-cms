@@ -9,7 +9,7 @@ use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\Boolean;
 use Embark\CMS\Structures\Guid;
 use Embark\CMS\Structures\Integer;

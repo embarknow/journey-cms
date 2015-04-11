@@ -5,8 +5,8 @@ namespace Embark\CMS\Structures;
 use Context;
 use Datasource;
 use DOMDocument;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class Sorting implements MetadataInterface
 {

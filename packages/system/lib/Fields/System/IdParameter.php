@@ -6,7 +6,7 @@ use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldParameterInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataTrait;
 
 class IdParameter implements FieldParameterInterface
 {

@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Actors;
 
-use Embark\CMS\Structures\MetadataControllerInterface;
-use Embark\CMS\Structures\MetadataControllerTrait;
+use Embark\CMS\Metadata\MetadataControllerInterface;
+use Embark\CMS\Metadata\MetadataControllerTrait;
 
 class Controller implements MetadataControllerInterface
 {

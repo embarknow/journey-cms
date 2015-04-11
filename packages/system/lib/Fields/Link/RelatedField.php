@@ -2,8 +2,8 @@
 
 namespace Embark\CMS\Fields\Link;
 
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use Entry;
 use Symphony;
 

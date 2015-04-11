@@ -1,12 +1,13 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
 
 use DOMElement;
-use Embark\CMS\Structures\Resource;
-use Embark\CMS\Structures\MetadataInterface;
 use Exception;
 use ReflectionClass;
+use Embark\CMS\Metadata\Resource;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataReferenceIndex;
 
 class MetadataReference implements MetadataReferenceInterface
 {
@@ -65,7 +66,7 @@ class MetadataReference implements MetadataReferenceInterface
         $index = $parent->getReferenceIndex();
 
         if (false === isset($index[$this->reference])) {
-            throw new \Exception(sprintf(
+            throw new Exception(sprintf(
                 'Unknown reference %s.',
                 $this->reference
             ));
@@ -74,7 +75,7 @@ class MetadataReference implements MetadataReferenceInterface
         $value = clone $index[$this->reference];
 
         if (false === ($value instanceof MetadataInterface)) {
-            throw new \Exception(sprintf(
+            throw new Exception(sprintf(
                 'Type %s cannot be used as a reference as it does not implement MetadataInterface.',
                 get_class($value)
             ));
@@ -91,7 +92,7 @@ class MetadataReference implements MetadataReferenceInterface
         $value = $this->resolve();
 
         if (false === $reflect->isInstance($value)) {
-            throw new \Exception(sprintf(
+            throw new Exception(sprintf(
                 'Could not resolve an instance of %s to an instance of %s.',
                 $reflect->getName(),
                 $class

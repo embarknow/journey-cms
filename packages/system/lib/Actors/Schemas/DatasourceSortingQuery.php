@@ -5,8 +5,8 @@ namespace Embark\CMS\Actors\Schemas;
 use Embark\CMS\Fields\FieldSortQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Structures\Boolean;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use DOMDocument;
 
 class DatasourceSortingQuery implements MetadataInterface

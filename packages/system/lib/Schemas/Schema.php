@@ -3,7 +3,7 @@
 namespace Embark\CMS\Schemas;
 
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Structures\ReferencedMetadataTrait;
+use Embark\CMS\Metadata\ReferencedMetadataTrait;
 use Embark\CMS\Structures\Guid;
 use General;
 use Symphony;

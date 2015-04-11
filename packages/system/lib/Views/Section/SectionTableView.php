@@ -2,13 +2,13 @@
 
 namespace Embark\CMS\Views\Section;
 
-use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Actors\Controller as ActorController;
+use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use AlertStack;
 use DOMElement;
 use Entry;

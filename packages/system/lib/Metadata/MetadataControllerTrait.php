@@ -1,11 +1,13 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
 
-use Embark\CMS\ClosureFilterIterator;
 use ArrayAccess;
 use DirectoryIterator;
 use DOMDocument;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\ReferencedMetadataInterface;
+use Embark\CMS\ClosureFilterIterator;
 
 /**
  * Trait implementing MetadataControllerInterface

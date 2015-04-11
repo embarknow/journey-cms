@@ -1,11 +1,17 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata;
 
 use DOMElement;
-use Embark\CMS\Structures\Resource;
-use Embark\CMS\Structures\MetadataInterface;
+use Exception;
 use ReflectionClass;
+use Embark\CMS\Structures\Resource;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataReference;
+use Embark\CMS\Metadata\MetadataReferenceIndex;
+use Embark\CMS\Metadata\MetadataReferenceInterface;
+use Embark\CMS\Metadata\ReferencedMetadataInterface;
+use Embark\CMS\Metadata\MetadataValueInterface;
 
 /**
  * Trait implementing MetadataInterface
@@ -159,7 +165,7 @@ trait MetadataTrait
                 }
 
                 else {
-                    throw new \Exception(sprintf(
+                    throw new Exception(sprintf(
                         'Type %s must implement MetadataInterface or MetadataReferenceInterface.',
                         get_class($value)
                     ));
@@ -259,7 +265,7 @@ trait MetadataTrait
         $reflect = new ReflectionClass($class);
 
         if (false === $reflect->isInstance($this)) {
-            throw new \Exception(sprintf(
+            throw new Exception(sprintf(
                 'Could not resolve an instance of %s to an instance of %s.',
                 $reflect->getName(),
                 $class

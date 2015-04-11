@@ -2,7 +2,7 @@
 
 namespace Embark\CMS\Fields;
 
-use Embark\CMS\Structures\ReferencedMetadataTrait;
+use Embark\CMS\Metadata\ReferencedMetadataTrait;
 
 /**
  * Trait implementing ReferencedMetadataInterface

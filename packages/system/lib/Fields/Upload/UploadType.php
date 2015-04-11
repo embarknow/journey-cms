@@ -4,8 +4,8 @@ namespace Embark\CMS\Fields\Upload;
 
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\Controller;
-use Embark\CMS\Structures\MetadataInterface;
-use Embark\CMS\Structures\MetadataTrait;
+use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Structures\Integer;
 use Context;
 use DOMDocument;

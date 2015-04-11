@@ -18,7 +18,7 @@ class SortingDirection implements MetadataValueInterface, SanitizedMetadataValue
      */
     public function toXML($value)
     {
-        return $this->sanitise($value);
+        return $this->sanitize($value);
     }
 
     /**
@@ -31,7 +31,7 @@ class SortingDirection implements MetadataValueInterface, SanitizedMetadataValue
      */
     public function fromXML($value)
     {
-        return $this->sanitise($value);
+        return $this->sanitize($value);
     }
 
     /**
@@ -43,7 +43,7 @@ class SortingDirection implements MetadataValueInterface, SanitizedMetadataValue
      * @return mixed
      *  sanitized mixed type value
      */
-    public function sanitise($value)
+    public function sanitize($value)
     {
         switch (strtolower($value)) {
             case 'rand':
@@ -74,6 +74,6 @@ class SortingDirection implements MetadataValueInterface, SanitizedMetadataValue
      */
     public function reverseSanitize($value)
     {
-        return $this->sanitise($value);
+        return $this->sanitize($value);
     }
 }

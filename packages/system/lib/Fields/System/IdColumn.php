@@ -16,7 +16,8 @@ class IdColumn implements FieldColumnInterface
     public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
     {
         $document = $wrapper->ownerDocument;
-        $body = $document->createElement('td');
+        $body = $document->createElement('dd');
+        $body->addClass($this['size']);
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {

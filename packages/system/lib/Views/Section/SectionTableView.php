@@ -143,40 +143,49 @@ class SectionTableView implements MetadataInterface
             $column = $this->findFirstColumn();
             $column->appendSortingQuery($query, $schema);
 
-            $_SESSION["{$handle}.sort"] = $_GET['sort'];
+            $_SESSION["{$handle}.sort"] = $column['name'];
         }
 
         // Build table header:
-        $table = $page->createElement('table');
+        $table = $page->createElement('section');
+        $table->addClass('entries table');
         $page->Form->appendChild($table);
 
-        $head = $page->createElement('thead');
-        $table->appendChild($head);
+        // $head = $page->createElement('thead');
+        // $table->appendChild($head);
 
-        foreach ($this->findAllColumns() as $column) {
-            $active = false;
+        // foreach ($this->findAllColumns() as $column) {
+        //     $active = false;
 
-            if (isset($_SESSION["{$handle}.sort"])) {
-                $active = $_SESSION["{$handle}.sort"] === $column['name'];
-            }
+        //     if (isset($_SESSION["{$handle}.sort"])) {
+        //         $active = $_SESSION["{$handle}.sort"] === $column['name'];
+        //     }
 
-            $column->appendHeaderElement($head, $active, $url);
-        }
+        //     $column->appendHeaderElement($head, $active, $url);
+        // }
 
         if ($statement = $query->execute() and $statement->rowCount()) {
             $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
 
-            while ($row = $statement->fetch(PDO::FETCH_BOUND)) {
+            while ($statement->fetch(PDO::FETCH_BOUND)) {
                 $entry = Entry::loadFromId($entryId);
-                $row = $page->createElement('tr');
-                $table->appendChild($row);
+                $article = $page->createElement('article');
+                $table->appendChild($article);
 
                 foreach ($this->findAllColumns() as $column) {
-                    $column->appendBodyElement($row, $schema, $entry, $url);
+                    $list = $page->createElement('dl');
+                    $article->appendChild($list);
+
+                    if (isset($_SESSION["{$handle}.sort"])) {
+                        $active = $_SESSION["{$handle}.sort"] === $column['name'];
+                    }
+
+                    $column->appendHeaderElement($list, $active, $url);
+                    $column->appendBodyElement($list, $schema, $entry, $url);
                 }
 
                 $input = Widget::Input('entries[]', $entry->entry_id, 'checkbox');
-                $row->firstChild->appendChild($input);
+                $article->prependChild($input);
             }
         }
 

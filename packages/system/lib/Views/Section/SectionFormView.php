@@ -90,16 +90,31 @@ class SectionFormView implements MetadataInterface
 
     public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
-        $div = $page->createElement('div');
-        $div->setAttribute('class', 'actions');
-        $div->appendChild(Widget::Submit(
+        $editing = isset($entry->entry_id);
+
+        $actions = $page->createElement('div');
+        $actions->setAttribute('class', 'actions');
+        $page->Form->appendChild($actions);
+
+        $actions->appendChild(Widget::Submit(
             'action[save]',
             __('Create Entry'),
             [
                 'accesskey' => 's'
             ]
         ));
-        $page->Form->appendChild($div);
+
+        if ($editing) {
+            $actions->appendChild(
+                Widget::Submit(
+                    'action[delete]', __('Delete'),
+                    [
+                        'class' => 'confirm delete',
+                        'title' => __('Delete this entry'),
+                    ]
+                )
+            );
+        }
     }
 
     public function appendAlert(HTMLDocument $page, $url, $message)
@@ -118,9 +133,48 @@ class SectionFormView implements MetadataInterface
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $saving = isset($_POST['fields']);
+        $deleting = isset($_POST['action']['delete']);
         $editing = isset($entry->entry_id);
         $headersAppended = [];
         $success = true;
+
+        if ($deleting) {
+            Symphony::Database()->beginTransaction();
+
+            try {
+                // Delete all field data:
+                foreach ($schema->findAllFields() as $field) {
+                    $field['data']->delete($schema, $entry, $field);
+                }
+
+                // Delete the entry record:
+                $statement = Symphony::Database()->prepare("
+                    delete from `entries` where
+                        entry_id = :entryId
+                ");
+
+                $statement->execute([
+                    ':entryId' =>   $entry->entry_id
+                ]);
+
+                Symphony::Database()->commit();
+
+                redirect($url);
+            }
+
+            // Something went wrong, do not commit:
+            catch (\Exception $error) {
+                Symphony::Database()->rollBack();
+
+                $page->alerts()->append(
+                    __('An error occurred while deleting this entry. <a class="more">Show the error.</a>'),
+                    AlertStack::ERROR,
+                    $error
+                );
+
+                // Todo: Log this exception.
+            }
+        }
 
         // Build basic form layout:
         foreach ($this->findInstancesOf(SectionFormRow::class) as $item) {

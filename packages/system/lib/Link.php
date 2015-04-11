@@ -2,6 +2,8 @@
 
 namespace Embark\CMS;
 
+use RuntimeException;
+
 class Link
 {
     /**

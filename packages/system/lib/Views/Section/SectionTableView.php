@@ -5,9 +5,10 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
-use Embark\CMS\Schemas\SchemaInterface;
+use Embark\CMS\Link;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Schemas\SchemaInterface;
 use AlertStack;
 use DOMElement;
 use Entry;
@@ -113,9 +114,15 @@ class SectionTableView implements MetadataInterface
     public function appendTable(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
+        $link = (new Link(URL))->withPath($url);
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
         $query = new DatasourceQuery();
+
+            // ->withParameter('sort', 'Id')
+            // ->withParameter('direction', 'asc');
+
+        // var_dump((string)$link, $link->getParameter('sort')); exit;
 
         // Show only entries from this schema:
         $query->filterBySubQuery("select entry_id from entries where schema_id = '{$guid}'");
@@ -154,6 +161,11 @@ class SectionTableView implements MetadataInterface
             $_SESSION["{$handle}.direction"] = $column['sorting']['direction'];
         }
 
+        // Add sorting parameters to our link:
+        $link = $link
+            ->withParameter('sort', $_SESSION["{$handle}.sort"])
+            ->withParameter('direction', $_SESSION["{$handle}.direction"]);
+
         // Build table header:
         $table = $page->createElement('section');
         $table->addClass('entries table');
@@ -171,7 +183,7 @@ class SectionTableView implements MetadataInterface
                     $list = $page->createElement('dl');
                     $article->appendChild($list);
 
-                    $column->appendHeaderElement($list, $_SESSION["{$handle}.sort"], $_SESSION["{$handle}.direction"], $url);
+                    $column->appendHeaderElement($list, $link);
                     $column->appendBodyElement($list, $schema, $entry, $url);
                 }
 

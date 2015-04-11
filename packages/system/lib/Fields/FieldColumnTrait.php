@@ -3,12 +3,13 @@
 namespace Embark\CMS\Fields;
 
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
-use Embark\CMS\Schemas\SchemaInterface;
+use Embark\CMS\Link;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Enum;
+use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use Widget;
 
@@ -47,7 +48,7 @@ trait FieldColumnTrait
         }
     }
 
-    public function appendHeaderElement(DOMElement $wrapper, $sortColumn, $sortDirection, $url)
+    public function appendHeaderElement(DOMElement $wrapper, Link $link)
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('dt');
@@ -57,25 +58,25 @@ trait FieldColumnTrait
 
         // Add sorting information:
         if ($this['sorting'] instanceof MetadataInterface) {
-            $direction = (
-                'asc' === $this['sorting']['direction']
-                    ? 'desc'
-                    : 'asc'
-            );
+            $anchor = $document->createElement('a');
+            $header->appendChild($anchor);
 
-            $link = Widget::Anchor(
-                $this['name'],
-                (
-                    $this['name'] === $sortColumn
-                        ? $url . '?sort=' . $this['name'] . '&direction=' . $direction
-                        : $url . '?sort=' . $this['name'] . '&direction=' . $sortDirection
-                )
-            );
-            $header->appendChild($link);
-
-            if ($this['name'] === $sortColumn) {
-                $link->addClass('active');
+            // Change sorting direction:
+            if ($this['name'] === $link->getParameter('sort')) {
+                $anchor->addClass('active');
+                $link = $link->withParameter('direction', (
+                    'asc' === $this['sorting']['direction']
+                        ? 'desc'
+                        : 'asc'
+                ));
             }
+
+            else {
+                $link = $link->withParameter('sort', $this['name']);
+            }
+
+            $anchor->setAttribute('href', (string)$link);
+            $anchor->setValue($this['name']);
         }
 
         else {

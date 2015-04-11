@@ -631,7 +631,8 @@
 	}
 
 	/* Table cell */
-	section.table article dd {
+	section.table article dd,
+	section.table article dd div.text {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}

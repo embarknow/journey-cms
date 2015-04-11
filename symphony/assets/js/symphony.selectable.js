@@ -56,13 +56,12 @@
 				return true;
 			}
 
-			// Cancel when text is selected:
-			if (window.getSelection && !!window.getSelection().toString()) {
-				return true;
-			}
-
 			// Range selection
-			if((event.shiftKey) && items.filter('.selected').length > 0 && !object.is('.single')) {
+			if ((event.shiftKey) && items.filter('.selected').length > 0 && !object.is('.single')) {
+				// Remove text selection:
+				if (window.getSelection) {
+					window.getSelection().removeAllRanges();
+				}
 
 				// Select upwards
 				if(item.prevAll().filter('.selected').length > 0) {
@@ -90,6 +89,10 @@
 
 			// Single selection
 			else {
+				// Cancel when text is selected:
+				if (window.getSelection && !!window.getSelection().toString()) {
+					return true;
+				}
 
 				// Press meta or ctrl key to adjust current range, otherwise the selection will be removed
 				if((!event.metaKey && !event.ctrlKey && settings.mode != 'additive' &&  !target.is('input')) || object.is('.single')) {

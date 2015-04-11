@@ -370,7 +370,7 @@ var Symphony;
 			'items':	'article:has(input)'
 		});
 
-		$('table tbody td')
+		$('section.table dd')
 			.each(function() {
 				var $cell = $(this),
 					$text = $('<div class="text" />');
@@ -382,16 +382,16 @@ var Symphony;
 
 		$(window)
 			.on('load resize', function() {
-				$('table td div.text')
+				$('section.table dd div.text')
 					.each(function() {
 						var $cell = $(this);
 
 						if (this.scrollWidth > $cell.outerWidth()) {
-							$cell.closest('td').attr('title', $cell.text());
+							$cell.closest('dd').attr('title', $cell.text());
 						}
 
 						else {
-							$cell.closest('td').removeAttr('title');
+							$cell.closest('dd').removeAttr('title');
 						}
 					});
 			});

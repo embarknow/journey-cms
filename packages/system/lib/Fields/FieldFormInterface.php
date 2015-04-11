@@ -28,26 +28,26 @@ interface FieldFormInterface extends MetadataInterface
     /**
      * Append the field interface to the publishing form.
      *
-     * @param   DOMElement      $wrapper
-     * @param   FieldInterface  $field
+     * @param   DOMElement          $wrapper
+     * @param   FieldInterface      $field
      */
-    public function appendPublishForm(DOMElement $wrapper);
+    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field);
 
     /**
      * Update the field interface to include the provided field data.
      *
-     * @param   EntryInterface  $entry
-     * @param   FieldInterface  $field
-     * @param   mixed           $data
+     * @param   EntryInterface      $entry
+     * @param   FieldInterface      $field
+     * @param   mixed               $data
      */
     public function setData(EntryInterface $entry, FieldInterface $field, $data);
 
     /**
      * Update the field interface to show an error message.
      *
-     * @param   EntryInterface  $entry
-     * @param   FieldInterface  $field
-     * @param   Exception       $error
+     * @param   EntryInterface      $entry
+     * @param   FieldInterface      $field
+     * @param   Exception           $error
      */
     public function setError(EntryInterface $entry, FieldInterface $field, Exception $error);
 }

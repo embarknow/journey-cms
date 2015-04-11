@@ -34,7 +34,7 @@ trait ElementTrait
         $data = $field['data']->read($schema, $entry, $field);
 
         if (isset($data->value) || isset($data->value_formatted)) {
-            $element = $document->createElement($field['schema']['handle']);
+            $element = $document->createElement($field['handle']);
             $wrapper->appendChild($element);
 
             try {

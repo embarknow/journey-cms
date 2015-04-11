@@ -3,6 +3,7 @@
 namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Fields\FieldInterface;
+use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Schemas\Controller;
 use Embark\CMS\Metadata\MetadataInterface;
@@ -43,7 +44,8 @@ class SectionFormFieldset implements MetadataInterface
         $fieldset->appendChild($legend);
 
         foreach ($this->findInstancesOf(FieldFormInterface::class) as $item) {
-            $item->appendPublishForm($fieldset);
+            $field = $item['field']->resolveInstanceOf(FieldInterface::class);
+            $item->appendPublishForm($fieldset, $field);
         }
     }
 }

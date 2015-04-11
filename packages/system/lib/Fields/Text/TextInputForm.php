@@ -8,9 +8,11 @@ use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
+use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Filters\Boolean;
+use Embark\CMS\Metadata\Filters\Integer;
 use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
@@ -25,8 +27,11 @@ class TextInputForm implements FieldFormInterface
     public function __construct()
     {
         $this->setSchema([
-            'data' => [
-                'type' =>   new TextData()
+            'required' => [
+                'filter' =>     new Boolean()
+            ],
+            'max-length' => [
+                'filter' =>     new Integer()
             ]
         ]);
     }
@@ -48,12 +53,9 @@ class TextInputForm implements FieldFormInterface
         $wrapper->appendChild($this->input);
     }
 
-    public function appendPublishForm(DOMElement $wrapper)
+    public function appendPublishForm(DOMElement $wrapper, FieldInterface $field)
     {
-        $data = $this['data']->resolveInstanceOf(TextData::class);
-        $field = $this['field']->resolveInstanceOf(TextField::class);
-
-        $handle = $field['schema']['handle'];
+        $handle = $field['handle'];
         $document = $wrapper->ownerDocument;
 
         $div = $document->createElement('div');
@@ -67,17 +69,17 @@ class TextInputForm implements FieldFormInterface
         $this->appendInput($this->label, $handle);
 
         // Show maximum text length label:
-        if ($data['max-length'] > 0) {
+        if ($this['max-length'] > 0) {
             $optional = $document->createElement('em', __('$1 of $2 remaining'));
             $optional->addClass('maxlength');
             $this->label->prependChild($optional);
-            $this->input->setAttribute('maxlength', $data['max-length']);
+            $this->input->setAttribute('maxlength', $this['max-length']);
         }
 
         // Mark field as optional:
         if (
-            false === isset($data['required'])
-            || false === $data['required']
+            false === isset($this['required'])
+            || false === $this['required']
         ) {
             $this->label->prependChild($document->createElement('em', __('Optional')));
         }
@@ -104,7 +106,7 @@ class TextInputForm implements FieldFormInterface
         else if ($error instanceof TextLengthException) {
             Widget::Error($this->label, __(
                 '%s is limited to %d characters.',
-                [$this['name'], $field['data']['max-length']]
+                [$this['name'], $this['max-length']]
             ));
         }
 

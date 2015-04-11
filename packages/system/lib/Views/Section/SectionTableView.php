@@ -62,7 +62,7 @@ class SectionTableView implements MetadataInterface
 
                     // Delete all field data:
                     foreach ($schema->findAllFields() as $field) {
-                        $field['data']->delete($schema, $entry, $field);
+                        $field->deleteData($schema, $entry, $field);
                     }
 
                     // Delete the entry record:

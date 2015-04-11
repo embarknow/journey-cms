@@ -62,7 +62,7 @@ class SectionFormView implements MetadataInterface
                 }
 
                 if ($field instanceof FieldInterface) {
-                    $data = $field['data']->read($schema, $entry, $field);
+                    $data = $field->readData($schema, $entry, $field);
 
                     if (isset($data->value)) {
                         $title = $data->value;
@@ -195,15 +195,14 @@ class SectionFormView implements MetadataInterface
 
         // Validate fields:
         foreach ($this->findAllForms() as $form) {
-            $data = $form['data']->resolveInstanceOf(FieldDataInterface::class);
             $field = $form['field']->resolveInstanceOf(FieldInterface::class);
-            $handle = $field['schema']['handle'];
+            $handle = $field['handle'];
 
             // Add headers to the page:
             $form->appendPublishHeaders($page, $entry, $field, $headersAppended);
 
             // Load the data:
-            $value = $data->read($schema, $entry, $field);
+            $data = $field->readData($schema, $entry, $form);
 
             // Validate the field data:
             if ($saving) {
@@ -212,11 +211,11 @@ class SectionFormView implements MetadataInterface
                         ? $_POST['fields'][$handle]
                         : null
                 );
-                $value = $data->prepare($schema, $entry, $field, $post, $value);
+                $data = $field->prepareData($schema, $entry, $form, $post, $data);
 
                 try {
-                    $data->validate($schema, $entry, $field, $value);
-                    $data->write($schema, $entry, $field, $value);
+                    $field->validateData($schema, $entry, $form, $data);
+                    $field->writeData($schema, $entry, $form, $data);
                 }
 
                 catch (\Exception $error) {
@@ -225,7 +224,7 @@ class SectionFormView implements MetadataInterface
                 }
             }
 
-            $form->setData($entry, $field, $value);
+            $form->setData($entry, $field, $data);
         }
 
         if ($saving) {

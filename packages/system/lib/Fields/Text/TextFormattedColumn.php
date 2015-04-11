@@ -9,7 +9,7 @@ use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use Widget;
 
-class TextValueColumn implements FieldColumnInterface
+class TextFormattedColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
@@ -23,15 +23,20 @@ class TextValueColumn implements FieldColumnInterface
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {
-            $link = Widget::Anchor(
-                (string)$data->value,
-                $url . '/edit/' . $entry->entry_id
-            );
+            $link = $document->createElement('a');
+            $link->setAttribute('href', $url . '/edit/' . $entry->entry_id);
+
+            $text = $document->createDocumentFragment();
+            $text->appendXml((string)$data->formatted);
+            $link->appendChild($text);
+
             $body->appendChild($link);
         }
 
         else {
-            $body->setValue((string)$data->value);
+            $text = $document->createDocumentFragment();
+            $text->appendXml((string)$data->formatted);
+            $body->appendChild($text);
         }
     }
 }

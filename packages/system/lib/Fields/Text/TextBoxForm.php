@@ -8,8 +8,11 @@ use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
+use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Enum;
+use Embark\CMS\Metadata\Filters\Integer;
 use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
@@ -22,11 +25,14 @@ class TextBoxForm extends TextInputForm
     public function __construct()
     {
         $this->setSchema([
-            'data' => [
-                'type' =>   new TextData()
+            'required' => [
+                'filter' =>     new Boolean()
+            ],
+            'max-length' => [
+                'filter' =>     new Integer()
             ],
             'size' => [
-                'filter' => new Enum(['small', 'medium', 'large', 'huge'])
+                'filter' =>     new Enum(['small', 'medium', 'large', 'huge'])
             ]
         ]);
     }

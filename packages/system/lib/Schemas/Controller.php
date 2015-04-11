@@ -28,7 +28,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
             // Delete field data:
             if ($object['fields'] instanceof FieldsList) {
                 foreach ($object['fields']->findAll() as $field) {
-                    $field['schema']->delete($object, $field);
+                    $field->deleteSchema($object);
                 }
             }
 
@@ -87,7 +87,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
             if ($stored->object['fields'] instanceof FieldsList) {
                 foreach ($stored->object['fields']->findAll() as $field) {
                     $oldFields[$field->getGuid()] = (object) [
-                        'raw'   =>  iterator_to_array($field['schema']->findAll()),
+                        'raw'   =>  iterator_to_array($field->findAll()),
                         'type'  =>  get_class($field),
                         'field' =>  $field
                     ];
@@ -104,7 +104,7 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
         if ($fresh->object['fields'] instanceof FieldsList) {
             foreach ($fresh->object['fields']->findAll() as $field) {
                 $newFields[$field->getGuid()] = (object) [
-                    'raw'   =>  iterator_to_array($field['schema']->findAll()),
+                    'raw'   =>  iterator_to_array($field->findAll()),
                     'type'  =>  get_class($field),
                     'field' =>  $field
                 ];
@@ -195,17 +195,17 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
 
             // Remove fields:
             foreach ($stats->remove as $guid => $data) {
-                $data->field['schema']->delete($schema, $data->field);
+                $data->field->deleteSchema($schema);
             }
 
             // Rename fields:
             foreach ($stats->rename as $guid => $data) {
-                $data->new->field['schema']->rename($schema, $data->new->field, $stats->schema->stored, $data->old->field);
+                $data->new->field->renameSchema($schema, $data->new->field, $stats->schema->stored, $data->old->field);
             }
 
             // Create fields:
             foreach ($stats->create as $guid => $data) {
-                $data->field['schema']->create($schema, $data->field);
+                $data->field->createSchema($schema, $data->field);
             }
 
             $syncController->sync();

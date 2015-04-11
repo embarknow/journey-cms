@@ -210,15 +210,12 @@ use Embark\CMS\Schemas\FieldsList;
 
                     // Apply data:
                     foreach ($fieldData as $name => $value) {
-                        $field['schema'][$name] = $value;
+                        $field[$name] = $value;
                     }
 
                     // Remove data that we do not want to save:
-                    foreach ($field->findAll() as $name => $value) {
-                        if ($name === 'schema') continue;
-
-                        unset($field[$name]);
-                    }
+                    unset($field['resource']);
+                    unset($field['name']);
                 }
             }
 
@@ -398,9 +395,9 @@ use Embark\CMS\Schemas\FieldsList;
             $duplicator->setAttribute('id', 'section-duplicator');
 
             foreach (FieldController::findAll() as $field) {
-                if ($field['schema'] instanceof FieldSchemaInterface) {
+                if (method_exists($field, 'appendSchemaSettings')) {
                     $item = $duplicator->createTemplate($field['name']);
-                    $field['schema']->appendSettings($item, new MessageStack(), $field);
+                    $field->appendSchemaSettings($item, new MessageStack());
                 }
             }
 
@@ -414,8 +411,8 @@ use Embark\CMS\Schemas\FieldsList;
                         $messages = new MessageStack();
                     }
 
-                    $item = $duplicator->createInstance($field['schema']['handle'], $field['name']);
-                    $field['schema']->appendSettings($item, $messages, $field);
+                    $item = $duplicator->createInstance($field['handle'], $field['name']);
+                    $field->appendSchemaSettings($item, $messages);
                 }
             }
 

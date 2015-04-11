@@ -16,7 +16,7 @@ class TextHandleColumn implements FieldColumnInterface
     public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
     {
         $field = $this['field']->resolve();
-        $data = $field['data']->read($schema, $entry, $field);
+        $data = $field->readData($schema, $entry, $this);
         $document = $wrapper->ownerDocument;
         $body = $document->createElement('dd');
         $body->addClass($this['size']);

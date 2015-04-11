@@ -17,7 +17,7 @@ trait ReferencedMetadataTrait
 
     public function getGuid()
     {
-        if (false === isset($this->metadataGuid)) {
+        if (false === isset($this->metadataGuid) || '' === $this->metadataGuid) {
             $this->createGuid();
         }
 

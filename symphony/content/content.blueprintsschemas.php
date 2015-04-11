@@ -199,9 +199,14 @@ use Embark\CMS\Schemas\FieldsList;
                 foreach ($_POST['fields'] as $index => $fieldData) {
                     $field = FieldController::read($fieldData['type']);
                     $schema['fields'][$index] = $field;
+
+                    if (empty($fieldData['guid'])) {
+                        $fieldData['guid'] = $field->getGuid();
+                    }
+
                     $field->setGuid($fieldData['guid']);
 
-                    unset($fieldData['type']);
+                    unset($fieldData['type'], $fieldData['guid']);
 
                     // Apply data:
                     foreach ($fieldData as $name => $value) {

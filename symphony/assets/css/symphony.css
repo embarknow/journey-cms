@@ -480,8 +480,9 @@
 -----------------------------------------------------------------------------*/
 
 	section.table {
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
 		overflow: hidden;
-		padding: 3em 0 0 0;
+		padding: calc(3em - 1px) 0 0 0;
 	}
 	section.table + .actions {
 		background: transparent;
@@ -491,8 +492,8 @@
 	}
 	section.table article {
 		background-clip: padding-box;
-		border-top: 1px solid hsla(0, 0%, 0%, 0.05);
 		border-bottom: 1px solid hsla(0, 0%, 0%, 0.05);
+		border-top: 1px solid hsla(0, 0%, 0%, 0.05);
 		display: flex;
 		line-height: 3em;
 		padding: 0 20px;
@@ -568,7 +569,7 @@
 
 	/* Table header */
 	section.table article dt {
-		margin: -3em 0 0 0;
+		margin: calc(-3em - 1px) 0 0 0;
 	}
 	section.table article dt a {
 		display: block;
@@ -577,11 +578,6 @@
 	}
 	section.table article dt a.active {
 		background:
-			linear-gradient(
-				to bottom,
-				hsl(0, 0%, 100%),
-				hsla(0, 0%, 100%, 0) 3em
-			),
 			linear-gradient(
 				to right,
 				hsla(0, 0%, 0%, 0.1),
@@ -593,6 +589,11 @@
 				hsla(0, 0%, 0%, 0.1),
 				hsla(0, 0%, 0%, 0.1) 1px,
 				transparent 1px
+			),
+			linear-gradient(
+				to bottom,
+				hsl(0, 0%, 100%),
+				hsla(0, 0%, 100%, 0) 3em
 			);
 		background-color: hsla(0, 0%, 0%, 0.025);
 		margin-bottom: -100em;

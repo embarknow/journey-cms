@@ -82,7 +82,7 @@ class Link
      */
     public function hasParameter($name)
     {
-        return array_key_exists($name, $this->paramaters);
+        return array_key_exists($name, $this->parameters);
     }
 
     /**

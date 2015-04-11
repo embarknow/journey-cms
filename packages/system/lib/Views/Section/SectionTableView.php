@@ -2,7 +2,6 @@
 
 namespace Embark\CMS\Views\Section;
 
-use Embark\CMS\Actors\Controller as ActorController;
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
@@ -116,7 +115,6 @@ class SectionTableView implements MetadataInterface
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
-        $actor = ActorController::read($view['actor']);
         $query = new DatasourceQuery();
 
         // Show only entries from this schema:

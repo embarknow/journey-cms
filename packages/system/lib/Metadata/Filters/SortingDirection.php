@@ -1,14 +1,11 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Filters;
 
-use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataValueInterface;
 use Embark\CMS\Metadata\SanitizedMetadataValueInterface;
 
-/**
- * Implements MetadataValueInterface for an integer metadata value
- */
-class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
+class SortingDirection implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
     /**
      * Set an integer value to XML
@@ -21,7 +18,7 @@ class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
      */
     public function toXML($value)
     {
-        return $this->sanitize($value);
+        return $this->sanitise($value);
     }
 
     /**
@@ -34,7 +31,7 @@ class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
      */
     public function fromXML($value)
     {
-        return $this->reverseSanitize($value);
+        return $this->sanitise($value);
     }
 
     /**
@@ -46,9 +43,24 @@ class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
      * @return mixed
      *  sanitized mixed type value
      */
-    public function sanitize($value)
+    public function sanitise($value)
     {
-        return (string) $value;
+        switch (strtolower($value)) {
+            case 'rand':
+            case 'random':
+                return 'random';
+
+            case 'desc':
+            case 'descending':
+                return 'desc';
+
+            case 'asc':
+            case 'ascending':
+                return 'asc';
+
+            default:
+                return $this->default;
+        }
     }
 
     /**
@@ -62,6 +74,6 @@ class Integer implements MetadataValueInterface, SanitizedMetadataValueInterface
      */
     public function reverseSanitize($value)
     {
-        return (integer) $value;
+        return $this->sanitise($value);
     }
 }

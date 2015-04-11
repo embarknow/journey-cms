@@ -1,8 +1,8 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Filters;
 
-use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Metadata\MetadataValueInterface;
 use Embark\CMS\Metadata\SanitizedMetadataValueInterface;
 
 /**

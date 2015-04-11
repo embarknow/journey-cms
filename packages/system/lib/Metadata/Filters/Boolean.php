@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\CMS\Structures;
+namespace Embark\CMS\Metadata\Filters;
 
 use Embark\CMS\Metadata\MetadataValueInterface;
 

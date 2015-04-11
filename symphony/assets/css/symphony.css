@@ -308,40 +308,27 @@
 	Layout
 -----------------------------------------------------------------------------*/
 
-	#layout,
 	.columns {
-		border-spacing: 30px 0;
-		display: table;
-		margin: 0 0 10px 0;
-		table-layout: fixed;
-		width: 100%;
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+		display: flex;
+		padding: 0 15px;
 	}
-	#layout > .column,
+	.columns + .actions {
+		border-top: none;
+	}
 	.columns > .column {
-		display: table-cell;
-		vertical-align: top;
+		flex: 1 1;
+		margin: 15px;
 	}
-	#layout > .small,
-	.columns > .small {
-		width: 30%;
+	.columns > .column.small {
+		flex-basis: 30%;
 	}
-	#layout > .large,
-	.columns > .large {
-		width: 70%;
+	.columns > .column.large {
+		flex-basis: 70%;
 	}
-
-	#layout.type-lll > .column,
-	.columns.type-lll > .column {
-		width: 33.3%;
-	}
-
-	#layout.type-lls > .large,
-	#layout.type-lsl > .large,
-	#layout.type-sll > .large,
-	.columns.type-lls > .large,
-	.columns.type-lsl > .large,
-	.columns.type-sll > .large {
-		width: 50%;
+	.columns > .column fieldset:last-child {
+		margin-bottom: 0;
 	}
 
 /*-----------------------------------------------------------------------------

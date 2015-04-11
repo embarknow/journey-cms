@@ -131,6 +131,15 @@ class SectionTableView implements MetadataInterface
             redirect($url);
         }
 
+        else if (isset($_GET['sort']) && $_SESSION["{$handle}.direction"]) {
+            $column = $this->findColumnByName($_GET['sort']);
+            $column->appendSortingQuery($query, $schema, $_SESSION["{$handle}.direction"]);
+
+            $_SESSION["{$handle}.sort"] = $_GET['sort'];
+
+            redirect($url);
+        }
+
         else if (isset($_SESSION["{$handle}.sort"], $_SESSION["{$handle}.direction"])) {
             $column = $this->findColumnByName($_SESSION["{$handle}.sort"]);
             $column->appendSortingQuery($query, $schema, $_SESSION["{$handle}.direction"]);
@@ -142,25 +151,13 @@ class SectionTableView implements MetadataInterface
             $column->appendSortingQuery($query, $schema);
 
             $_SESSION["{$handle}.sort"] = $column['name'];
+            $_SESSION["{$handle}.direction"] = $column['sorting']['direction'];
         }
 
         // Build table header:
         $table = $page->createElement('section');
         $table->addClass('entries table');
         $page->Form->appendChild($table);
-
-        // $head = $page->createElement('thead');
-        // $table->appendChild($head);
-
-        // foreach ($this->findAllColumns() as $column) {
-        //     $active = false;
-
-        //     if (isset($_SESSION["{$handle}.sort"])) {
-        //         $active = $_SESSION["{$handle}.sort"] === $column['name'];
-        //     }
-
-        //     $column->appendHeaderElement($head, $active, $url);
-        // }
 
         if ($statement = $query->execute() and $statement->rowCount()) {
             $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
@@ -174,11 +171,7 @@ class SectionTableView implements MetadataInterface
                     $list = $page->createElement('dl');
                     $article->appendChild($list);
 
-                    if (isset($_SESSION["{$handle}.sort"])) {
-                        $active = $_SESSION["{$handle}.sort"] === $column['name'];
-                    }
-
-                    $column->appendHeaderElement($list, $active, $url);
+                    $column->appendHeaderElement($list, $_SESSION["{$handle}.sort"], $_SESSION["{$handle}.direction"], $url);
                     $column->appendBodyElement($list, $schema, $entry, $url);
                 }
 

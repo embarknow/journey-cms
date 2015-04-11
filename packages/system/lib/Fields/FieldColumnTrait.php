@@ -47,7 +47,7 @@ trait FieldColumnTrait
         }
     }
 
-    public function appendHeaderElement(DOMElement $wrapper, $active, $url)
+    public function appendHeaderElement(DOMElement $wrapper, $sortColumn, $sortDirection, $url)
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('dt');
@@ -65,11 +65,15 @@ trait FieldColumnTrait
 
             $link = Widget::Anchor(
                 $this['name'],
-                $url . '?sort=' . $this['name'] . '&direction=' . $direction
+                (
+                    $this['name'] === $sortColumn
+                        ? $url . '?sort=' . $this['name'] . '&direction=' . $direction
+                        : $url . '?sort=' . $this['name'] . '&direction=' . $sortDirection
+                )
             );
             $header->appendChild($link);
 
-            if ($active) {
+            if ($this['name'] === $sortColumn) {
                 $link->addClass('active');
             }
         }

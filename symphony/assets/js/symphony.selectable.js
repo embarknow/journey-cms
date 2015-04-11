@@ -56,10 +56,10 @@
 				return true;
 			}
 
-			// // Remove text selection
-			// if(window.getSelection) {
-			// 	window.getSelection().removeAllRanges();
-			// }
+			// Cancel when text is selected:
+			if (window.getSelection && !!window.getSelection().toString()) {
+				return true;
+			}
 
 			// Range selection
 			if((event.shiftKey) && items.filter('.selected').length > 0 && !object.is('.single')) {

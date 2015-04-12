@@ -17,6 +17,8 @@ trait FieldColumnTrait
 {
 	use MetadataTrait;
 
+    protected $sortingActive = false;
+
     public function __construct()
     {
         $this->setSchema([
@@ -34,6 +36,8 @@ trait FieldColumnTrait
     public function appendSortingQuery(DatasourceQuery $query, SchemaInterface $schema, $direction = null)
     {
         if ($this['sorting'] instanceof MetadataInterface) {
+            $this->sortingActive = true;
+
             if (isset($direction)) {
                 $this['sorting']['direction'] = $direction;
             }
@@ -52,18 +56,18 @@ trait FieldColumnTrait
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('dt');
-        $header->addClass('col');
         $wrapper->appendChild($header);
         $wrapper->addClass($this['size']);
 
         // Add sorting information:
         if ($this['sorting'] instanceof MetadataInterface) {
+            $wrapper->addClass('sortable');
             $anchor = $document->createElement('a');
             $header->appendChild($anchor);
 
             // Change sorting direction:
-            if ($this['name'] === $link->getParameter('sort')) {
-                $anchor->addClass('active');
+            if ($this->sortingActive) {
+                $wrapper->addClass('active');
                 $link = $link->withParameter('direction', (
                     'asc' === $this['sorting']['direction']
                         ? 'desc'

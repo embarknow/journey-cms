@@ -215,7 +215,7 @@ class Link
     {
         $new = clone $this;
 
-        foreach ($_GET as $name => $value) {
+        foreach ($parameters as $name => $value) {
             // This is a hack until such a time as
             // these are removed at boot time:
             if ('symphony-page' === $name) continue;

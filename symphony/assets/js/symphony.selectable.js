@@ -58,11 +58,6 @@
 
 			// Range selection
 			if ((event.shiftKey) && items.filter('.selected').length > 0 && !object.is('.single')) {
-				// Remove text selection:
-				if (window.getSelection) {
-					window.getSelection().removeAllRanges();
-				}
-
 				// Select upwards
 				if(item.prevAll().filter('.selected').length > 0) {
 					first = items.filter('.selected:first').index();

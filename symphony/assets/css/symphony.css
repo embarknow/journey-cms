@@ -480,9 +480,21 @@
 -----------------------------------------------------------------------------*/
 
 	section.table {
+		background:
+			linear-gradient(
+				to bottom,
+				hsla(0, 0%, 0%, 0),
+				hsla(0, 0%, 0%, 0.05) 32px,
+				hsla(0, 0%, 0%, 0) 32px
+			);
 		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
 		overflow: hidden;
 		padding: calc(32px - 1px) 0 0 0;
+	}
+	section.table.selected {
+		-moz-user-select: none;
+		-ms-user-select: none;
+		-webkit-user-select: none;
 	}
 	section.table + .actions {
 		background: transparent;
@@ -501,15 +513,6 @@
 		width: 100%;
 		white-space: nowrap;
 	}
-	section.table article:nth-child(odd) {
-		background: #f8f8f8;
-		background: linear-gradient(
-			to bottom,
-			hsla(0, 0%, 0%, 0.015),
-			hsla(0, 0%, 0%, 0.025)
-		);
-		background-clip: padding-box;
-	}
 	section.table article:first-of-type {
 		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
@@ -525,7 +528,7 @@
 		margin-top: -1px;
 	}
 	section.table article.selected {
-		background-color: hsla(215, 80%, 25%, 0.75);
+		background-color: hsla(215, 100%, 25%, 0.7);
 		border-bottom-color: hsla(215, 80%, 20%, 0.75);
 		border-top-color: hsla(215, 80%, 20%, 0.75);
 	}
@@ -565,6 +568,7 @@
 	section.table article dt,
 	section.table article dd {
 		padding: 0 10px;
+		position: relative;
 	}
 
 	/* Table header */
@@ -572,6 +576,7 @@
 		color: #666666;
 		font-size: 10pt;
 		margin: calc(-32px - 1px) 0 0 0;
+		z-index: 1;
 	}
 	section.table article dt a {
 		display: block;
@@ -581,23 +586,15 @@
 	section.table article dt a.active {
 		background:
 			linear-gradient(
-				to right,
-				hsla(0, 0%, 0%, 0.1),
-				hsla(0, 0%, 0%, 0.1) 1px,
-				transparent 1px
-			),
-			linear-gradient(
-				to left,
-				hsla(0, 0%, 0%, 0.1),
-				hsla(0, 0%, 0%, 0.1) 1px,
-				transparent 1px
-			),
-			linear-gradient(
 				to bottom,
-				hsl(0, 0%, 100%),
-				hsla(0, 0%, 100%, 0) 32px
+				hsla(0, 0%, 0%, 0.025),
+				hsla(0, 0%, 0%, 0.05) 32px,
+				hsla(0, 0%, 0%, 0) 32px
 			);
-		background-color: hsla(0, 0%, 0%, 0.025);
+		background-clip: padding-box;
+		border-left: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-right: 1px solid hsla(0, 0%, 0%, 0.1);
+		margin: 0 -11px;
 		margin-bottom: -100em;
 		padding-bottom: 100em;
 	}
@@ -635,6 +632,7 @@
 	section.table article dd div.text {
 		overflow: hidden;
 		text-overflow: ellipsis;
+		z-index: 2;
 	}
 
 	table {

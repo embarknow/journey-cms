@@ -5,7 +5,6 @@ namespace Embark\CMS\Metadata;
 use DOMElement;
 use Exception;
 use ReflectionClass;
-use Embark\CMS\Metadata\Resource;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceIndex;
 

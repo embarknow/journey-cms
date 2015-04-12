@@ -11,7 +11,7 @@ use Embark\CMS\Metadata\MetadataReferenceIndex;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\ReferencedMetadataInterface;
 use Embark\CMS\Metadata\MetadataValueInterface;
-use Embark\CMS\Metadata\Types\Resource;
+use Embark\CMS\Metadata\Types\XmlResource;
 
 /**
  * Trait implementing MetadataInterface
@@ -104,7 +104,7 @@ trait MetadataTrait
 
         // Give the root metadata information about where it came from:
         if ($xml === $xml->ownerDocument->documentElement) {
-            $this['resource'] = new Resource($xml);
+            $this['resource'] = new XmlResource($xml);
         }
 
         // No reference index provided, start a new one:
@@ -344,7 +344,7 @@ trait MetadataTrait
 
         foreach ($this->metadata as $name => $value) {
             // Do not output resource information:
-            if ($value instanceof Resource) {
+            if ($value instanceof XmlResource) {
                 continue;
             }
 

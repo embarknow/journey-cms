@@ -6,7 +6,7 @@ use DOMElement;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
-class Resource implements MetadataInterface
+class XmlResource implements MetadataInterface
 {
     use MetadataTrait;
 

@@ -114,20 +114,18 @@ class SectionTableView implements MetadataInterface
     public function appendTable(HTMLDocument $page, SectionView $view, SchemaInterface $schema)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
-        $link = (new Link(URL))->withPath($url);
+        $sortLink = $pageLink = (new Link)->withPath($url);
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
         $query = new DatasourceQuery();
 
-            // ->withParameter('sort', 'Id')
-            // ->withParameter('direction', 'asc');
-
-        // var_dump((string)$link, $link->getParameter('sort')); exit;
+        // Prime with parameters:
+        $sortLink = $sortLink->withParameters($_GET);
 
         // Show only entries from this schema:
         $query->filterBySubQuery("select entry_id from entries where schema_id = '{$guid}'");
 
-        // Sort entries by the selected column:
+        // Change the stored sorting information:
         if (isset($_GET['sort'], $_GET['direction'])) {
             $column = $this->findColumnByName($_GET['sort']);
             $column->appendSortingQuery($query, $schema, $_GET['direction']);
@@ -135,18 +133,14 @@ class SectionTableView implements MetadataInterface
             $_SESSION["{$handle}.sort"] = $_GET['sort'];
             $_SESSION["{$handle}.direction"] = $_GET['direction'];
 
-            redirect($url);
+            $sortLink = $sortLink
+                ->withoutParameter('sort')
+                ->withoutParameter('direction');
+
+            redirect($sortLink);
         }
 
-        else if (isset($_GET['sort']) && $_SESSION["{$handle}.direction"]) {
-            $column = $this->findColumnByName($_GET['sort']);
-            $column->appendSortingQuery($query, $schema, $_SESSION["{$handle}.direction"]);
-
-            $_SESSION["{$handle}.sort"] = $_GET['sort'];
-
-            redirect($url);
-        }
-
+        // Sort based on the stored sorting information:
         else if (isset($_SESSION["{$handle}.sort"], $_SESSION["{$handle}.direction"])) {
             $column = $this->findColumnByName($_SESSION["{$handle}.sort"]);
             $column->appendSortingQuery($query, $schema, $_SESSION["{$handle}.direction"]);
@@ -162,7 +156,7 @@ class SectionTableView implements MetadataInterface
         }
 
         // Add sorting parameters to our link:
-        $link = $link
+        $sortLink = $sortLink
             ->withParameter('sort', $_SESSION["{$handle}.sort"])
             ->withParameter('direction', $_SESSION["{$handle}.direction"]);
 
@@ -183,7 +177,7 @@ class SectionTableView implements MetadataInterface
                     $list = $page->createElement('dl');
                     $article->appendChild($list);
 
-                    $column->appendHeaderElement($list, $link);
+                    $column->appendHeaderElement($list, $sortLink);
                     $column->appendBodyElement($list, $schema, $entry, $url);
                 }
 

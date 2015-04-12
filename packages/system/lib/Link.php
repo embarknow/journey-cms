@@ -3,6 +3,7 @@
 namespace Embark\CMS;
 
 use RuntimeException;
+use InvalidArgumentException;
 
 class Link
 {
@@ -168,7 +169,7 @@ class Link
      *  The parameter value to use in the new instance
      *
      * @return self
-     *  A new instance with the changed path
+     *  A new instance with the specified parameter
      *
      * @throws InvalidArgumentException
      *  if either the name or value are not a string
@@ -193,6 +194,67 @@ class Link
 
         $new = clone $this;
         $new->parameters[$name] = $value;
+
+        return $new;
+    }
+
+    /**
+     * Create a new instance with the specified parameters
+     *
+     * @param  array $parameters
+     *  The parameter name to use in the new instance
+     *
+     * @return self
+     *  A new instance with the specified parameters
+     *
+     * @throws InvalidArgumentException
+     *  if either the name or value of one of the given
+     *  parameters is not a string.
+     */
+    public function withParameters(array $parameters)
+    {
+        $new = clone $this;
+
+        foreach ($_GET as $name => $value) {
+            // This is a hack until such a time as
+            // these are removed at boot time:
+            if ('symphony-page' === $name) continue;
+            if ('symphony-renderer' === $name) continue;
+
+            if (!is_string($name)) {
+                throw new InvalidArgumentException("Parameter name must be a string.");
+            }
+
+            if (!is_string($value)) {
+                throw new InvalidArgumentException("Parameter value must be a string.");
+            }
+
+            $new->parameters[$name] = $value;
+        }
+
+        return $new;
+    }
+
+    /**
+     * Create a new instance without the specified parameter
+     *
+     * @param  string $name
+     *  The parameter name to remove in the new instance
+     *
+     * @return self
+     *  A new instance without the specified parameter
+     *
+     * @throws InvalidArgumentException
+     *  if the name is not a string
+     */
+    public function withoutParameter($name)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException("Parameter name must be a string.");
+        }
+
+        $new = clone $this;
+        unset($new->parameters[$name]);
 
         return $new;
     }

@@ -20,7 +20,6 @@ class CreationDateColumn implements FieldColumnInterface
         $date = new SystemDateTime($entry->creation_date);
         $date = $date->toUserDateTime();
         $body = $document->createElement('dd');
-        $body->addClass($this['size']);
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {

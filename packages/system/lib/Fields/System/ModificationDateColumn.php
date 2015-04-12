@@ -20,7 +20,6 @@ class ModificationDateColumn implements FieldColumnInterface
         $date = new SystemDateTime($entry->modification_date);
         $date = $date->toUserDateTime();
         $body = $document->createElement('dd');
-        $body->addClass($this['size']);
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {

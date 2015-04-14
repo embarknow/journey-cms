@@ -679,6 +679,12 @@
 		color: #ffffff;
 		text-shadow: 0 0 3px hsla(0, 0%, 0%, 0.75);
 	}
+	section.table article.selected dl + dl dd {
+		border-left-color: hsla(0, 0%, 100%, 0.1);
+	}
+	section.table article.selected + article.selected dd {
+		border-top-color: hsla(0, 0%, 100%, 0.1);
+	}
 	section.table article dd div.text i,
 	section.table article dd div.text em {
 		font-style: italic;

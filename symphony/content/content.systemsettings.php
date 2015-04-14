@@ -316,7 +316,7 @@ use Embark\CMS\Configuration\Controller as Configuration;
                     $config = Configuration::read('main');
 
                     if ($this->saveSettings($config, $settings)) {
-                        Configuration::update('main');
+                        Configuration::update($config, 'main');
                     }
 
                     redirect(ADMIN_URL . '/system/settings/:saved/');

@@ -3,6 +3,7 @@
 use Embark\CMS\Actors\Controller;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Structures\ParameterPool as Context;
+use Embark\CMS\Configuration\Controller as Configuration;
 
 	require_once(LIB . '/class.event.php');
 	require_once(LIB . '/class.documentheaders.php');
@@ -332,7 +333,7 @@ use Embark\CMS\Structures\ParameterPool as Context;
 			}
 
 			if($simulate != true){
-				if(!is_dir(dirname($pathname)) && !mkdir(dirname($pathname), intval(Symphony::Configuration()->main()->system->{'directory-write-mode'}, 8), true)){
+				if(!is_dir(dirname($pathname)) && !mkdir(dirname($pathname), intval(Symphony::Configuration()['system']['directory-write-mode'], 8), true)){
 					throw new ViewException(
 						__('Could not create view directory. Please check permissions on <code>%s</code>.', $view->path),
 						self::ERROR_FAILED_TO_WRITE
@@ -340,7 +341,7 @@ use Embark\CMS\Structures\ParameterPool as Context;
 				}
 
 				// Save the config
-				if(!General::writeFile($pathname, (string)$view,Symphony::Configuration()->main()->system->{'file-write-mode'})){
+				if(!General::writeFile($pathname, (string)$view, Symphony::Configuration()['system']['file-write-mode'])){
 					throw new ViewException(
 						__('View configuration XML could not be written to disk. Please check permissions on <code>%s</code>.', $view->path),
 						self::ERROR_FAILED_TO_WRITE
@@ -351,7 +352,7 @@ use Embark\CMS\Structures\ParameterPool as Context;
 				$result = General::writeFile(
 					sprintf('%s/%s/%s.xsl', VIEWS, $view->path, $view->handle),
 					$view->template,
-					Symphony::Configuration()->main()->system->{'file-write-mode'}
+					Symphony::Configuration()['system']['file-write-mode']
 				);
 
 				if(!$result){

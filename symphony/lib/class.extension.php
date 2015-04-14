@@ -1,4 +1,5 @@
 <?php
+use Embark\CMS\Configuration\Controller as Configuration;
 
 	interface ExtensionInterface {
 
@@ -208,7 +209,7 @@
 			General::writeFile(
 				$pathname,
 				$doc->ownerDocument->saveXML(),
-				Symphony::Configuration()->main()->system->{'file-write-mode'}
+				Configuration::read('main')['system']['file-write-mode']
 			);
 		}
 

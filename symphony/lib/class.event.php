@@ -1,7 +1,7 @@
 <?php
 
 use Embark\CMS\Structures\ParameterPool as Context;
-
+use Embark\CMS\Configuration\Controller as Configuration;
 use Embark\CMS\SystemDateTime;
 
 	Class EventException extends Exception {}
@@ -227,7 +227,7 @@ use Embark\CMS\SystemDateTime;
 				if(General::writeFile(
 					$pathname,
 					vsprintf(file_get_contents($this->getTemplate()), $data),
-					Symphony::Configuration()->main()->system->{'file-write-mode'}
+					Configuration::read('main')['system']['file-write-mode']
 				)){
 					if($editing !== false && $editing != $this->handle) General::deleteFile(EVENTS . '/' . $editing . '.php');
 

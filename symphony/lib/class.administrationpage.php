@@ -2,6 +2,7 @@
 
 use Embark\CMS\Sections\Controller;
 use Embark\CMS\Metadata\Types\MenuItem;
+use Embark\CMS\Configuration\Controller as Configuration;
 
 	require_once(LIB . '/class.htmldocument.php');
 	require_once(LIB . '/class.section.php');
@@ -71,7 +72,7 @@ use Embark\CMS\Metadata\Types\MenuItem;
 			);
 
 			// Builds a super JS and CSS document
-			if (Symphony::Configuration()->main()->admin->{'minify-assets'} == 'yes'){
+			if (Configuration::read('main')['admin']['minify-assets']){
 				if (file_exists(CACHE . '/admin-styles.css')){
 					$styles = array(URL . '/manifest/cache/admin-styles.css');
 				}
@@ -127,7 +128,7 @@ use Embark\CMS\Metadata\Types\MenuItem;
 			$this->Body->appendChild($this->Form);
 
 			$h1 = $this->createElement('h1');
-			$anchor = $this->createElement('a', Symphony::Configuration()->main()->name);
+			$anchor = $this->createElement('a', Configuration::read('main')['name']);
 			$anchor->setAttribute('href', rtrim(URL, '/') . '/');
 			$h1->appendChild($anchor);
 			$this->Form->appendChild($h1);

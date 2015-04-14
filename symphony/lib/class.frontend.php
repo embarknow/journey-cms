@@ -2,6 +2,7 @@
 
 use Embark\CMS\UserDateTime;
 use Embark\CMS\Structures\ParameterPool as Context;
+use Embark\CMS\Configuration\Controller as Configuration;
 
 	require_once(LIB . '/class.symphony.php');
 	require_once(LIB . '/class.xmldocument.php');
@@ -225,7 +226,7 @@ use Embark\CMS\Structures\ParameterPool as Context;
 				'this-month' =>				$date->format('m'),
 				'this-day' =>				$date->format('d'),
 				'timezone' =>				date_default_timezone_get(),
-				'website-name' =>			Symphony::Configuration()->main()->name,
+				'website-name' =>			Configuration::read('main')['name'],
 				'root' =>					URL,
 				'relative-root' =>			ROOT_PATH,
 				'workspace' =>				URL . '/workspace',

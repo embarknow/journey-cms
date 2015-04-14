@@ -1,7 +1,7 @@
 <?php
 
 use Embark\CMS\Database\Connection;
-use Embark\CMS\Configuration\Loader as Configuration;
+use Embark\CMS\Configuration\Controller as Configuration;
 use Embark\CMS\SystemDateTime;
 
 	require_once 'class.errorhandler.php';
@@ -152,16 +152,16 @@ use Embark\CMS\SystemDateTime;
 
 		public function initialiseConfiguration($path = CONF)
 		{
-			self::$Configuration = new Configuration($path);
+			self::$Configuration = $config = Configuration::read('main');
 
-			date_default_timezone_set(self::Configuration()->main()->region->timezone);
+			date_default_timezone_set($config['region']['timezone']);
 
-			self::$_lang = (self::Configuration()->main()->lang ? self::Configuration()->main()->lang : 'en');
+			self::$_lang = ($config['lang'] ? $config['lang'] : 'en');
 
-			define_safe('__SYM_DATE_FORMAT__', self::Configuration()->main()->region->{'date-format'});
-			define_safe('__SYM_TIME_FORMAT__', self::Configuration()->main()->region->{'time-format'});
+			define_safe('__SYM_DATE_FORMAT__', $config['region']['date-format']);
+			define_safe('__SYM_TIME_FORMAT__', $config['region']['time-format']);
 			define_safe('__SYM_DATETIME_FORMAT__', sprintf('%s %s', __SYM_DATE_FORMAT__, __SYM_TIME_FORMAT__));
-			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim(self::Configuration()->main()->admin->path, '/')));
+			define_safe('ADMIN_URL', sprintf('%s/%s', URL, trim($config['admin']['path'], '/')));
 		}
 
 		public static function Configuration()
@@ -181,7 +181,7 @@ use Embark\CMS\SystemDateTime;
 			}
 
 			define_safe('__SYM_COOKIE_PATH__', $cookie_path);
-			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()->main()->session->{'cookie-prefix'});
+			define_safe('__SYM_COOKIE_PREFIX__', self::Configuration()['session']['cookie-prefix']);
 
 			self::$Cookie = new Cookie(__SYM_COOKIE_PREFIX__, TWO_WEEKS, __SYM_COOKIE_PATH__, null, true);
 		}
@@ -193,7 +193,7 @@ use Embark\CMS\SystemDateTime;
 
 		public function initialiseDatabase()
 		{
-			$conf = (object)Symphony::Configuration()->database();
+			$conf = (object)iterator_to_array(Configuration::read('database')->findAll());
 			$database = new Connection($conf);
 			$database->connect();
 
@@ -220,8 +220,8 @@ use Embark\CMS\SystemDateTime;
 		public function initialiseLog()
 		{
 			self::$Log = new Log(ACTIVITY_LOG);
-			Symphony::Log()->setArchive((self::Configuration()->main()->logging->archive == '1' ? true : false));
-			Symphony::Log()->setMaxSize(intval(self::Configuration()->main()->logging->maxsize));
+			Symphony::Log()->setArchive(self::Configuration()['logging']['archive']);
+			Symphony::Log()->setMaxSize(intval(self::Configuration()['logging']['maxsize']));
 
 			if (Symphony::Log()->open() == 1) {
 				Symphony::Log()->writeToLog('Symphony Log', true);

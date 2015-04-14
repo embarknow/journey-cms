@@ -1,4 +1,5 @@
 <?php
+use Embark\CMS\Configuration\Controller as Configuration;
 
 	Class FileTypeFilterIterator extends FilterIterator{
 
@@ -90,7 +91,7 @@
 			General::writeFile(
 				$file,
 				$utility->body,
-				Symphony::Configuration()->main()->system->{'file-write-mode'}
+				Symphony::Configuration()['system']['file-write-mode']
 			);
 
 			return file_exists($file);

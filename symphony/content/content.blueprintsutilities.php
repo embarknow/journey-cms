@@ -1,5 +1,7 @@
 <?php
 
+use Embark\CMS\Configuration\Controller as Configuration;
+
 	require_once(LIB . '/class.administrationpage.php');
 	require_once(LIB . '/class.xslproc.php');
 
@@ -280,7 +282,7 @@
 					elseif($this->_context[0] == 'new' && is_file($file)) $this->errors->name = __('A Utility with that name already exists. Please choose another.');
 
 					##Write the file
-					elseif(!$write = General::writeFile($file, $fields['template'],Symphony::Configuration()->main()->system->{'file-write-mode'})) {
+					elseif(!$write = General::writeFile($file, $fields['template'],Configuration::read('main')['system']['file-write-mode'])) {
 						$this->alerts()->append(
 							__('Utility could not be written to disk. Please check permissions on <code>/workspace/utilities</code>.'),
 							AlertStack::SUCCESS

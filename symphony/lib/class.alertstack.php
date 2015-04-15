@@ -1,154 +1,158 @@
 <?php
 
-	class AlertStack implements Iterator {
-		const SUCCESS = 'success';
-		const NOTICE = 'notice';
-		const ERROR = 'error';
+class AlertStack implements Iterator
+{
+    const SUCCESS = 'success';
+    const NOTICE = 'notice';
+    const ERROR = 'error';
 
-		protected $alerts = array();
+    protected $alerts = array();
 
-		public function append($message, $type = AlertStack::NOTICE, $info = null) {
-			if (is_null($info) === false) {
-				if (
-					is_string($info) === false
-					&& ($info instanceof Exception) === false
-					&& ($info instanceof DOMElement) === false
-					&& ($info instanceof MessageStack) === false
-				) {
-					throw new Exception(__('Expecting a string or an instance of Exception, DOMElement or MessageStack.'));
-				}
-			}
+    public function append($message, $type = AlertStack::NOTICE, $info = null)
+    {
+        if (is_null($info) === false) {
+            if (
+                is_string($info) === false
+                && ($info instanceof Exception) === false
+                && ($info instanceof DOMElement) === false
+                && ($info instanceof MessageStack) === false
+            ) {
+                throw new Exception(__('Expecting a string or an instance of Exception, DOMElement or MessageStack.'));
+            }
+        }
 
-			$this->alerts[] = (object)array(
-				'message'	=> $message,
-				'type'		=> $type,
-				'info'		=> $info
-			);
-		}
+        $this->alerts[] = (object)array(
+            'message'    => $message,
+            'type'        => $type,
+            'info'        => $info
+        );
+    }
 
-		public function appendTo(SymphonyDOMElement $parent) {
-			$document = $parent->ownerDocument;
+    public function appendTo(SymphonyDOMElement $parent)
+    {
+        $document = $parent->ownerDocument;
 
-			$list = $document->createElement('ol');
-			$list->setAttribute('id', 'alerts');
+        $list = $document->createElement('ol');
+        $list->setAttribute('id', 'alerts');
 
-			foreach ($this as $alert) {
-				$item = $document->createElement('li');
-				$item->setAttribute('class', $alert->type);
+        foreach ($this as $alert) {
+            $item = $document->createElement('li');
+            $item->setAttribute('class', $alert->type);
 
-				$message = $document->createElement('div');
-				$message->setAttribute('class', 'message');
-				$fragment = $document->createDocumentFragment();
-				$fragment->appendXML($alert->message);
-				$message->appendChild($fragment);
-				$item->appendChild($message);
+            $message = $document->createElement('div');
+            $message->setAttribute('class', 'message');
+            $fragment = $document->createDocumentFragment();
+            $fragment->appendXML($alert->message);
+            $message->appendChild($fragment);
+            $item->appendChild($message);
 
-				if ($alert->info instanceof DOMElement) {
-					$info = $document->createElement('div', $alert->info);
-				}
+            if ($alert->info instanceof DOMElement) {
+                $info = $document->createElement('div', $alert->info);
+            } elseif ($alert->info instanceof Exception) {
+                $info = $document->createElement('div');
+                $header = $document->createElement('h3');
+                $header->setValue($alert->info->getMessage());
+                $info->appendChild($header);
 
-				else if ($alert->info instanceof Exception) {
-					$info = $document->createElement('div');
-					$header = $document->createElement('h3');
-					$header->setValue($alert->info->getMessage());
-					$info->appendChild($header);
+                $paragraph = $document->createElement('p');
+                $fragment = $document->createDocumentFragment();
+                $fragment->appendXML(__(
+                    'An error occurred in <code>%s</code> around line <code>%d</code>',
+                    array(
+                        $alert->info->getFile(),
+                        $alert->info->getLine()
+                    )
+                ));
+                $paragraph->appendChild($fragment);
+                $info->appendChild($paragraph);
 
-					$paragraph = $document->createElement('p');
-					$fragment = $document->createDocumentFragment();
-					$fragment->appendXML(__(
-						'An error occurred in <code>%s</code> around line <code>%d</code>',
-						array(
-							$alert->info->getFile(),
-							$alert->info->getLine()
-						)
-					));
-					$paragraph->appendChild($fragment);
-					$info->appendChild($paragraph);
+                $ul = $document->createElement('ol');
+                $ul->setAttribute('class', 'trace-list');
 
-					$ul = $document->createElement('ol');
-					$ul->setAttribute('class', 'trace-list');
+                foreach ($alert->info->getTrace() as $trace) {
+                    $li = $document->createElement('li');
+                    $code = $document->createElement('code');
+                    $strong = $document->createElement('strong');
 
-					foreach ($alert->info->getTrace() as $trace) {
-						$li = $document->createElement('li');
-						$code = $document->createElement('code');
-						$strong = $document->createElement('strong');
+                    $called = array();
 
-						$called = array();
+                    if (isset($trace['class']) and !empty($trace['class'])) {
+                        $called[] = $trace['class'];
+                    }
 
-						if (isset($trace['class']) and !empty($trace['class'])) {
-							$called[] = $trace['class'];
-						}
+                    if (isset($trace['type']) and !empty($trace['type'])) {
+                        $called[] = $trace['type'];
+                    }
 
-						if (isset($trace['type']) and !empty($trace['type'])) {
-							$called[] = $trace['type'];
-						}
+                    if (isset($trace['function']) and !empty($trace['function'])) {
+                        $called[] = $trace['function'];
+                    }
 
-						if (isset($trace['function']) and !empty($trace['function'])) {
-							$called[] = $trace['function'];
-						}
+                    $code->setValue($trace['file'] . ':' . $trace['line']);
+                    $strong->setValue(implode('', $called));
 
-						$code->setValue($trace['file'] . ':' . $trace['line']);
-						$strong->setValue(implode('', $called));
+                    $code->appendChild($strong);
+                    $li->appendChild($code);
+                    $ul->appendChild($li);
+                }
 
-						$code->appendChild($strong);
-						$li->appendChild($code);
-						$ul->appendChild($li);
-					}
+                $info->appendChild($ul);
+            } elseif ($alert->info instanceof MessageStack) {
+                $info = $document->createElement('div');
+                $alert->info->appendTo($info);
+            } elseif (is_string($alert->info)) {
+                $fragment = $document->createDocumentFragment();
+                $fragment->appendXML($alert->info);
+                $info = $document->createElement('div', $fragment);
+            }
 
-					$info->appendChild($ul);
-				}
+            if (isset($info)) {
+                $info->setAttribute('class', 'info');
+                $item->appendChild($info);
+            }
 
-				else if ($alert->info instanceof MessageStack) {
-					$info = $document->createElement('div');
-					$alert->info->appendTo($info);
-				}
+            $list->appendChild($item);
+        }
 
-				else if (is_string($alert->info)) {
-					$fragment = $document->createDocumentFragment();
-					$fragment->appendXML($alert->info);
-					$info = $document->createElement('div', $fragment);
-				}
+        $parent->appendChild($list);
+    }
 
-				if (isset($info)) {
-					$info->setAttribute('class', 'info');
-					$item->appendChild($info);
-				}
+    protected function appendMessageStack(SymphonyDOMElement $wrapper, MessageStack $messages)
+    {
+    }
 
-				$list->appendChild($item);
-			}
+    public function rewind()
+    {
+        reset($this->alerts);
+    }
 
-			$parent->appendChild($list);
-		}
+    public function current()
+    {
+        return current($this->alerts);
+    }
 
-		protected function appendMessageStack(SymphonyDOMElement $wrapper, MessageStack $messages) {
+    public function key()
+    {
+        return key($this->alerts);
+    }
 
-		}
+    public function next()
+    {
+        return next($this->alerts);
+    }
 
-	    public function rewind() {
-	        reset($this->alerts);
-	    }
+    public function valid()
+    {
+        return ($this->current() !== false);
+    }
 
-	    public function current() {
-	        return current($this->alerts);
-	    }
+    public function length()
+    {
+        return count($this->alerts);
+    }
 
-	    public function key() {
-	        return key($this->alerts);
-	    }
-
-	    public function next() {
-	        return next($this->alerts);
-	    }
-
-	    public function valid() {
-	        return ($this->current() !== false);
-	    }
-
-		public function length() {
-			return count($this->alerts);
-		}
-
-		public function flush() {
-			$this->alerts = array();
-		}
-	}
+    public function flush()
+    {
+        $this->alerts = array();
+    }
+}

@@ -7,31 +7,31 @@ require_once LIB . '/class.administrationpage.php';
 
 class ContentPublish extends AdministrationPage
 {
-	protected $section;
+    protected $section;
 
-	public function __switchboard($type = 'view')
-	{
-		if (false === isset($section)) {
-			$section = SectionController::read($this->_context['section_handle']);
-		}
+    public function __switchboard($type = 'view')
+    {
+        if (false === isset($section)) {
+            $section = SectionController::read($this->_context['section_handle']);
+        }
 
-		if ($type === 'view') {
-			$this->{'__view' . $this->_context['page']}($section);
-		}
-	}
+        if ($type === 'view') {
+            $this->{'__view' . $this->_context['page']}($section);
+        }
+    }
 
-	public function __viewIndex($section)
-	{
-		$section->appendIndexView($this);
-	}
+    public function __viewIndex($section)
+    {
+        $section->appendIndexView($this);
+    }
 
-	public function __viewNew($section)
-	{
-		$section->appendFormView($this, new Entry());
-	}
+    public function __viewNew($section)
+    {
+        $section->appendFormView($this, new Entry());
+    }
 
-	public function __viewEdit($section)
-	{
-		$section->appendFormView($this, Entry::loadFromId($this->_context['entry_id']));
-	}
+    public function __viewEdit($section)
+    {
+        $section->appendFormView($this, Entry::loadFromId($this->_context['entry_id']));
+    }
 }

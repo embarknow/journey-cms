@@ -11,7 +11,7 @@ use Embark\CMS\Metadata\MetadataReferenceIndex;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\ReferencedMetadataInterface;
 use Embark\CMS\Metadata\MetadataValueInterface;
-use Embark\CMS\Metadata\Types\Resource;
+use Embark\CMS\Metadata\Types\XmlResource;
 
 /**
  * Trait implementing MetadataInterface
@@ -38,6 +38,9 @@ trait MetadataTrait
      */
     private $metadataReferences;
 
+    /**
+     * Magic clone method ensures data structure is correct for object cloning
+     */
     public function __clone()
     {
         foreach ($this->metadata as $key => $value) {
@@ -104,7 +107,7 @@ trait MetadataTrait
 
         // Give the root metadata information about where it came from:
         if ($xml === $xml->ownerDocument->documentElement) {
-            $this['resource'] = new Resource($xml);
+            $this['resource'] = new XmlResource($xml);
         }
 
         // No reference index provided, start a new one:
@@ -220,6 +223,12 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Gets an index of referenced Metadata
+     *
+     * @return MetadataReferenceIndex
+     *  an index of referenced Metadata
+     */
     public function getReferenceIndex()
     {
         return $this->references;
@@ -227,8 +236,9 @@ trait MetadataTrait
 
     /**
      * Find all metadata
-     * @return array
-     *  yeilds an iteratable array of key => value pairs
+     *
+     * @return Generator
+     *  yeilds a generator of key => value pairs
      */
     public function findAll()
     {
@@ -243,6 +253,15 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Find instances of a certian class
+     *
+     * @param  mixed $class
+     *  the class to find instances of
+     *
+     * @return Generator
+     *  yeilds a generator of instances
+     */
     public function findInstancesOf($class)
     {
         $reflect = new ReflectionClass($class);
@@ -255,11 +274,28 @@ trait MetadataTrait
         }
     }
 
+    /**
+     * Resolve this instance
+     *
+     * @return self
+     */
     public function resolve()
     {
         return $this;
     }
 
+    /**
+     * Resolve instances of a class to this instance
+     *
+     * @param  mixed $class
+     *  the class to resolve
+     *
+     * @return self
+     *  returns self if resolved
+     *
+     * @throws Exception
+     *  if an instance of the class cannot be resolved to this instance
+     */
     public function resolveInstanceOf($class)
     {
         $reflect = new ReflectionClass($class);
@@ -313,6 +349,7 @@ trait MetadataTrait
 
     /**
      * Set the schema definition for this metadata
+     *
      * @param array $schema
      *  array describing the expected schema definition that a metadata file describes
      */
@@ -344,7 +381,7 @@ trait MetadataTrait
 
         foreach ($this->metadata as $name => $value) {
             // Do not output resource information:
-            if ($value instanceof Resource) {
+            if ($value instanceof XmlResource) {
                 continue;
             }
 

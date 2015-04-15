@@ -5,15 +5,36 @@ namespace Embark\CMS\Metadata;
 use DOMElement;
 use Exception;
 use ReflectionClass;
-use Embark\CMS\Metadata\Resource;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceIndex;
 
+/**
+ * A reference to another piece of Metadata
+ */
 class MetadataReference implements MetadataReferenceInterface
 {
+    /**
+     * The controller instance
+     * @var MetadataControllerInterface
+     */
     protected $controller;
+
+    /**
+     * The referenced handle
+     * @var string
+     */
     protected $handle;
+
+    /**
+     * The actual reference
+     * @var mixed
+     */
     protected $reference;
+
+    /**
+     * The refefrenced Metadata object
+     * @var MetadataInterface
+     */
     protected $object;
 
     public function __construct(MetadataInterface $object = null, $controller = null, $handle = null, $reference = null)

@@ -15,8 +15,8 @@ class CreationDateParameter implements FieldParameterInterface
     use MetadataTrait;
 
     public function appendParameter(array &$parameters, DatasourceInterface $datasource, SchemaInterface $section, EntryInterface $entry)
-	{
-		$key = sprintf('ds-%s.system.%s', $datasource['handle'], 'creation-date');
+    {
+        $key = sprintf('ds-%s.system.%s', $datasource['handle'], 'creation-date');
 
         if (false === isset($parameters[$key])) {
             $parameters[$key] = [];

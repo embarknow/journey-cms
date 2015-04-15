@@ -10,39 +10,39 @@ use Symphony;
 
 class Field implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function getParameterOutputValue($data, Entry $entry = null)
-	{
-		if (is_null($data->value)) return;
+    public function getParameterOutputValue($data, Entry $entry = null)
+    {
+        if (is_null($data->value)) return;
 
-		$date = new SystemDateTime($data->value);
+        $date = new SystemDateTime($data->value);
 
- 		return $date->format('Y-m-d H:i:s');
-	}
+         return $date->format('Y-m-d H:i:s');
+    }
 
-	public function loadDataFromDatabaseEntries($section, $entryIds)
-	{
-		try {
-			$result = [];
-			$rows = Symphony::Database()->query(
-				"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
-				[
-					$section,
-					$this['name'],
-					implode(',', $entryIds)
-				]
-			);
+    public function loadDataFromDatabaseEntries($section, $entryIds)
+    {
+        try {
+            $result = [];
+            $rows = Symphony::Database()->query(
+                "SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+                [
+                    $section,
+                    $this['name'],
+                    implode(',', $entryIds)
+                ]
+            );
 
-			foreach ($rows as $row) {
-				$result[] = $row;
-			}
+            foreach ($rows as $row) {
+                $result[] = $row;
+            }
 
-			return $result;
-		}
+            return $result;
+        }
 
-		catch (DatabaseException $e) {
-			return [];
-		}
-	}
+        catch (DatabaseException $e) {
+            return [];
+        }
+    }
 }

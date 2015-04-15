@@ -2,225 +2,242 @@
 
 use Embark\CMS\Structures\ParameterPool as Context;
 
-	require_once LIB . '/class.htmldocument.php';
-	require_once LIB . '/class.view.php';
-	require_once LIB . '/class.urlwriter.php';
+require_once LIB . '/class.htmldocument.php';
+require_once LIB . '/class.view.php';
+require_once LIB . '/class.urlwriter.php';
 
-	class DevKit extends View {
-		protected $document;
-		protected $data;
-		protected $url;
+class DevKit extends View
+{
+    protected $document;
+    protected $data;
+    protected $url;
 
-		public function __construct() {
-			parent::__construct();
+    public function __construct()
+    {
+        parent::__construct();
 
-			$this->document = new HTMLDocument();
+        $this->document = new HTMLDocument();
 
-			$this->view = Frontend::loadedView();
-			$this->data = (object)array();
-			$this->url = new URLWriter(URL . CURRENT_PATH, $_GET);
+        $this->view = Frontend::loadedView();
+        $this->data = (object)array();
+        $this->url = new URLWriter(URL . CURRENT_PATH, $_GET);
 
-			// Remove symphony parameters:
-			unset($this->url->parameters()->{'symphony-page'});
-			unset($this->url->parameters()->{'symphony-renderer'});
-		}
+        // Remove symphony parameters:
+        unset($this->url->parameters()->{'symphony-page'});
+        unset($this->url->parameters()->{'symphony-renderer'});
+    }
 
-		public function __isset($name) {
-			return isset($this->data->$name);
-		}
+    public function __isset($name)
+    {
+        return isset($this->data->$name);
+    }
 
-		public function __get($name) {
-			if ($name == 'title' and !isset($this->title)) {
-				$this->title = __('Untitled');
-			}
+    public function __get($name)
+    {
+        if ($name == 'title' and !isset($this->title)) {
+            $this->title = __('Untitled');
+        }
 
-			return $this->data->$name;
-		}
+        return $this->data->$name;
+    }
 
-		public function __set($name, $value) {
-			if (isset($this->data) === false) {
-				$this->data = new StdClass();
-			}
+    public function __set($name, $value)
+    {
+        if (isset($this->data) === false) {
+            $this->data = new StdClass();
+        }
 
-			$this->data->$name = $value;
-		}
+        $this->data->$name = $value;
+    }
 
-		public function templatePathname() {
-			return $this->view->templatePathname();
-		}
+    public function templatePathname()
+    {
+        return $this->view->templatePathname();
+    }
 
-		protected function createScriptElement($path) {
-			$element = $this->document->createElement('script');
-			$element->setAttribute('type', 'text/javascript');
-			$element->setAttribute('src', $path);
+    protected function createScriptElement($path)
+    {
+        $element = $this->document->createElement('script');
+        $element->setAttribute('type', 'text/javascript');
+        $element->setAttribute('src', $path);
 
-			// Creating an empty text node forces <script></script>
-			$element->appendChild($this->document->createTextNode(''));
+        // Creating an empty text node forces <script></script>
+        $element->appendChild($this->document->createTextNode(''));
 
-			return $element;
-		}
+        return $element;
+    }
 
-		protected function createStylesheetElement($path, $type = 'screen') {
-			$element = $this->document->createElement('link');
-			$element->setAttribute('type', 'text/css');
-			$element->setAttribute('rel', 'stylesheet');
-			$element->setAttribute('media', $type);
-			$element->setAttribute('href', $path);
+    protected function createStylesheetElement($path, $type = 'screen')
+    {
+        $element = $this->document->createElement('link');
+        $element->setAttribute('type', 'text/css');
+        $element->setAttribute('rel', 'stylesheet');
+        $element->setAttribute('media', $type);
+        $element->setAttribute('href', $path);
 
-			return $element;
-		}
+        return $element;
+    }
 
-		public function render(Context $parameters, XMLDocument &$document) {
-			Widget::init($this->document);
+    public function render(Context $parameters, XMLDocument &$document)
+    {
+        Widget::init($this->document);
 
-			$this->appendHead($this->document->documentElement);
-			$this->appendBody($this->document->documentElement);
+        $this->appendHead($this->document->documentElement);
+        $this->appendBody($this->document->documentElement);
 
-			return $this->document->saveHTML();
-		}
+        return $this->document->saveHTML();
+    }
 
-		protected function appendHead(DOMElement $wrapper) {
-			$head = $this->document->xpath('/html/head[1]')->item(0);
+    protected function appendHead(DOMElement $wrapper)
+    {
+        $head = $this->document->xpath('/html/head[1]')->item(0);
 
-			$this->appendTitle($head);
-			$this->appendIncludes($head);
-			$wrapper->appendChild($head);
+        $this->appendTitle($head);
+        $this->appendIncludes($head);
+        $wrapper->appendChild($head);
 
-			return $head;
-		}
+        return $head;
+    }
 
-		protected function appendTitle(DOMElement $wrapper) {
-			$title = $this->document->createElement('title');
-			$title->appendChild($this->document->createTextNode(
-				__('Symphony') . ' '
-			));
-			$title->appendChild(
-				$this->document->createEntityReference('ndash')
-			);
-			$title->appendChild($this->document->createTextNode(
-				' ' . $this->view->title . ' '
-			));
-			$title->appendChild(
-				$this->document->createEntityReference('ndash')
-			);
-			$title->appendChild($this->document->createTextNode(
-				' ' . $this->title
-			));
+    protected function appendTitle(DOMElement $wrapper)
+    {
+        $title = $this->document->createElement('title');
+        $title->appendChild($this->document->createTextNode(
+            __('Symphony') . ' '
+        ));
+        $title->appendChild(
+            $this->document->createEntityReference('ndash')
+        );
+        $title->appendChild($this->document->createTextNode(
+            ' ' . $this->view->title . ' '
+        ));
+        $title->appendChild(
+            $this->document->createEntityReference('ndash')
+        );
+        $title->appendChild($this->document->createTextNode(
+            ' ' . $this->title
+        ));
 
-			$wrapper->appendChild($title);
+        $wrapper->appendChild($title);
 
-			return $title;
-		}
+        return $title;
+    }
 
-		protected function appendIncludes(DOMElement $wrapper) {
-			$wrapper->appendChild(
-				$this->createStylesheetElement(ADMIN_URL . '/assets/css/devkit.css')
-			);
-		}
+    protected function appendIncludes(DOMElement $wrapper)
+    {
+        $wrapper->appendChild(
+            $this->createStylesheetElement(ADMIN_URL . '/assets/css/devkit.css')
+        );
+    }
 
-		protected function appendBody(DOMElement $wrapper) {
-			$body = $this->document->xpath('/html/body[1]')->item(0);
+    protected function appendBody(DOMElement $wrapper)
+    {
+        $body = $this->document->xpath('/html/body[1]')->item(0);
 
-			$this->appendContent($body);
-			$this->appendSidebar($body);
+        $this->appendContent($body);
+        $this->appendSidebar($body);
 
-			$wrapper->appendChild($body);
+        $wrapper->appendChild($body);
 
-			return $body;
-		}
+        return $body;
+    }
 
-		protected function appendContent(DOMElement $wrapper) {
-			$container = $this->document->createElement('div');
-			$container->setAttribute('id', 'content');
+    protected function appendContent(DOMElement $wrapper)
+    {
+        $container = $this->document->createElement('div');
+        $container->setAttribute('id', 'content');
 
-			$wrapper->appendChild($container);
+        $wrapper->appendChild($container);
 
-			return $container;
-		}
+        return $container;
+    }
 
-		protected function appendSidebar(DOMElement $wrapper) {
-			$container = $this->document->createElement('div');
-			$container->setAttribute('id', 'sidebar');
+    protected function appendSidebar(DOMElement $wrapper)
+    {
+        $container = $this->document->createElement('div');
+        $container->setAttribute('id', 'sidebar');
 
-			// Header:
-			$header = $this->document->createElement('h1');
-			$header->appendChild(Widget::Anchor(
-				$this->view->title, (string)$this->url
-			));
-			$container->appendChild($header);
+        // Header:
+        $header = $this->document->createElement('h1');
+        $header->appendChild(Widget::Anchor(
+            $this->view->title,
+            (string)$this->url
+        ));
+        $container->appendChild($header);
 
-			$list = $this->document->createElement('ul');
-			$list->setAttribute('class', 'menu');
+        $list = $this->document->createElement('ul');
+        $list->setAttribute('class', 'menu');
 
-			$root = $this->document->createElement('navigation');
+        $root = $this->document->createElement('navigation');
 
-			####
-			# Delegate: DevKiAppendtMenuItem
-			# Description: Allow navigation XML to be manipulated before it is rendered.
-			# Global: Yes
-			#$this->_page->ExtensionManager->notifyMembers(
-			Extension::notify(
-				'DevKiAppendtMenuItem', '/frontend/',
-				array(
-					'wrapper'	=> $root
-				)
-			);
+        ####
+        # Delegate: DevKiAppendtMenuItem
+        # Description: Allow navigation XML to be manipulated before it is rendered.
+        # Global: Yes
+        #$this->_page->ExtensionManager->notifyMembers(
+        Extension::notify(
+            'DevKiAppendtMenuItem',
+            '/frontend/',
+            array(
+                'wrapper'    => $root
+            )
+        );
 
-			if ($root->hasChildNodes()) {
-				foreach ($root->childNodes as $node) {
-					if ($node->getAttribute('active') == 'yes') {
-						$item = $this->document->createElement('li', $node->getAttribute('name'));
-					}
+        if ($root->hasChildNodes()) {
+            foreach ($root->childNodes as $node) {
+                if ($node->getAttribute('active') == 'yes') {
+                    $item = $this->document->createElement('li', $node->getAttribute('name'));
+                } else {
+                    $handle = $node->getAttribute('handle');
 
-					else {
-						$handle = $node->getAttribute('handle');
+                    $url = clone $this->url;
+                    $url->parameters()->$handle = null;
 
-						$url = clone $this->url;
-						$url->parameters()->$handle = null;
+                    $item = $this->document->createElement('li');
+                    $item->appendChild(Widget::Anchor(
+                        $node->getAttribute('name'),
+                        (string)$url
+                    ));
+                }
 
-						$item = $this->document->createElement('li');
-						$item->appendChild(Widget::Anchor(
-							$node->getAttribute('name'),
-							(string)$url
-						));
-					}
+                $list->appendChild($item);
+            }
+        }
 
-					$list->appendChild($item);
-				}
-			}
+        $item = $this->document->createElement('li');
+        $item->appendChild(Widget::Anchor(
+            __('Edit'),
+            ADMIN_URL . '/blueprints/views/edit/' . $this->view->handle . '/'
+        ));
+        $list->prependChild($item);
 
-			$item = $this->document->createElement('li');
-			$item->appendChild(Widget::Anchor(
-				__('Edit'), ADMIN_URL . '/blueprints/views/edit/' . $this->view->handle . '/'
-			));
-			$list->prependChild($item);
+        $container->appendChild($list);
 
-			$container->appendChild($list);
+        // Main:
+        $fieldset = Widget::Fieldset(__('Pages'));
+        $container->appendChild($fieldset);
+        $wrapper->appendChild($container);
 
-			// Main:
-			$fieldset = Widget::Fieldset(__('Pages'));
-			$container->appendChild($fieldset);
-			$wrapper->appendChild($container);
+        return $container;
+    }
 
-			return $container;
-		}
+    protected function appendLink(DOMElement $wrapper, $name, $link, $active = false)
+    {
+        $item = $this->document->createElement('li');
+        $anchor = $this->document->createElement('a');
+        $anchor->setAttribute('href', $link);
+        $anchor->setAttribute('class', 'inactive');
+        $anchor->appendChild(
+            $this->document->createTextNode($name)
+        );
 
-		protected function appendLink(DOMElement $wrapper, $name, $link, $active = false) {
-			$item = $this->document->createElement('li');
-			$anchor = $this->document->createElement('a');
-			$anchor->setAttribute('href', $link);
-			$anchor->setAttribute('class', 'inactive');
-			$anchor->appendChild(
-				$this->document->createTextNode($name)
-			);
+        if ($active == true) {
+            $anchor->setAttribute('class', 'active');
+        }
 
-			if ($active == true) {
-				$anchor->setAttribute('class', 'active');
-			}
+        $item->appendChild($anchor);
+        $wrapper->appendChild($item);
 
-			$item->appendChild($anchor);
-			$wrapper->appendChild($item);
-
-			return $item;
-		}
-	}
+        return $item;
+    }
+}

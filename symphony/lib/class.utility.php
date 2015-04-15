@@ -1,187 +1,217 @@
 <?php
+use Embark\CMS\Configuration\Controller as Configuration;
 
-	Class FileTypeFilterIterator extends FilterIterator{
+class FileTypeFilterIterator extends FilterIterator
+{
+    protected $_extensions;
 
-		protected $_extensions;
+    public function __construct($path, array $extensions)
+    {
+        $this->_extensions = array_map('strtolower', $extensions);
+        parent::__construct(new DirectoryIterator($path));
+    }
 
-		public function __construct($path, array $extensions){
-			$this->_extensions = array_map('strtolower', $extensions);
-			parent::__construct(new DirectoryIterator($path));
-		}
+    public function accept()
+    {
+        return (in_array(strtolower(pathinfo($this->current(), PATHINFO_EXTENSION)), $this->_extensions) ? true : false);
+    }
+}
 
-		public function accept(){
-			return (in_array(strtolower(pathinfo($this->current(), PATHINFO_EXTENSION)), $this->_extensions) ? true : false);
-		}
-	}
+final class UtilityIterator implements Iterator
+{
+    private $_iterator;
+    private $_length;
+    private $_position;
 
-	Final Class UtilityIterator implements Iterator{
+    public function __construct()
+    {
+        $this->_iterator = new FileTypeFilterIterator(UTILITIES, array('xsl'));
+        $this->_length = $this->_position = 0;
+        foreach ($this->_iterator as $f) {
+            $this->_length++;
+        }
+        $this->_iterator->rewind();
+    }
 
-		private $_iterator;
-		private $_length;
-		private $_position;
+    public function current()
+    {
+        $this->_current = $this->_iterator->current();
+        return Utility::load($this->_current->getPathname());
+    }
 
-		public function __construct(){
-			$this->_iterator = new FileTypeFilterIterator(UTILITIES, array('xsl'));
-			$this->_length = $this->_position = 0;
-			foreach($this->_iterator as $f){
-				$this->_length++;
-			}
-			$this->_iterator->rewind();
-		}
+    public function innerIterator()
+    {
+        return $this->_iterator;
+    }
 
-		public function current(){
-			$this->_current = $this->_iterator->current();
-			return Utility::load($this->_current->getPathname());
-		}
+    public function next()
+    {
+        $this->_position++;
+        $this->_iterator->next();
+    }
 
-		public function innerIterator(){
-			return $this->_iterator;
-		}
+    public function key()
+    {
+        return $this->_iterator->key();
+    }
 
-		public function next(){
-			$this->_position++;
-			$this->_iterator->next();
-		}
+    public function valid()
+    {
+        return $this->_iterator->valid();
+    }
 
-		public function key(){
-			return $this->_iterator->key();
-		}
+    public function rewind()
+    {
+        $this->_position = 0;
+        $this->_iterator->rewind();
+    }
 
-		public function valid(){
-			return $this->_iterator->valid();
-		}
+    public function position()
+    {
+        return $this->_position;
+    }
 
-		public function rewind(){
-			$this->_position = 0;
-			$this->_iterator->rewind();
-		}
+    public function length()
+    {
+        return $this->_length;
+    }
+}
 
-		public function position(){
-			return $this->_position;
-		}
+final class Utility
+{
+    private $_properties;
 
-		public function length(){
-			return $this->_length;
-		}
+    const ERROR_XSLT_INVALID = 10;
+    const ERROR_NAME_INVALID = 20;
+    const ERROR_CANNOT_READ = 30;
+    const ERROR_CANNOT_WRITE = 40;
 
-	}
+    public function __construct($name=null, $body=null)
+    {
+        $this->_properties = array();
 
-	Final Class Utility{
+        if (!is_null($name)) {
+            $this->name = $name;
+        }
+        if (!is_null($body)) {
+            $this->body = $body;
+        }
+    }
 
-		private $_properties;
+    public static function save(Utility $utility)
+    {
+        $file = UTILITIES . "/{$utility->name}";
 
-		const ERROR_XSLT_INVALID = 10;
-		const ERROR_NAME_INVALID = 20;
-		const ERROR_CANNOT_READ = 30;
-		const ERROR_CANNOT_WRITE = 40;
+        General::writeFile(
+            $file,
+            $utility->body,
+            Symphony::Configuration()['system']['file-write-mode']
+        );
 
-		public function __construct($name=NULL, $body=NULL){
+        return file_exists($file);
+    }
 
-			$this->_properties = array();
+    public static function delete($name)
+    {
+        unlink(UTILITIES . "/{$name}");
+    }
 
-			if(!is_null($name)) $this->name = $name;
-			if(!is_null($body)) $this->body = $body;
-		}
+    public static function load($file)
+    {
+        if (!file_exists($file) && is_readable($file)) {
+            throw new Exception("Utility '{$file}' does not exist or is not readable.", self::ERROR_CANNOT_READ);
+        }
+        return new self(basename($file), file_get_contents($file));
+    }
 
-		public static function save(Utility $utility)
-		{
-			$file = UTILITIES . "/{$utility->name}";
+    public function findTemplates()
+    {
+        $templates = array();
 
-			General::writeFile(
-				$file,
-				$utility->body,
-				Symphony::Configuration()->main()->system->{'file-write-mode'}
-			);
+        preg_match_all('/xsl:template\s+name="([^"]+)"/i', $this->body, $matches, PREG_SET_ORDER);
 
-			return file_exists($file);
-		}
+        foreach ($matches as $m) {
+            if (empty($m)) {
+                continue;
+            }
 
-		public static function delete($name){
-			unlink(UTILITIES . "/{$name}");
-		}
+            $templates[] = $m[1];
+        }
 
-		public static function load($file){
-			if(!file_exists($file) && is_readable($file)) throw new Exception("Utility '{$file}' does not exist or is not readable.", self::ERROR_CANNOT_READ);
-			return new self(basename($file), file_get_contents($file));
-		}
+        return $templates;
+    }
 
-		public function findTemplates(){
+    public function findIncludes()
+    {
+        $includes = array();
 
-			$templates = array();
+        preg_match_all('/xsl:(include|import)\s+href="([^"]+)"/i', $this->body, $matches, PREG_SET_ORDER);
 
-			preg_match_all('/xsl:template\s+name="([^"]+)"/i', $this->body, $matches, PREG_SET_ORDER);
+        foreach ($matches as $m) {
+            if (empty($m)) {
+                continue;
+            }
 
-			foreach($matches as $m){
-				if(empty($m)) continue;
+            $includes[] = basename($m[2]);
+        }
 
-				$templates[] = $m[1];
+        return $includes;
+    }
 
-			}
+    public function validate(MessageStack $messages = null, $validateAsNew = true)
+    {
+        $valid = true;
 
-			return $templates;
+        if ($this->name == '.xsl' || strlen(trim($this->name)) == 0) {
+            if ($messages instanceof MessageStack) {
+                $messages->append('name', 'This is a required field.');
+            }
 
-		}
+            $valid = false;
+        } elseif ($validateAsNew && file_exists(UTILITIES . "/{$this->name}")) {
+            if ($messages instanceof MessageStack) {
+                $messages->append('name', 'A utility with name name already exists.');
+            }
 
-		public function findIncludes(){
+            $valid = false;
+        }
 
-			$includes = array();
+        $error = array();
+        if (strlen(trim($this->body)) == 0) {
+            if ($messages instanceof MessageStack) {
+                $messages->append('body', 'This is a required field.');
+            }
 
-			preg_match_all('/xsl:(include|import)\s+href="([^"]+)"/i', $this->body, $matches, PREG_SET_ORDER);
+            $valid = false;
+        } elseif (!General::validateXML($this->body, $error)) {
+            if ($messages instanceof MessageStack) {
+                $messages->append('body', sprintf('XSLT specified is invalid. The following error was returned: "%s near line %s"', $error[0]->message, $error[0]->line));
+            }
 
-			foreach($matches as $m){
-				if(empty($m)) continue;
+            $valid = false;
+        }
 
-				$includes[] = basename($m[2]);
+        return $valid;
+    }
 
-			}
+    public function __get($name)
+    {
+        if ($name == 'properties') {
+            return $this->_properties;
+        } elseif ($name == 'directory') {
+            return $this->_directory;
+        }
+        return $this->_properties[$name];
+    }
 
-			return $includes;
-		}
-
-		public function validate(MessageStack $messages=NULL, $validateAsNew=true){
-
-			$valid = true;
-
-			if($this->name == '.xsl' || strlen(trim($this->name)) == 0){
-				if($messages instanceof MessageStack)
-					$messages->append('name', 'This is a required field.');
-
-				$valid = false;
-			}
-			elseif($validateAsNew && file_exists(UTILITIES . "/{$this->name}")){
-				if($messages instanceof MessageStack)
-					$messages->append('name', 'A utility with name name already exists.');
-
-				$valid = false;
-			}
-
-			$error = array();
-			if(strlen(trim($this->body)) == 0){
-				if($messages instanceof MessageStack)
-					$messages->append('body', 'This is a required field.');
-
-				$valid = false;
-			}
-			elseif(!General::validateXML($this->body, $errors)){
-				if($messages instanceof MessageStack)
-					$messages->append('body', sprintf('XSLT specified is invalid. The following error was returned: "%s near line %s"', $error[0]->message, $error[0]->line));
-
-				$valid = false;
-			}
-
-			return $valid;
-		}
-
-		public function __get($name){
-			if($name == 'properties') return $this->_properties;
-			elseif($name == 'directory') return $this->_directory;
-			return $this->_properties[$name];
-		}
-
-		public function __set($name, $value){
-			if($name == 'properties') $this->_properties = $value;
-			elseif($name == 'directory') $this->_directory = $value;
-			else $this->_properties[$name] = $value;
-		}
-
-	}
+    public function __set($name, $value)
+    {
+        if ($name == 'properties') {
+            $this->_properties = $value;
+        } elseif ($name == 'directory') {
+            $this->_directory = $value;
+        } else {
+            $this->_properties[$name] = $value;
+        }
+    }
+}

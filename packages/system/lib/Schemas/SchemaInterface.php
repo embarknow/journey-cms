@@ -6,9 +6,9 @@ use Embark\CMS\Metadata\ReferencedMetadataInterface;
 
 interface SchemaInterface extends ReferencedMetadataInterface
 {
-	public function countEntries();
+    public function countEntries();
 
-	public function deleteEntries(array $entries);
+    public function deleteEntries(array $entries);
 
-	public function findField($handle);
+    public function findField($handle);
 }

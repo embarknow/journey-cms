@@ -2,16 +2,15 @@
 
 namespace Embark\CMS\Actors\Schemas;
 
+use DOMElement;
 use Embark\CMS\Actors\DatasourceInterface;
 use Embark\CMS\Database\Exception as DatabaseException;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Schemas\Controller as SchemaController;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Metadata\Types\Resource;
 use Embark\CMS\Metadata\Types\Pagination;
 use Embark\CMS\Metadata\Types\QueryOptions;
 use Embark\CMS\SystemDateTime;
-use DOMElement;
 use Entry;
 use PDO;
 use Section;

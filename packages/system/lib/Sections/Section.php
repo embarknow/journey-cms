@@ -6,12 +6,12 @@ use Embark\CMS\Metadata\MetadataTrait;
 
 class Section implements SectionInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
+    public function __construct()
+    {
+        $this->setSchema([
 
-		]);
-	}
+        ]);
+    }
 }

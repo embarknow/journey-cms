@@ -1,234 +1,234 @@
 /*-----------------------------------------------------------------------------
-	Duplicator plugin
+    Duplicator plugin
 -----------------------------------------------------------------------------*/
 
-	.duplicator-widget {
-		background: #eeeeee;
-		border: 1px solid #bbbbbb;
-		border-radius: 5px;
-		margin: 10px 0 0 0;
-		position: relative;
-	}
+    .duplicator-widget {
+        background: #eeeeee;
+        border: 1px solid #bbbbbb;
+        border-radius: 5px;
+        margin: 10px 0 0 0;
+        position: relative;
+    }
 
 /*-----------------------------------------------------------------------------
-	Duplicator: Controls
+    Duplicator: Controls
 -----------------------------------------------------------------------------*/
 
-	.duplicator-widget > .controls {
-		background: #666666;
-		background: -moz-linear-gradient(#cccccc, #bbbbbb);
-		background: -webkit-gradient(
-			linear, left top, left bottom,
-			from(#cccccc),
-			to(#bbbbbb)
-		);
-		border-bottom: 1px solid #aaaaaa;
-		border-top: 1px solid #dadada;
-		border-radius: 4px;
-		height: 35px;
-		line-height: 33px;
-		list-style: none;
-		margin: 0 0 -1px 0;
-		position: relative;
-		z-index: 1;
-	}
-	.duplicator-widget.templates-visible > .controls,
-	.duplicator-widget.content-visible > .controls {
-		border-bottom-left-radius: 0;
-		border-bottom-right-radius: 0;
-		border-bottom-color: #999999;
-		margin-bottom: 0;
-	}
-	.duplicator-widget > .controls li {
-		bottom: 0;
-		color: #444444;
-		cursor: pointer;
-		position: absolute;
-		top: 0;
-		text-decoration: none;
-	}
-	.duplicator-widget > .controls li:hover {
-		color: #000000;
-	}
-	.duplicator-widget > .controls li.disabled {
-		color: #888888;
-		cursor: default;
-	}
-	.duplicator-widget > .controls .add {
-		left: 20px;
-	}
-	.duplicator-widget > .controls .add:after {
-		content: '+';
-		margin: 0 0 0 10px;
-	}
-	.duplicator-widget.templates-visible > .controls .add:after {
-		content: '-';
-	}
-	.duplicator-widget > .controls .remove {
-		right: 20px;
-	}
+    .duplicator-widget > .controls {
+        background: #666666;
+        background: -moz-linear-gradient(#cccccc, #bbbbbb);
+        background: -webkit-gradient(
+            linear, left top, left bottom,
+            from(#cccccc),
+            to(#bbbbbb)
+        );
+        border-bottom: 1px solid #aaaaaa;
+        border-top: 1px solid #dadada;
+        border-radius: 4px;
+        height: 35px;
+        line-height: 33px;
+        list-style: none;
+        margin: 0 0 -1px 0;
+        position: relative;
+        z-index: 1;
+    }
+    .duplicator-widget.templates-visible > .controls,
+    .duplicator-widget.content-visible > .controls {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom-color: #999999;
+        margin-bottom: 0;
+    }
+    .duplicator-widget > .controls li {
+        bottom: 0;
+        color: #444444;
+        cursor: pointer;
+        position: absolute;
+        top: 0;
+        text-decoration: none;
+    }
+    .duplicator-widget > .controls li:hover {
+        color: #000000;
+    }
+    .duplicator-widget > .controls li.disabled {
+        color: #888888;
+        cursor: default;
+    }
+    .duplicator-widget > .controls .add {
+        left: 20px;
+    }
+    .duplicator-widget > .controls .add:after {
+        content: '+';
+        margin: 0 0 0 10px;
+    }
+    .duplicator-widget.templates-visible > .controls .add:after {
+        content: '-';
+    }
+    .duplicator-widget > .controls .remove {
+        right: 20px;
+    }
 
 /*-----------------------------------------------------------------------------
-	Duplicator: Templates
+    Duplicator: Templates
 -----------------------------------------------------------------------------*/
 
-	.duplicator-widget > .templates {
-		display: none;
-		background: #888888;
-		background: linear-gradient(#666666, #777777 4%, #666666);
-		border: 1px solid #555555;
-		border-bottom-left-radius: 5px;
-		border-bottom-right-radius: 5px;
-		list-style: none;
-		margin: -1px;
-		overflow: hidden;
-		padding: 5px;
-		position: relative;
-		z-index: 3;
-	}
-	.duplicator-widget.templates-visible > .templates {
-		display: block;
-	}
-	.duplicator-widget.content-visible > .templates {
-		border-bottom-left-radius: 0;
-		border-bottom-right-radius: 0;
-	}
-	.duplicator-widget > .templates > li {
-		background: hsla(0, 0%, 0%, 0.15);
-		border-radius: 5px;
-		cursor: pointer;
-		display: block;
-		float: left;
-		margin: 4px;
-		width: 160px;
-		white-space: nowrap;
-	}
-	.duplicator-widget > .templates > li > * {
-		display: none;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.duplicator-widget > .templates > li:hover {
-		background: hsla(0, 0%, 0%, 0.25);
-	}
-	.duplicator-widget > .templates > li > .name {
-		cursor: pointer;
-		display: block;
-		line-height: 26px;
-		padding: 0 10px;
-		color: #eeeeee;
-	}
-	.duplicator-widget > .templates > li > .name em {
-		margin: 0 0 0 1ex;
-		opacity: 0.5;
-	}
+    .duplicator-widget > .templates {
+        display: none;
+        background: #888888;
+        background: linear-gradient(#666666, #777777 4%, #666666);
+        border: 1px solid #555555;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        list-style: none;
+        margin: -1px;
+        overflow: hidden;
+        padding: 5px;
+        position: relative;
+        z-index: 3;
+    }
+    .duplicator-widget.templates-visible > .templates {
+        display: block;
+    }
+    .duplicator-widget.content-visible > .templates {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .duplicator-widget > .templates > li {
+        background: hsla(0, 0%, 0%, 0.15);
+        border-radius: 5px;
+        cursor: pointer;
+        display: block;
+        float: left;
+        margin: 4px;
+        width: 160px;
+        white-space: nowrap;
+    }
+    .duplicator-widget > .templates > li > * {
+        display: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .duplicator-widget > .templates > li:hover {
+        background: hsla(0, 0%, 0%, 0.25);
+    }
+    .duplicator-widget > .templates > li > .name {
+        cursor: pointer;
+        display: block;
+        line-height: 26px;
+        padding: 0 10px;
+        color: #eeeeee;
+    }
+    .duplicator-widget > .templates > li > .name em {
+        margin: 0 0 0 1ex;
+        opacity: 0.5;
+    }
 
 /*-----------------------------------------------------------------------------
-	Duplicator: Lower
+    Duplicator: Lower
 -----------------------------------------------------------------------------*/
 
-	.duplicator-widget > .content {
-		border-spacing: 0;
-		display: none;
-		overflow: hidden;
-		position: relative;
-		table-layout: fixed;
-		width: 100%;
-		z-index: 2;
-	}
-	.duplicator-widget.content-visible > .content {
-		display: table;
-	}
-	.duplicator-widget > .content > * {
-		display: table-cell;
-		vertical-align: top;
-	}
+    .duplicator-widget > .content {
+        border-spacing: 0;
+        display: none;
+        overflow: hidden;
+        position: relative;
+        table-layout: fixed;
+        width: 100%;
+        z-index: 2;
+    }
+    .duplicator-widget.content-visible > .content {
+        display: table;
+    }
+    .duplicator-widget > .content > * {
+        display: table-cell;
+        vertical-align: top;
+    }
 
-	.duplicator-widget > .content > .tabs {
-		list-style: none;
-		padding: 5px 0 5px 10px;
-		width: 20%;
-	}
-	.duplicator-widget > .content > .tabs:empty {
-		border: none;
-	}
-	.duplicator-widget > .content > .tabs > * {
-		background: hsla(0, 0%, 0%, 0.03);
-		border: 1px solid #cccccc;
-		border-right: none;
-		border-bottom-left-radius: 4px;
-		border-top-left-radius: 4px;
-		color: #444444;
-		display: block;
-		line-height: 30px;
-		margin: 5px 0;
-		overflow: hidden;
-		position: relative;
-		text-indent: 10px;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.duplicator-widget > .content > .tabs * {
-		cursor: move;
-	}
-	.duplicator-widget > .content > .tabs > :hover,
-	.duplicator-widget > .content > .tabs > .active {
-		background: #FBFBFB;
-		margin-right: -1px;
-	}
-	.duplicator-widget > .content > .tabs > .ordering {
-		font-weight: bold;
-	}
-	.duplicator-widget > .content > .tabs > * em {
-		margin: 0;
-		opacity: 0.5;
-	}
-	.duplicator-widget > .content > .tabs > * em:before {
-		content: ' ';
-	}
-	.duplicator-widget > .content > .tabs > * .remove {
-		background: hsla(0, 0%, 0%, 0.3);
-		border-radius: 5px;
-		color: #FBFBFB;
-		cursor: pointer;
-		display: block;
-		font-weight: bold;
-		height: 15px;
-		line-height: 14px;
-		position: absolute;
-		right: 10px;
-		text-align: center;
-		text-decoration: none;
-		text-indent: 1px;
-		top: 7px;
-		visibility: hidden;
-		width: 15px;
-	}
-	.duplicator-widget > .content > .tabs > * .remove:hover {
-		background: hsla(0, 0%, 0%, 0.5);
-	}
-	.duplicator-widget > .content > .tabs > :hover .remove {
-		visibility: visible;
-	}
+    .duplicator-widget > .content > .tabs {
+        list-style: none;
+        padding: 5px 0 5px 10px;
+        width: 20%;
+    }
+    .duplicator-widget > .content > .tabs:empty {
+        border: none;
+    }
+    .duplicator-widget > .content > .tabs > * {
+        background: hsla(0, 0%, 0%, 0.03);
+        border: 1px solid #cccccc;
+        border-right: none;
+        border-bottom-left-radius: 4px;
+        border-top-left-radius: 4px;
+        color: #444444;
+        display: block;
+        line-height: 30px;
+        margin: 5px 0;
+        overflow: hidden;
+        position: relative;
+        text-indent: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .duplicator-widget > .content > .tabs * {
+        cursor: move;
+    }
+    .duplicator-widget > .content > .tabs > :hover,
+    .duplicator-widget > .content > .tabs > .active {
+        background: #FBFBFB;
+        margin-right: -1px;
+    }
+    .duplicator-widget > .content > .tabs > .ordering {
+        font-weight: bold;
+    }
+    .duplicator-widget > .content > .tabs > * em {
+        margin: 0;
+        opacity: 0.5;
+    }
+    .duplicator-widget > .content > .tabs > * em:before {
+        content: ' ';
+    }
+    .duplicator-widget > .content > .tabs > * .remove {
+        background: hsla(0, 0%, 0%, 0.3);
+        border-radius: 5px;
+        color: #FBFBFB;
+        cursor: pointer;
+        display: block;
+        font-weight: bold;
+        height: 15px;
+        line-height: 14px;
+        position: absolute;
+        right: 10px;
+        text-align: center;
+        text-decoration: none;
+        text-indent: 1px;
+        top: 7px;
+        visibility: hidden;
+        width: 15px;
+    }
+    .duplicator-widget > .content > .tabs > * .remove:hover {
+        background: hsla(0, 0%, 0%, 0.5);
+    }
+    .duplicator-widget > .content > .tabs > :hover .remove {
+        visibility: visible;
+    }
 
-	.duplicator-widget > .content > .instances {
-		background: #FBFBFB;
-		border-left: 1px solid #bbbbbb;
-		border-bottom-right-radius: 4px;
-		box-shadow: -1px 0 5px hsla(0, 0%, 0%, 0.1);
-		list-style: none;
-	}
-	.duplicator-widget > .content > .instances > * {
-		display: none;
-		padding: 20px;
-		width: 100%;
-	}
-	.duplicator-widget > .content > .instances > .active {
-		display: block;
-	}
-	.duplicator-widget > .content > .instances > .active + .active,
-	.duplicator-widget > .content > .instances > .active ~ .active {
-		border-top: 1px solid #dddddd;
-	}
+    .duplicator-widget > .content > .instances {
+        background: #FBFBFB;
+        border-left: 1px solid #bbbbbb;
+        border-bottom-right-radius: 4px;
+        box-shadow: -1px 0 5px hsla(0, 0%, 0%, 0.1);
+        list-style: none;
+    }
+    .duplicator-widget > .content > .instances > * {
+        display: none;
+        padding: 20px;
+        width: 100%;
+    }
+    .duplicator-widget > .content > .instances > .active {
+        display: block;
+    }
+    .duplicator-widget > .content > .instances > .active + .active,
+    .duplicator-widget > .content > .instances > .active ~ .active {
+        border-top: 1px solid #dddddd;
+    }
 
 /*-------------------------------------------------------------------------------*/

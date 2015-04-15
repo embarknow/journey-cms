@@ -1,15 +1,16 @@
 <?php
-	require_once(LIB . '/class.administrationpage.php');
+require_once(LIB . '/class.administrationpage.php');
 
-	Class contentSystemLog extends AdministrationPage{
+class contentSystemLog extends AdministrationPage
+{
+    public function build()
+    {
+        if (!is_file(ACTIVITY_LOG)) {
+            throw new AdministrationPageNotFoundException;
+        }
 
-		public function build(){
-
-			if(!is_file(ACTIVITY_LOG)) throw new AdministrationPageNotFoundException;
-
-			header('Content-Type: text/plain');
-			readfile(ACTIVITY_LOG);
-			exit();
-		}
-
-	}
+        header('Content-Type: text/plain');
+        readfile(ACTIVITY_LOG);
+        exit();
+    }
+}

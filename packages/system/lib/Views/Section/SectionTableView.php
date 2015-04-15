@@ -2,7 +2,6 @@
 
 namespace Embark\CMS\Views\Section;
 
-use Embark\CMS\Actors\Schemas\DatasourceQuery;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldPreviewInterface;
@@ -12,6 +11,7 @@ use Embark\CMS\Link;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Schemas\SchemaInterface;
+use Embark\CMS\Schemas\SchemaSelectQuery;
 use AlertStack;
 use DOMElement;
 use Entry;
@@ -166,6 +166,11 @@ class SectionTableView implements MetadataInterface
         }
     }
 
+    protected function appendFilteringQueries($handle, $query, SchemaInterface $schema)
+    {
+
+    }
+
     protected function appendSortingQueries($handle, $query, SchemaInterface $schema, Link &$link)
     {
         // Prime with parameters:
@@ -209,11 +214,14 @@ class SectionTableView implements MetadataInterface
     {
         $handle = $view['resource']['handle'];
         $guid = $schema->getGuid();
-        $query = new DatasourceQuery();
+        $query = new SchemaSelectQuery(Symphony::Database());
         $sortLink = clone $pageLink;
 
         // Show only entries from this schema:
         $query->filterBySubQuery("select entry_id from entries where schema_id = '{$guid}'");
+
+        // Filter the results:
+        $this->appendFilteringQueries($handle, $query, $schema);
 
         // Sort the results:
         $this->appendSortingQueries($handle, $query, $schema, $sortLink);

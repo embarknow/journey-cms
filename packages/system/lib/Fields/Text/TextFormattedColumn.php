@@ -5,6 +5,7 @@ namespace Embark\CMS\Fields\Text;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
+use Embark\CMS\Link;
 use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use Widget;
@@ -13,7 +14,7 @@ class TextFormattedColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
-    public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
+    public function appendBodyTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
     {
         $field = $this['field']->resolve();
         $data = $field->readData($schema, $entry, $this);
@@ -23,7 +24,7 @@ class TextFormattedColumn implements FieldColumnInterface
 
         if ($this['editLink']) {
             $link = $document->createElement('a');
-            $link->setAttribute('href', $url . '/edit/' . $entry->entry_id);
+            $link->setAttribute('href', $link . '/edit/' . $entry->entry_id);
 
             $text = $document->createDocumentFragment();
             $text->appendXml((string)$data->formatted);

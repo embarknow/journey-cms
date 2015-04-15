@@ -331,7 +331,13 @@ class Link
         $result = '';
 
         foreach ($this->parameters as $key => $value) {
-            $result .= $key . '=' . $value . '&';
+            if (null === $value || '' === $value) {
+                $result .= $key . '&';
+            }
+
+            else {
+                $result .= $key . '=' . $value . '&';
+            }
         }
 
         return rtrim($result, '&');

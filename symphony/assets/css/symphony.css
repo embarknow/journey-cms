@@ -476,6 +476,107 @@
 	}
 
 /*-----------------------------------------------------------------------------
+	Content: Cards
+-----------------------------------------------------------------------------*/
+
+	section.cards {
+		background: hsla(0, 0%, 0%, 0.05);
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+		display: flex;
+		overflow: hidden;
+		padding: 0 30px 15px 15px;
+		flex-wrap: wrap;
+	}
+	section.cards article {
+		background: #ffffff;
+		background-clip: padding-box;
+		border: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-radius: 3px;
+		box-sizing: border-box;
+		flex-basis: calc(25% - 15px);
+		margin: 15px 0 0 15px;
+		padding: 15px;
+	}
+	section.cards article input[type = checkbox] {
+		display: none;
+	}
+	section.cards article h1 {
+		background: transparent;
+		font-size: 11pt;
+		font-weight: normal;
+		height: auto;
+		line-height: 1.6;
+		margin: -5px 0 0 0;
+		padding: 0 0 3px 0;
+		text-shadow: none;
+	}
+	section.cards article h1 a {
+		display: inline;
+		color: inherit;
+		padding: 0;
+	}
+	section.cards article h1 a:hover {
+		background: transparent;
+	}
+	section.cards article > figure {
+		background: hsl(0, 0%, 98%);
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+		box-shadow: 0 0 5px hsla(0, 0%, 100%, 1) inset;
+		height: 7em;
+		overflow: hidden;
+		margin: 0 -15px;
+		padding: 0.5em 15px;
+		position: relative;
+	}
+	section.cards article > figure:after {
+		background:
+			linear-gradient(
+				to bottom,
+				hsla(0, 0%, 98%, 0) 40%,
+				hsla(0, 0%, 98%, 0.6) 70%,
+				hsla(0, 0%, 98%, 1)
+			);
+		bottom: 0;
+		content: '';
+		display: block;
+		left: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+	}
+	section.cards article > figure caption i,
+	section.cards article > figure caption em {
+		font-style: italic;
+	}
+	section.cards article > figure caption b,
+	section.cards article > figure caption strong {
+		font-weight: bold;
+	}
+	section.cards article > dl {
+		display: flex;
+		margin: 5px 0 0 0;
+	}
+	section.cards article > dl dt {
+		flex-basis: 8em;
+		float: left;
+		font-weight: bold;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	section.cards article > dl dt a {
+		color: inherit;
+		text-decoration: none;
+	}
+	section.cards article > dl dd {
+		flex: 1 1;
+		max-height: 3.2em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+/*-----------------------------------------------------------------------------
 	Content: Table
 -----------------------------------------------------------------------------*/
 
@@ -495,6 +596,12 @@
 		margin: 20px 30px;
 		padding: 0;
 	}
+	section.table > p.error {
+		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+		line-height: 32px;
+		padding: 0 30px;
+	}
 
 	/* Table rows */
 	section.table article {
@@ -506,6 +613,7 @@
 		white-space: nowrap;
 	}
 	section.table article h1,
+	section.table article figure,
 	section.table article input[type = checkbox] {
 		display: none;
 	}
@@ -534,7 +642,6 @@
 	}
 	section.table article dl.active:before {
 		background: hsla(0, 0%, 0%, 0.025);
-		/*background-color: hsla(210, 100%, 25%, 0.7);*/
 		bottom: 0;
 		content: '';
 		display: block;

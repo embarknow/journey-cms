@@ -3,10 +3,11 @@
 namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Entries\EntryInterface;
-use Embark\CMS\Schemas\Controller as SchemaController;
+use Embark\CMS\Link;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Types\MenuItem;
+use Embark\CMS\Schemas\Controller as SchemaController;
 use HTMLDocument;
 
 class SectionView implements MetadataInterface
@@ -31,18 +32,20 @@ class SectionView implements MetadataInterface
     public function appendIndexView(HTMLDocument $page)
     {
         $schema = SchemaController::read($this['schema']);
+        $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
 
-        $this['table']->appendHeader($page, $this, $schema);
-        $this['table']->appendTable($page, $this, $schema);
-        $this['table']->appendFooter($page, $this, $schema);
+        $this['table']->appendHeaderTo($page, $this, $schema, $pageLink);
+        $this['table']->appendListTo($page, $this, $schema, $pageLink);
+        $this['table']->appendFooterTo($page, $this, $schema, $pageLink);
     }
 
     public function appendFormView(HTMLDocument $page, EntryInterface $entry)
     {
         $schema = SchemaController::read($this['schema']);
+        $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
 
-        $this['form']->appendHeader($page, $this, $schema, $entry);
-        $this['form']->appendForm($page, $this, $schema, $entry);
-        $this['form']->appendFooter($page, $this, $schema, $entry);
+        $this['form']->appendHeaderTo($page, $this, $schema, $entry, $pageLink);
+        $this['form']->appendFormTo($page, $this, $schema, $entry, $pageLink);
+        $this['form']->appendFooterTo($page, $this, $schema, $entry, $pageLink);
     }
 }

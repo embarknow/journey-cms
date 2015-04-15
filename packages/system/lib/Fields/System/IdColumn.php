@@ -6,6 +6,7 @@ use DOMElement;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
+use Embark\CMS\Link;
 use Embark\CMS\Schemas\SchemaInterface;
 use Widget;
 
@@ -13,7 +14,7 @@ class IdColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
-    public function appendBodyElement(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, $url)
+    public function appendBodyTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
     {
         $document = $wrapper->ownerDocument;
         $body = $document->createElement('dd');
@@ -22,7 +23,7 @@ class IdColumn implements FieldColumnInterface
         if ($this['editLink']) {
             $link = Widget::Anchor(
                 (string)$entry->entry_id,
-                $url . '/edit/' . $entry->entry_id
+                $link . '/edit/' . $entry->entry_id
             );
             $body->appendChild($link);
         }

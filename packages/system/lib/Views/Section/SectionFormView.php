@@ -45,7 +45,7 @@ class SectionFormView implements MetadataInterface
         }
     }
 
-    public function appendHeader(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendHeaderTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $title = __('Create new');
@@ -88,7 +88,7 @@ class SectionFormView implements MetadataInterface
         }
     }
 
-    public function appendFooter(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendFooterTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $editing = isset($entry->entry_id);
 
@@ -129,7 +129,7 @@ class SectionFormView implements MetadataInterface
         );
     }
 
-    public function appendForm(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendFormTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $saving = isset($_POST['fields']);

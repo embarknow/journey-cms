@@ -8,5 +8,7 @@ interface SchemaInterface extends ReferencedMetadataInterface
 {
 	public function countEntries();
 
+	public function deleteEntries(array $entries);
+
 	public function findField($handle);
 }

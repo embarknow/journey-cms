@@ -33,21 +33,21 @@ class DatasourceQuery
 
     public function __toString()
     {
-        $query = "select\n\tentries.entry_id\nfrom\n\tentries";
+        $query = "select distinct\n\tentries.entry_id\nfrom\n\tentries";
+        $where = $order = [];
 
         if (!empty($this->filterQueries)) {
             foreach ($this->filterQueries as $index => $item) {
                 switch ($item->type) {
                     case 'subquery':
                         $query .= "\nright join\n\t({$item->query})\n\tas filter{$index} using (entry_id)";
+                        $where[] = "filter{$index}.entry_id is not null";
                         break;
                 }
             }
         }
 
         if (!empty($this->sortQueries)) {
-            $order = [];
-
             foreach ($this->sortQueries as $index => $item) {
                 switch ($item->type) {
                     case 'metadata':
@@ -64,7 +64,13 @@ class DatasourceQuery
                         break;
                 }
             }
+        }
 
+        if (false === empty($where)) {
+            $query .= "\nwhere\n\t" . implode("\n\tand ", $where);
+        }
+
+        if (false === empty($order)) {
             $query .= "\norder by\n\t" . implode(",\n\t", $order);
         }
 

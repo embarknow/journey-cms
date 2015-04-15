@@ -3,10 +3,11 @@
 namespace Embark\CMS\Fields;
 
 use Embark\CMS\Actors\Schemas\DatasourceQuery;
+use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Link;
-use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
+use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Enum;
 use Embark\CMS\Schemas\SchemaInterface;
@@ -52,7 +53,7 @@ trait FieldColumnTrait
         }
     }
 
-    public function appendHeaderElement(DOMElement $wrapper, Link $link)
+    public function appendHeaderTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('dt');

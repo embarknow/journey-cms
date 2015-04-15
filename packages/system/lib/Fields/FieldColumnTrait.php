@@ -15,7 +15,7 @@ use Widget;
 
 trait FieldColumnTrait
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
     protected $sortingActive = false;
 
@@ -43,11 +43,11 @@ trait FieldColumnTrait
             }
 
             if ($this['field'] instanceof FieldInterface) {
-            	$this['sorting']->appendQuery($query, $schema, $this['field']);
+                $this['sorting']->appendQuery($query, $schema, $this['field']);
             }
 
             else if ($this['field'] instanceof MetadataReferenceInterface) {
-            	$this['sorting']->appendQuery($query, $schema, $this['field']->resolve());
+                $this['sorting']->appendQuery($query, $schema, $this['field']->resolve());
             }
         }
     }

@@ -2,11 +2,11 @@
 
 namespace Embark\CMS\Views;
 
-use Embark\CMS\Metadata\MetadataInterface;
-use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\ReferencedMetadataInterface;
+use Embark\CMS\Metadata\ReferencedMetadataTrait;
 use Embark\CMS\Views\ViewType;
 
-class ViewTemplate implements MetadataInterface
+class ViewTemplate implements ReferencedMetadataInterface
 {
-    use MetadataTrait;
+    use ReferencedMetadataTrait;
 }

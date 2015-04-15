@@ -16,11 +16,11 @@ class IdSortQuery implements FieldSortQueryInterface
 
     public function __construct()
     {
-    	$this->setSchema([
-    		'direction' => [
-    			'filter' =>		new SortingDirection()
-    		]
-    	]);
+        $this->setSchema([
+            'direction' => [
+                'filter' =>        new SortingDirection()
+            ]
+        ]);
     }
 
     public function appendQuery(DatasourceQuery $query, SchemaInterface $schema, FieldInterface $field = null)

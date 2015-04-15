@@ -319,7 +319,7 @@ use Embark\CMS\Configuration\Controller as Configuration;
                         Configuration::update($config, 'main');
                     }
 
-                    redirect(ADMIN_URL . '/system/settings/:saved/');
+                    redirect(URL . '/' . $config['admin']['path'] . '/system/settings/:saved/');
                 }
                 else{
                     $this->alerts()->append(__('An error occurred while processing this form. <a href="#error">See below for details.</a>'), AlertStack::ERROR, $this->errors);

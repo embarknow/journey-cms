@@ -9,56 +9,55 @@ use Symphony;
 
 class Field implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
-			'related-fields' => [
-				'type' =>		new RelatedFields()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'related-fields' => [
+                'type' => new RelatedFields()
+            ]
+        ]);
+    }
 
-	public function getParameterOutputValue($data, Entry $entry = null)
-	{
-		$result = [];
+    public function getParameterOutputValue($data, Entry $entry = null)
+    {
+        $result = [];
 
-		if (!is_array($data)) {
-			$data = array($data);
-		}
+        if (!is_array($data)) {
+            $data = array($data);
+        }
 
-		if (!empty($data)) foreach($data as $link) {
-			if (is_null($link->relation_id)) continue;
+        if (!empty($data)) foreach($data as $link) {
+            if (is_null($link->relation_id)) continue;
 
-			$result[] = $link->relation_id;
-		}
+            $result[] = $link->relation_id;
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 
-	public function loadDataFromDatabaseEntries($section, $entryIds)
-	{
-		try {
-			$result = [];
-			$rows = Symphony::Database()->query(
-				"SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
-				[
-					$section,
-					$this['name'],
-					implode(',', $entryIds)
-				]
-			);
+    public function loadDataFromDatabaseEntries($section, $entryIds)
+    {
+        try {
+            $result = [];
+            $rows = Symphony::Database()->query("SELECT * FROM `data_%s_%s` WHERE `entry_id` IN (%s) ORDER BY `id` ASC",
+                [
+                    $section,
+                    $this['name'],
+                    implode(',', $entryIds)
+                ]
+            );
 
-			foreach ($rows as $row) {
-				$result[] = $row;
-			}
+            foreach ($rows as $row) {
+                $result[] = $row;
+            }
 
-			return $result;
-		}
+            return $result;
+        }
 
-		catch (DatabaseException $e) {
-			return [];
-		}
-	}
+        catch (DatabaseException $e) {
+            return [];
+        }
+    }
 }

@@ -10,14 +10,14 @@ use Symphony;
 
 class RelatedFields implements MetadataInterface
 {
-	use MetadataTrait;
+    use MetadataTrait;
 
-	public function __construct()
-	{
-		$this->setSchema([
-			'item' => [
-				'type' =>		new RelatedField()
-			]
-		]);
-	}
+    public function __construct()
+    {
+        $this->setSchema([
+            'item' => [
+                'type' => new RelatedField()
+            ]
+        ]);
+    }
 }

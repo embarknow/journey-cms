@@ -1,67 +1,75 @@
 <?php
 
-	require_once LIB . '/class.page.php';
+require_once LIB . '/class.page.php';
 
-	abstract class AjaxPage extends Page {
-		const STATUS_OK = 200;
-		const STATUS_BAD = 400;
-		const STATUS_UNAUTHORISED = 401;
-		const STATUS_ERROR = 400;
+abstract class AjaxPage extends Page
+{
+    const STATUS_OK = 200;
+    const STATUS_BAD = 400;
+    const STATUS_UNAUTHORISED = 401;
+    const STATUS_ERROR = 400;
 
-		protected $_Parent;
-		protected $_Result;
-		protected $_status;
+    protected $_Parent;
+    protected $_Result;
+    protected $_status;
 
-		abstract public function view();
+    abstract public function view();
 
-		public function __construct($parent) {
-			$this->_Parent = $parent;
+    public function __construct($parent)
+    {
+        $this->_Parent = $parent;
 
-			$this->_Result = $this->createElement('result');
-			$this->_Result->setIncludeHeader(true);
+        $this->_Result = $this->createElement('result');
+        $this->_Result->setIncludeHeader(true);
 
-			$this->_status = self::STATUS_OK;
+        $this->_status = self::STATUS_OK;
 
-			$this->addHeaderToPage('Content-Type', 'text/xml');
-		}
+        $this->addHeaderToPage('Content-Type', 'text/xml');
+    }
 
-		public function build($context = null) {
-			if ($context) $this->_context = $context;
+    public function build($context = null)
+    {
+        if ($context) {
+            $this->_context = $context;
+        }
 
-			$this->view();
-		}
+        $this->view();
+    }
 
-		public function handleFailedAuthorisation() {
-			$this->_status = self::STATUS_UNAUTHORISED;
-			$this->_Result->setValue(__('You are not authorised to access this page.'));
-		}
+    public function handleFailedAuthorisation()
+    {
+        $this->_status = self::STATUS_UNAUTHORISED;
+        $this->_Result->setValue(__('You are not authorised to access this page.'));
+    }
 
-		public function generate() {
-			switch ($this->_status) {
-				case self::STATUS_OK:
-					$status_message = '200 OK';
-					break;
+    public function generate()
+    {
+        switch ($this->_status) {
+            case self::STATUS_OK:
+                $status_message = '200 OK';
+                break;
 
-				case self::STATUS_BAD:
-				case self::STATUS_ERROR:
-					$status_message = '400 Bad Request';
-					break;
+            case self::STATUS_BAD:
+            case self::STATUS_ERROR:
+                $status_message = '400 Bad Request';
+                break;
 
-				case self::STATUS_UNAUTHORISED:
-					$status_message = '401 Unauthorized';
-					break;
-			}
+            case self::STATUS_UNAUTHORISED:
+                $status_message = '401 Unauthorized';
+                break;
+        }
 
-			$this->addHeaderToPage('HTTP/1.0 ' . $status_message);
-			$this->_Result->setAttribute('status', $this->_status);
+        $this->addHeaderToPage('HTTP/1.0 ' . $status_message);
+        $this->_Result->setAttribute('status', $this->_status);
 
-			parent::generate();
+        parent::generate();
 
-			return $this->_Result->generate(true);
-		}
+        return $this->_Result->generate(true);
+    }
 
-		//	TODO: Fix AJAX pages
-		public function __toString() {
-			return "candy";
-		}
-	}
+    //    TODO: Fix AJAX pages
+    public function __toString()
+    {
+        return "candy";
+    }
+}

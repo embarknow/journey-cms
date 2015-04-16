@@ -36,21 +36,17 @@ trait FieldColumnTrait
 
     public function appendSortingQuery(SchemaSelectQuery $query, SchemaInterface $schema, $direction = null)
     {
-        if ($this['sorting'] instanceof MetadataInterface) {
-            $this->sortingActive = true;
+        if (false === isset($this['sorting'])) return;
 
-            if (isset($direction)) {
-                $this['sorting']['direction'] = $direction;
-            }
+        $sorting = $this['sorting']->resolveInstanceOf(FieldQueryInterface::class);
+        $field = $this['field']->resolveInstanceOf(FieldInterface::class);
+        $this->sortingActive = true;
 
-            if ($this['field'] instanceof FieldInterface) {
-                $this['sorting']->appendQuery($query, $schema, $this['field']);
-            }
-
-            else if ($this['field'] instanceof MetadataReferenceInterface) {
-                $this['sorting']->appendQuery($query, $schema, $this['field']->resolve());
-            }
+        if (isset($direction)) {
+            $sorting['direction'] = $direction;
         }
+
+        $sorting->appendQuery($query, $schema, $field);
     }
 
     public function appendHeaderTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)

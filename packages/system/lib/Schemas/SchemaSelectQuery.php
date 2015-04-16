@@ -8,6 +8,7 @@ class SchemaSelectQuery
 {
     protected $database;
     protected $filterQueries;
+    protected $parameters;
     protected $limitStart;
     protected $limitLength;
     protected $sortQueries;
@@ -16,6 +17,7 @@ class SchemaSelectQuery
     {
         $this->database = $database;
         $this->filterQueries = [];
+        $this->parameters = [];
         $this->sortQueries = [];
     }
 
@@ -77,6 +79,10 @@ class SchemaSelectQuery
     {
         $statement = $this->database->prepare($this);
 
+        foreach ($this->parameters as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+
         // Build Entry Records
         if ($statement->execute()) {
             return $statement;
@@ -85,8 +91,22 @@ class SchemaSelectQuery
         return false;
     }
 
-    public function filterBySubQuery($query)
+    public function filterBySubQuery($query, array $parameters = [])
     {
+        $id = 'filter' . count($this->filterQueries);
+
+        if (false === empty($parameters)) {
+            $keys = array_keys($parameters);
+
+            foreach ($keys as &$key) {
+                $key = ':' . $id . substr($key, 1);
+            }
+
+            $query = str_replace(':', ':' . $id, $query);
+            $parameters = array_combine($keys, $parameters);
+            $this->parameters = array_merge($this->parameters, $parameters);
+        }
+
         $this->filterQueries[] = (object)[
             'type' =>       'subquery',
             'query' =>      $query

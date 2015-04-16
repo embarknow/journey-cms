@@ -7,15 +7,15 @@ use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Schemas\SchemaSelectQuery;
 use Embark\CMS\Metadata\MetadataInterface;
 
-interface FieldSortQueryInterface extends MetadataInterface
+interface FieldQueryInterface extends MetadataInterface
 {
     /**
-     * Append a sorting query to a schema query.
+     * Append a filtering or sorting query to a schema query.
      *
      * @param   SchemaSelectQuery   $page
      * @param   SchemaInterface     $entry
      * @param   FieldInterface|null $field
-     *  Instance of the field being sorted on, or null
+     *  Instance of the field being filtered or sorted on, or null
      *  when the field is specified in metadata.
      */
     public function appendQuery(SchemaSelectQuery $query, SchemaInterface $schema, FieldInterface $field = null);

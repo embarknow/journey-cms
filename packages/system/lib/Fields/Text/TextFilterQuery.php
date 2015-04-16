@@ -7,18 +7,23 @@ use Embark\CMS\Fields\FieldQueryInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Schemas\SchemaSelectQuery;
 use Embark\CMS\Metadata\MetadataTrait;
-use Embark\CMS\Metadata\Filters\SortingDirection;
+use Embark\CMS\Metadata\Filters\Boolean;
 use Symphony;
 
-class TextSortQuery implements FieldQueryInterface
+class TextFilterQuery implements FieldQueryInterface
 {
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
-            'direction' => [
-                'filter' =>     new SortingDirection()
+            'value' => [
+                'required' =>   true
+            ],
+            'negate' => [
+                'default' =>    false,
+                'filter' =>     new Boolean(),
+                'required' =>   true
             ]
         ]);
     }
@@ -34,6 +39,14 @@ class TextSortQuery implements FieldQueryInterface
             $field['handle'],
             $field->getGuid()
         );
-        $query->sortBySubQuery("select entry_id, value as order_id from {$table}", $this['direction']);
+        $operator = (
+            $this['negate']
+                ? '!='
+                : '='
+        );
+
+        $query->filterBySubQuery("select entry_id from {$table} where value {$operator} :value", [
+            ':value' =>     $this['value']
+        ]);
     }
 }

@@ -35,7 +35,7 @@ class Schema implements SchemaInterface
                     WHERE
                         e.schema_id = '%s'
                 ",
-                [$this['guid']]
+                [$this->getGuid()]
             );
 
             if ($result->valid()) {

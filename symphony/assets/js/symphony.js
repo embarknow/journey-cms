@@ -367,8 +367,18 @@ var Symphony;
 
         $('table:has(input)').symphonySelectable();
         $('section.table:has(input)').symphonySelectable({
-            'items':    'article:has(input)'
+            items:  'article:has(input)',
+            ignore: 'a, div.preview, div.preview *, div.details, div.details *'
         });
+
+        $('section.table')
+            .on('click', 'a.info', function() {
+                $(this).closest('article').addClass('show-details');
+            })
+
+            .on('click', 'a.close', function() {
+                $(this).closest('article').removeClass('show-details');
+            });
 
         $('section.table dd')
             .each(function() {

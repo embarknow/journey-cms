@@ -22,16 +22,16 @@ class ContentPublish extends AdministrationPage
 
     public function __viewIndex($section)
     {
-        $section->appendIndexView($this);
+        $section->appendListView($this);
     }
 
     public function __viewNew($section)
     {
-        $section->appendFormView($this, new Entry());
+        $section->appendPublishView($this, new Entry());
     }
 
     public function __viewEdit($section)
     {
-        $section->appendFormView($this, Entry::loadFromId($this->_context['entry_id']));
+        $section->appendPublishView($this, Entry::loadFromId($this->_context['entry_id']));
     }
 }

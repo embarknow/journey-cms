@@ -20,8 +20,11 @@ class SectionView implements MetadataInterface
             'menu' => [
                 'type' =>   new MenuItem()
             ],
-            'table' => [
-                'type' =>   new SectionTableView($this)
+            'filters' => [
+                'type' =>   new SectionFilters()
+            ],
+            'list' => [
+                'type' =>   new SectionListView()
             ],
             'form' => [
                 'type' =>   new SectionFormView($this)
@@ -29,17 +32,15 @@ class SectionView implements MetadataInterface
         ]);
     }
 
-    public function appendIndexView(HTMLDocument $page)
+    public function appendListView(HTMLDocument $page)
     {
         $schema = SchemaController::read($this['schema']);
         $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
 
-        $this['table']->appendHeaderTo($page, $this, $schema, $pageLink);
-        $this['table']->appendListTo($page, $this, $schema, $pageLink);
-        $this['table']->appendFooterTo($page, $this, $schema, $pageLink);
+        $this['list']->appendListTo($page, $this, $schema, $pageLink);
     }
 
-    public function appendFormView(HTMLDocument $page, EntryInterface $entry)
+    public function appendPublishView(HTMLDocument $page, EntryInterface $entry)
     {
         $schema = SchemaController::read($this['schema']);
         $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);

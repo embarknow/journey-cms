@@ -24,7 +24,7 @@ class SectionTableView implements MetadataInterface
 {
     use MetadataTrait;
 
-    public function __construct(SectionView $view)
+    public function __construct()
     {
         $this->setSchema([
             'column' => [
@@ -153,9 +153,13 @@ class SectionTableView implements MetadataInterface
                 }
             }
 
+            $content = $document->createElement('div');
+            $content->addClass('content');
+            $article->appendChild($content);
+
             foreach ($this->findAllColumns() as $column) {
                 $list = $document->createElement('dl');
-                $article->appendChild($list);
+                $content->appendChild($list);
 
                 $column->appendHeaderTo($list, $schema, $entry, $sortLink);
                 $column->appendBodyTo($list, $schema, $entry, $pageLink);

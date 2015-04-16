@@ -476,6 +476,107 @@
     }
 
 /*-----------------------------------------------------------------------------
+    Content: Entries
+-----------------------------------------------------------------------------*/
+
+    /* Entry preview */
+    section.entries article > div.preview {
+        overflow: hidden;
+    }
+    section.entries article > div.preview h1 {
+        background: transparent;
+        font-size: 11pt;
+        font-weight: normal;
+        height: auto;
+        line-height: 1.6;
+        padding: 0 0 3px 0;
+        text-shadow: none;
+    }
+    section.entries article > div.preview h1 a {
+        display: inline;
+        color: inherit;
+        padding: 0;
+    }
+    section.entries article > div.preview h1 a:hover {
+        background: transparent;
+    }
+    section.entries article > div.preview figure {
+        background: hsl(0, 0%, 25%);
+        box-shadow: 0 0 5px hsla(0, 0%, 0%, 0.5) inset;
+        color: #ffffff;
+        height: 7em;
+        overflow: hidden;
+        margin: 0 -30px;
+        padding: 0.5em 30px;
+        position: relative;
+    }
+    section.entries article > div.preview figure:after {
+        background:
+            linear-gradient(
+                to bottom,
+                hsla(0, 0%, 15%, 0.5),
+                hsla(0, 0%, 15%, 0) 25%,
+                hsla(0, 0%, 15%, 0) 75%,
+                hsla(0, 0%, 15%, 0.5)
+            );
+        bottom: 0;
+        content: '';
+        display: block;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    section.entries article > div.preview figure figcaption {
+        align-items: center;
+        bottom: 0;
+        display: flex;
+        left: 30px;
+        max-width: 50em;
+        position: absolute;
+        right: 30px;
+        top: 0;
+    }
+    section.entries article > div.preview figure figcaption i,
+    section.entries article > div.preview figure figcaption em {
+        font-style: italic;
+    }
+    section.entries article > div.preview figure figcaption b,
+    section.entries article > div.preview figure figcaption strong {
+        font-weight: bold;
+    }
+
+    /* Entry details */
+    section.entries article > div.details {
+        margin-top: 15px;
+    }
+    section.entries article > div.details dl {
+        display: flex;
+        margin: 5px 0 0 0;
+        max-width: 50em;
+    }
+    section.entries article > div.details dl:first-of-type {
+        margin-top: 0;
+    }
+    section.entries article > div.details dl dt {
+        flex-basis: 8em;
+        float: left;
+        font-weight: bold;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    section.entries article > div.details dl dt a {
+        color: inherit;
+        text-decoration: none;
+    }
+    section.entries article > div.details dl dd {
+        flex: 1 1;
+        max-height: 3.2em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+/*-----------------------------------------------------------------------------
 	Content: Cards
 -----------------------------------------------------------------------------*/
 
@@ -484,104 +585,44 @@
 		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
 		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
 		display: flex;
-		overflow: hidden;
-		padding: 0 30px 15px 15px;
-		flex-wrap: wrap;
-	}
-	section.cards article {
-		background: #ffffff;
-		background-clip: padding-box;
-		border: 1px solid hsla(0, 0%, 0%, 0.1);
-		border-radius: 3px;
-		box-sizing: border-box;
-		flex-basis: calc(25% - 15px);
-		margin: 15px 0 0 15px;
+        overflow: hidden;
+        padding: 0 14px 14px 0;
+        flex-wrap: wrap;
+    }
+    section.cards article {
+        background: #ffffff;
+        background-clip: padding-box;
+        border: 1px solid hsla(0, 0%, 0%, 0.1);
+        border-radius: 3px;
+        box-sizing: border-box;
+        box-shadow: 0 0 10px hsla(0, 0%, 0%, 0.1);
+        flex-basis: calc(25% - 14px);
+        margin: 14px 0 0 14px;
+        overflow: hidden;
 		padding: 15px;
 	}
 	section.cards article input[type = checkbox] {
 		display: none;
 	}
-	section.cards article h1 {
-		background: transparent;
-		font-size: 11pt;
-		font-weight: normal;
-		height: auto;
-		line-height: 1.6;
-		margin: -5px 0 0 0;
-		padding: 0 0 3px 0;
-		text-shadow: none;
-	}
-	section.cards article h1 a {
-		display: inline;
-		color: inherit;
-		padding: 0;
-	}
-	section.cards article h1 a:hover {
-		background: transparent;
-	}
-	section.cards article > figure {
-		background: hsl(0, 0%, 98%);
-		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
-		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
-		box-shadow: 0 0 5px hsla(0, 0%, 100%, 1) inset;
-		height: 7em;
-		overflow: hidden;
-		margin: 0 -15px;
-		padding: 0.5em 15px;
-		position: relative;
-	}
-	section.cards article > figure:after {
-		background:
-			linear-gradient(
-				to bottom,
-				hsla(0, 0%, 98%, 0) 40%,
-				hsla(0, 0%, 98%, 0.6) 70%,
-				hsla(0, 0%, 98%, 1)
-			);
-		bottom: 0;
-		content: '';
-		display: block;
-		left: 0;
-		position: absolute;
-		right: 0;
-		top: 0;
-	}
-	section.cards article > figure caption i,
-	section.cards article > figure caption em {
-		font-style: italic;
-	}
-	section.cards article > figure caption b,
-	section.cards article > figure caption strong {
-		font-weight: bold;
-	}
-	section.cards article > dl {
-		display: flex;
-		margin: 5px 0 0 0;
-	}
-	section.cards article > dl dt {
-		flex-basis: 8em;
-		float: left;
-		font-weight: bold;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	section.cards article > dl dt a {
-		color: inherit;
-		text-decoration: none;
-	}
-	section.cards article > dl dd {
-		flex: 1 1;
-		max-height: 3.2em;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
+    section.cards article > div.columns {
+        display: none;
+    }
+    section.cards article > div.preview {
+        margin-top: -5px;
+        overflow: visible;
+    }
+    section.cards article > div.preview figure {
+    }
+    section.cards article > div.details nav {
+        display: none;
+    }
 
 /*-----------------------------------------------------------------------------
 	Content: Table
 -----------------------------------------------------------------------------*/
 
 	section.table {
-		overflow: hidden;
+        padding-top: 33px;
 		position: relative;
 		z-index: 1;
 	}
@@ -606,18 +647,24 @@
 	/* Table rows */
 	section.table article {
 		background-clip: padding-box;
-		display: flex;
-		line-height: 32px;
 		position: relative;
 		width: 100%;
-		white-space: nowrap;
 	}
-	section.table article h1,
-	section.table article figure,
-	section.table article input[type = checkbox] {
+    section.table article > div.columns {
+        border: none;
+        display: flex;
+        line-height: 32px;
+        padding: 0;
+        position: relative;
+        width: 100%;
+        white-space: nowrap;
+    }
+	section.table article > div.details,
+    section.table article > div.preview,
+	section.table article > input[type = checkbox] {
 		display: none;
 	}
-	section.table article.selected:before {
+	section.table article.selected > div.columns:before {
 		background-color: hsla(215, 100%, 25%, 0.7);
 		bottom: -1px;
 		content: '';
@@ -627,20 +674,82 @@
 		right: 0;
 		top: 0;
 	}
-	section.table article.selected + article.selected:before {
-		top: 1px;
-	}
-	section.table article:nth-child(20n-19).selected:before,
-	section.table article.selected + article:nth-child(20n-19).selected:before {
-		top: 33px;
-	}
+    section.table article.selected + article.selected > div.columns:before {
+        top: 1px;
+    }
+    section.table article:last-of-type > div.columns:before {
+        bottom: 0;
+    }
+    section.table article > div.columns nav {
+        position: relative;
+        z-index: 2;
+    }
+    section.table article > div.columns nav a.info,
+    section.table article > div.details nav a.close {
+        background: #000000;
+        border-radius: 100%;
+        color: #ffffff;
+        display: block;
+        height: 18px;
+        font-size: 12pt;
+        line-height: 18px;
+        opacity: 0.2;
+        overflow: hidden;
+        position: absolute;
+        right: 30px;
+        top: 8px;
+        text-align: center;
+        text-decoration: none;
+        width: 18px;
+    }
+    section.table article > div.details nav a.close {
+        top: 20px;
+    }
+    section.table article.selected > div.columns nav a.info,
+    section.table article.selected > div.details nav a.close {
+        background: #ffffff;
+        color: #000000;
+    }
+    section.table article > div.columns nav a.info:hover,
+    section.table article > div.details nav a.close:hover {
+        opacity: 0.5;
+    }
+
+    /* Show details */
+    section.table article.show-details {
+        box-shadow: 0 0 10px hsla(0, 0%, 0%, 0.2);
+        display: flex;
+        flex-direction: column;
+    }
+    section.table article.show-details > div.columns {
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    section.table article.show-details > div.columns dd,
+    section.table article.show-details > div.columns nav {
+        display: none;
+    }
+    section.table article.show-details > div.preview,
+    section.table article.show-details > div.details {
+        display: block;
+    }
+    section.table article.show-details > div.preview {
+        border-top: 1px solid hsla(0, 0%, 0%, 0.15);
+        padding: 15px 30px 0 30px;
+    }
+    section.table article.show-details > div.details {
+        overflow: hidden;
+        padding: 0 30px 15px 30px;
+    }
 
 	/* Table columns */
-	section.table article dl {
+	section.table article > div.columns dl {
 		flex: 0 1;
 		position: relative;
 	}
-	section.table article dl.active:before {
+	section.table article > div.columns dl.active:before {
 		background: hsla(0, 0%, 0%, 0.025);
 		bottom: 0;
 		content: '';
@@ -650,58 +759,61 @@
 		right: -1px;
 		top: 0;
 	}
-	section.table article dl.small {
+    section.table article:first-of-type > div.columns dl.active:before {
+        top: -33px;
+    }
+	section.table article > div.columns dl.small {
 		flex-basis: 5%;
 		min-width: 4em;
 	}
-	section.table article dl:first-of-type.small,
-	section.table article dl:last-of-type.small {
+	section.table article > div.columns dl:first-of-type.small,
+	section.table article > div.columns dl:last-of-type.small {
 		flex-basis: calc(5% + 20px);
 		min-width: calc(4em + 20px);
 	}
-	section.table article dl.medium {
+	section.table article > div.columns dl.medium {
 		flex-basis: 20%;
 		min-width: 8em;
 	}
-	section.table article dl:first-of-type.medium,
-	section.table article dl:last-of-type.medium {
+	section.table article > div.columns dl:first-of-type.medium,
+	section.table article > div.columns dl:last-of-type.medium {
 		flex-basis: calc(20% + 20px);
 		min-width: calc(8em + 20px);
 	}
-	section.table article dl.large {
+	section.table article > div.columns dl.large {
 		flex-basis: 40%;
 		min-width: 12em;
 	}
-	section.table article dl:first-of-type.large,
-	section.table article dl:last-of-type.large {
+	section.table article > div.columns dl:first-of-type.large,
+	section.table article > div.columns dl:last-of-type.large {
 		flex-basis: calc(40% + 20px);
 		min-width: calc(12em + 20px);
 	}
-	section.table article dl.huge {
+	section.table article > div.columns dl.huge {
 		flex-basis: 60%;
 		min-width: 12em;
 	}
-	section.table article dl:first-of-type.huge,
-	section.table article dl:last-of-type.huge {
+	section.table article > div.columns dl:first-of-type.huge,
+	section.table article > div.columns dl:last-of-type.huge {
 		flex-basis: calc(60% + 20px);
 		min-width: calc(12em + 20px);
 	}
-	section.table article dt,
-	section.table article dd {
+	section.table article > div.columns dt,
+	section.table article > div.columns dd {
 		padding: 0 10px;
 		position: relative;
 	}
-	section.table article dl:first-of-type dt,
-	section.table article dl:first-of-type dd {
+	section.table article > div.columns dl:first-of-type dt,
+	section.table article > div.columns dl:first-of-type dd {
 		padding-left: 30px;
 	}
-	section.table article dl:last-of-type dt,
-	section.table article dl:last-of-type dd {
+	section.table article > div.columns dl:last-of-type dt,
+	section.table article > div.columns dl:last-of-type dd {
 		padding-right: 30px;
 	}
 
 	/* Table header */
-	section.table article dt {
+	section.table article > div.columns dt {
 		background:
 			linear-gradient(
 				to bottom,
@@ -713,91 +825,92 @@
 		color: #666666;
 		display: none;
 		font-size: 10pt;
+        margin-top: -33px;
 		z-index: 1;
 	}
-	section.table article dl + dl dt {
+	section.table article > div.columns dl + dl dt {
 		border-left: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
-	section.table article:nth-child(20n-19) dt {
+	section.table article:nth-child(20n-19) > div.columns dt {
 		display: block;
 	}
-	section.table article dt a {
+	section.table article > div.columns dt a {
 		display: block;
 		margin: 0 -10px;
 		padding: 0 10px;
 	}
-	section.table article dl:first-of-type dt a {
+	section.table article > div.columns dl:first-of-type dt a {
 		margin-left: -30px;
 		padding-left: 30px;
 	}
-	section.table article dl:last-of-type dt a {
+	section.table article > div.columns dl:last-of-type dt a {
 		margin-right: -30px;
 		padding-right: 30px;
 	}
-	section.table article dt a,
-	section.table article dt a:hover,
-	section.table article dt a:hover:after {
+	section.table article > div.columns dt a,
+	section.table article > div.columns dt a:hover,
+	section.table article > div.columns dt a:hover:after {
 		color: #665;
 		text-decoration: none;
 	}
-	section.table article dt a:after {
+	section.table article > div.columns dt a:after {
 		color: #ccb;
 	}
-	section.table article dt a:active,
-	section.table article dl.active dt a,
-	section.table article dl.active dt a:after {
+	section.table article > div.columns dt a:active,
+	section.table article > div.columns dl.active dt a,
+	section.table article > div.columns dl.active dt a:after {
 		color: #554;
 	}
-	section.table article dt a:after,
-	section.table article dl.active dt a:hover:after,
-	section.table article dl.active dt a[href$=asc]:after {
+	section.table article > div.columns dt a:after,
+	section.table article > div.columns dl.active dt a:hover:after,
+	section.table article > div.columns dl.active dt a[href$=asc]:after {
 		margin-left: 0.5ex;
 		content: "▴";
 		display: inline-block;
 		text-align: center;
 		width: 1em;
 	}
-	section.table article dl.active dt a:after,
-	section.table article dt a[href$=asc]:after,
-	section.table article dl.active dt a[href$=asc]:hover:after {
+	section.table article > div.columns dl.active dt a:after,
+	section.table article > div.columns dt a[href$=asc]:after,
+	section.table article > div.columns dl.active dt a[href$=asc]:hover:after {
 		content: "▾";
 	}
 
 	/* Table cell */
-	section.table article dd {
+	section.table article > div.columns dd {
 		border-top: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
-	section.table article:last-child dd {
+	section.table article:last-child > div.columns dd {
 		border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
-	section.table article dl + dl dd {
+	section.table article > div.columns dl + dl dd {
 		border-left: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
-	section.table article dd,
-	section.table article dd div.text {
+	section.table article > div.columns dd,
+	section.table article > div.columns dd div.text {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-shadow: 0 0 3px white;
 		z-index: 2;
 	}
-	section.table article.selected dd,
-	section.table article.selected dd a,
-	section.table article.selected dd div.text {
+	section.table article.selected > div.columns dd,
+	section.table article.selected > div.columns dd a,
+	section.table article.selected > div.columns dd div.text {
 		color: #ffffff;
 		text-shadow: 0 0 3px hsla(0, 0%, 0%, 0.75);
 	}
-	section.table article.selected dl + dl dd {
+	section.table article.selected > div.columns dl + dl dd {
 		border-left-color: hsla(0, 0%, 100%, 0.1);
 	}
-	section.table article.selected + article.selected dd {
+	section.table article.selected + article.selected > div.columns dd {
 		border-top-color: hsla(0, 0%, 100%, 0.1);
 	}
-	section.table article dd div.text i,
-	section.table article dd div.text em {
+	section.table article > div.columns dd div.text i,
+	section.table article > div.columns dd div.text em {
 		font-style: italic;
 	}
-	section.table article dd div.text b,
-	section.table article dd div.text strong {
+	section.table article > div.columns dd div.text b,
+	section.table article > div.columns dd div.text strong {
 		font-weight: bold;
 	}
 
@@ -925,13 +1038,16 @@
 -----------------------------------------------------------------------------*/
 
     div.actions + ul.page {
-        margin-top: -58px;
+        margin-top: -46px;
+        position: relative;
+        z-index: 2;
     }
     ul.page {
-        margin: 0;
-        padding: 20px 50px 0 30px;
-        height: 36px;
         color: #999;
+        height: 26px;
+        line-height: 26px;
+        margin: 20px 0;
+        text-align: center;
     }
     ul.page li {
         display: inline;
@@ -1270,6 +1386,10 @@
         float: left;
         line-height: 26px;
         margin: 0;
+    }
+    .actions button {
+        position: relative;
+        z-index: 3;
     }
     .actions input {
         float: none;

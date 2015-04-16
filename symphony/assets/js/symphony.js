@@ -380,7 +380,7 @@ var Symphony;
                 $(this).closest('article').removeClass('show-details');
             });
 
-        $('section.table dd')
+        $('section.table div.columns dd')
             .each(function() {
                 var $cell = $(this),
                     $text = $('<div class="text" />');
@@ -392,7 +392,7 @@ var Symphony;
 
         $(window)
             .on('load resize', function() {
-                $('section.table dd div.text')
+                $('section.table div.columns dd div.text')
                     .each(function() {
                         var $cell = $(this);
 

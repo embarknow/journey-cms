@@ -887,7 +887,8 @@
 		border-left: 1px solid hsla(0, 0%, 0%, 0.1);
 	}
 	section.table article > div.columns dd,
-	section.table article > div.columns dd div.text {
+    section.table article > div.columns dd div.text,
+    section.table article > div.columns dd div.text p {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-shadow: 0 0 3px white;

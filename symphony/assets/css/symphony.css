@@ -896,7 +896,8 @@
 	}
 	section.table article.selected > div.columns dd,
 	section.table article.selected > div.columns dd a,
-	section.table article.selected > div.columns dd div.text {
+    section.table article.selected > div.columns dd div.text,
+    section.table article.selected > div.columns dd div.text p {
 		color: #ffffff;
 		text-shadow: 0 0 3px hsla(0, 0%, 0%, 0.75);
 	}

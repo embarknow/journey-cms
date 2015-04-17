@@ -22,31 +22,6 @@ $container['middleware'] = function ($con) {
     return new MiddlewareStack;
 };
 
-// Quick and dirty middleware to output stuff while building
-$container['middleware']->addMiddleware(
-    function ($request, $response, $next = null) use ($container) {
-        var_dump($container['environment']);
-
-        return (
-            $next
-            ? $next($request, $response)
-            : $response
-        );
-    }
-);
-
-// The router is set up based on the request object
-// $container['middleware']->addMiddleware(
-//     $container['router']
-// );
-
-/**
- * Bootstrap must be the last middleware added, so it is the first called off the top of the stack
- */
-$container['middleware']->addMiddleware(
-    new Bootstrap($container)
-);
-
 /**
  * The error handler takes any application exception and handles it gracefully
  */
@@ -74,4 +49,36 @@ $container['server'] = function ($con) {
     );
 };
 
+/**
+ * Add Middleware
+ */
+
+// Quick and dirty middleware to output stuff while building
+$container['middleware']->addMiddleware(
+    function ($request, $response, $next = null) use ($container) {
+        var_dump($container['environment']);
+
+        return (
+            $next
+            ? $next($request, $response)
+            : $response
+        );
+    }
+);
+
+// The router is set up based on the request object
+// $container['middleware']->addMiddleware(
+//     $container['router']
+// );
+
+/**
+ * Bootstrap must be the last middleware added, so it is the first called off the top of the stack
+ */
+$container['middleware']->addMiddleware(
+    new Bootstrap($container)
+);
+
+/**
+ * Run the application, providing the error handler for fallback
+ */
 $container['server']->listen($container['error-handler']);

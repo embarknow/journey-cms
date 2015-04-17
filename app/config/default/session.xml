@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Session">
+    <name>journey-session</name>
+    <gc-probability>1</gc-probability>
+    <gc-divisor>10</gc-divisor>
+    <gc-maxlifetime>1400</gc-maxlifetime>
+    <cookie-lifetime>1400</cookie-lifetime>
+    <cookie-path>/</cookie-path>
+    <cookie-domain></cookie-domain>
+    <cookie-secure>no</cookie-secure>
+    <cookie-httponly>no</cookie-httponly>
+    <encrypt>false</encrypt>
+    <flash-key>flash</flash-key>
+</object>

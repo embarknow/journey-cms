@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Core">
+    <name>Journey CMS</name>
+    <version>0.0.1</version>
+    <debug>yes</debug>
+</object>

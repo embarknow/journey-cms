@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Cookies">
+    <prefix>journey_</prefix>
+    <encrypt>yes</encrypt>
+    <lifetime>20 minutes</lifetime>
+    <path>/</path>
+    <domain></domain>
+    <secure>no</secure>
+    <httponly>no</httponly>
+</object>

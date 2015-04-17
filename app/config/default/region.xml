@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Regional">
+    <time-format>H:i</time-format>
+    <date-format>d F Y</date-format>
+    <datetime-separator> </datetime-separator>
+    <timezone>UTC</timezone>
+</object>

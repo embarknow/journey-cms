@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Filesystem">
+    <file>0664</file>
+    <directory>0775</directory>
+    <max-upload-size>5242880</max-upload-size>
+</object>

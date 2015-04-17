@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Admin">
+    <pagination>20</pagination>
+    <minify-assets>yes</minify-assets>
+    <locale>en</locale>
+</object>

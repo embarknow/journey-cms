@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Domain">
+    <driver>mysql</driver>
+    <host>localhost</host>
+    <port>3306</port>
+    <dbname>journey_cms</dbname>
+    <user>root</user>
+    <password>PuddleBadger</password>
+</object>

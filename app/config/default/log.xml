@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object type="Embark\Journey\Configuration\Log">
+    <enabled>yes</enabled>
+    <level>DEBUG</level>
+    <name>main</name>
+</object>

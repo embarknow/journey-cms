@@ -74,7 +74,7 @@ class MiddlewareStack
         $first = null;
 
         try {
-            $first = $this->stack->top(); // throws RuntimeException
+            $first = $this->middlewareStack->top(); // throws RuntimeException
         } catch (RuntimeException $e) {
             // Ignore it
         }
@@ -99,7 +99,7 @@ class MiddlewareStack
             throw new RuntimeException('MiddlewareStack can only be created once.');
         }
 
-        $this->stack = new SplStack;
+        $this->middlewareStack = new SplStack;
     }
 
     /**

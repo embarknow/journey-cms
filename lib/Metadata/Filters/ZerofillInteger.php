@@ -6,10 +6,27 @@ use Embark\CMS\Metadata\MetadataValueInterface;
 use Embark\CMS\Metadata\SanitizedMetadataValueInterface;
 
 /**
- * Implements MetadataValueInterface for an integer metadata value
+ * Implements MetadataValueInterface for an zerofilled integer metadata value
  */
 class ZerofillInteger implements MetadataValueInterface, SanitizedMetadataValueInterface
 {
+    /**
+     * Number of places to zerofill
+     * @var int
+     */
+    protected $zerofill;
+
+    /**
+     * Accepts the number of places to zerofill
+     *
+     * @param int $zerofill
+     *  the number of places to zerofill
+     */
+    public function __construct($zerofill)
+    {
+        $this->zerofill = $zerofill;
+    }
+
     /**
      * Set an integer value to XML
      *
@@ -48,7 +65,7 @@ class ZerofillInteger implements MetadataValueInterface, SanitizedMetadataValueI
      */
     public function sanitize($value)
     {
-        return (string) $value;
+        return str_pad($value, $this->zerofill, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -62,6 +79,6 @@ class ZerofillInteger implements MetadataValueInterface, SanitizedMetadataValueI
      */
     public function reverseSanitize($value)
     {
-        return (integer) $value;
+        return $this->sanitize($value);
     }
 }

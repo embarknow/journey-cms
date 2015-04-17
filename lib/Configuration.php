@@ -39,7 +39,7 @@ class Configuration
      * @var array
      */
     protected $required = [
-        'core', 'domain', 'filesystem', 'log', 'region', 'session', 'cookie'
+        'core', 'domain', 'filesystem', 'log', 'region', 'session', 'cookies'
     ];
 
     /**

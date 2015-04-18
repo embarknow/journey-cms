@@ -38,10 +38,10 @@ trait MetadataControllerTrait
     {
         // Does not have a file extension, assume it is a handle
         if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            return DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+            $handleOrFile = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
         }
 
-        else if (is_file($handleOrFile)) {
+        if (is_file($handleOrFile)) {
            return $handleOrFile;
         }
 

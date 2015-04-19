@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\Journey\Configuration;
+namespace Embark\Journey\Metadata\Configuration;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
@@ -8,28 +8,26 @@ use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Integer;
 
-class Admin implements MetadataInterface
+use Embark\Journey\Metadata\Filters\Semver;
+
+class Core implements MetadataInterface
 {
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
-            'path' => [
+            'name' => [
                 'required' => true,
-                'default' => 'journey'
+                'default' => 'Journey CMS'
             ],
-            'pagination' => [
+            'version' => [
                 'required' => true,
-                'filter' => new Integer
+                'filter' => new Semver
             ],
-            'minify-assets' => [
+            'debug' => [
                 'required' => true,
                 'filter' => new Boolean
-            ],
-            'locale' => [
-                'required' => true,
-                'default' => 'en'
             ]
         ]);
     }

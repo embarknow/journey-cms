@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\Journey\Configuration;
+namespace Embark\Journey\Metadata\Configuration;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
@@ -8,26 +8,28 @@ use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Integer;
 
-use Embark\Journey\Metadata\Filters\ZerofillInteger;
-
-class Filesystem implements MetadataInterface
+class Admin implements MetadataInterface
 {
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
-            'file' => [
+            'path' => [
                 'required' => true,
-                'filter' => new ZerofillInteger(4)
+                'default' => 'journey'
             ],
-            'directory' => [
-                'required' => true,
-                'filter' => new ZerofillInteger(4)
-            ],
-            'max-upload-size' => [
+            'pagination' => [
                 'required' => true,
                 'filter' => new Integer
+            ],
+            'minify-assets' => [
+                'required' => true,
+                'filter' => new Boolean
+            ],
+            'locale' => [
+                'required' => true,
+                'default' => 'en'
             ]
         ]);
     }

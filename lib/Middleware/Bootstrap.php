@@ -6,15 +6,20 @@ use Pimple\Container;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+use FastRoute\RouteParser\Std as RouteParser;
+use FastRoute\DataGenerator\GroupCountBased as RouteDataGenerator;
+
 use Embark\Journey\ContainerAwareInterface;
 use Embark\Journey\ContainerAwareTrait;
 use Embark\Journey\Configuration;
+use Embark\Journey\Metadata\Configuration\Controller as ConfigurationController;
 use Embark\Journey\Middleware\StackedMiddlewareInterface;
+use Embark\Journey\Middleware\Router;
+use Embark\Journey\Metadata\Routes\Controller as RoutesController;
 
 /**
  * neamespaces to be moved over after concept is proven
  */
-use Embark\CMS\Configuration\Controller as ConfigurationController;
 
 /**
  * Bootstrap the application instances. This class makes sure that the application is prepared correctly based on the current HTTP request. It is a container aware class meaning it has access to the entire container for modification during the bootstrap process.
@@ -53,6 +58,7 @@ class Bootstrap implements ContainerAwareInterface, StackedMiddlewareInterface
 
         $this->setEnvironment();
         $this->setConfiguration();
+        $this->setRouter();
 
         // Check there actually is a next middleware, or return the response
         return (
@@ -88,6 +94,20 @@ class Bootstrap implements ContainerAwareInterface, StackedMiddlewareInterface
             return new Configuration(
                 $con['environment'],
                 new ConfigurationController
+            );
+        };
+    }
+
+    /**
+     * Sets up the router
+     */
+    protected function setRouter()
+    {
+        $this->container['router'] = function () {
+            return new Router(
+                new RoutesController,
+                new RouteParser,
+                new RouteDataGenerator
             );
         };
     }

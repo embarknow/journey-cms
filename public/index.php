@@ -56,7 +56,11 @@ $container['server'] = function ($con) {
 // Quick and dirty middleware to output stuff while building
 $container['middleware']->addMiddleware(
     function ($request, $response, $next = null) use ($container) {
-        var_dump($container['environment']);
+        // var_dump($container['server']->request->getUri()->getPath());
+        $router = $container['router'];
+        $router($request, $response);
+        // var_dump($container['router']);
+        // var_dump((new Embark\Journey\Routes\Controller)->read('route-groups'));
 
         return (
             $next

@@ -174,13 +174,19 @@ class Router extends RouteCollector implements StackedMiddlewareInterface
 
             $pattern = $this->processPatternPrefix($route['pattern'], $routeInfo['prefix']);
 
-            if (isset($routeInfo['route']['redirect'])) {
-                // Need to pass off to a RedirectException
-                // params are the nodes of the redirect
+            if (isset($route['redirect'])) {
+                // Need to pass off to a RedirectException when this route matches
+                // How do we tell the dispatcher that this uri matches as a redirect??
+                continue;
             }
 
-            elseif (isset($routeInfo['route']['view'])) {
-                $handler = $routeInfo['route']['view'];
+            elseif (isset($route['view'])) {
+                $handler = $route['view'];
+                if (count($route['methods']) > 1) {
+                    foreach ($route['methods'] as $method) {
+                        $this->addRoute($method, $pattern, $handler);
+                    }
+                }
             }
         }
     }

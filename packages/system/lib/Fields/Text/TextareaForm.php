@@ -17,7 +17,7 @@ use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
 
-class TextBoxForm extends TextInputForm
+class TextareaForm extends InputForm
 {
     protected $label;
     protected $input;

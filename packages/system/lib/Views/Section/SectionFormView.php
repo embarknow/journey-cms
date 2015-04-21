@@ -5,6 +5,7 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldDataInterface;
+use Embark\CMS\Fields\FieldPreviewInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataReferenceInterface;
@@ -54,20 +55,14 @@ class SectionFormView implements MetadataInterface
         if (isset($entry->entry_id)) {
             $title = __('Edit entry');
 
-            if (isset($view['form']['title'])) {
-                $field = $view['form']['title'];
+            if (isset($view['title']['field'])) {
+                $preview = $view['title']->resolveInstanceOf(FieldPreviewInterface::class);
+                $field = $preview['field']->resolveInstanceOf(FieldInterface::class);
+                $data = $field->readData($schema, $entry, $field);
 
-                if ($view['form']['title'] instanceof MetadataReferenceInterface) {
-                    $field = $field->resolve();
-                }
-
-                if ($field instanceof FieldInterface) {
-                    $data = $field->readData($schema, $entry, $field);
-
-                    if (isset($data->value)) {
-                        $title = $data->value;
-                        $link = $url . '/edit/' . $entry->entry_id;
-                    }
+                if (isset($data->value)) {
+                    $title = $data->value;
+                    $link = $url . '/edit/' . $entry->entry_id;
                 }
             }
         }

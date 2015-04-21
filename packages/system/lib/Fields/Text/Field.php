@@ -24,7 +24,7 @@ use Widget;
 /**
  * A collection of information about the field type.
  */
-class TextField implements FieldInterface
+class Field implements FieldInterface
 {
     use FieldTrait;
 
@@ -189,7 +189,7 @@ class TextField implements FieldInterface
             && $settings['max-length'] > 0
             && strlen($data->value) > $settings['max-length']
         ) {
-            throw new TextLengthException('Value is longer than allowed.');
+            throw new MaxLengthException('Value is longer than allowed.');
         }
 
         return true;

@@ -2,15 +2,15 @@
 
 namespace Embark\CMS\Fields\Text;
 
-use DOMElement;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Link;
 use Embark\CMS\Schemas\SchemaInterface;
+use DOMElement;
 use Widget;
 
-class TextHandleColumn implements FieldColumnInterface
+class FormattedColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
@@ -23,15 +23,20 @@ class TextHandleColumn implements FieldColumnInterface
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {
-            $link = Widget::Anchor(
-                (string)$data->handle,
-                $link . '/edit/' . $entry->entry_id
-            );
+            $link = $document->createElement('a');
+            $link->setAttribute('href', $link . '/edit/' . $entry->entry_id);
+
+            $text = $document->createDocumentFragment();
+            $text->appendXml((string)$data->formatted);
+            $link->appendChild($text);
+
             $body->appendChild($link);
         }
 
         else {
-            $body->setValue((string)$data->handle);
+            $text = $document->createDocumentFragment();
+            $text->appendXml((string)$data->formatted);
+            $body->appendChild($text);
         }
     }
 }

@@ -120,7 +120,7 @@ class MiddlewareStack
         try {
             $response = $this->callMiddlewareStack($request, $response);
         } catch (Exception $e) {
-            // The application can be forced to quit by throwing an XMLException which is caught here
+            // The application can be forced to quit by throwing an Exception which is caught here
             $response = $errorHandler($request, $response, $e);
         }
 

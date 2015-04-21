@@ -5,7 +5,7 @@ namespace Embark\Journey\Metadata\Routes;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
-use Embark\Journey\Metadata\Routes\RouteItem;
+use Embark\Journey\Metadata\Routes\Route;
 
 class RoutesList implements MetadataInterface
 {
@@ -15,7 +15,7 @@ class RoutesList implements MetadataInterface
     {
         $this->setSchema([
             'route' => [
-                'type' => new RouteItem,
+                'type' => new Route,
                 'list' => true
             ]
         ]);

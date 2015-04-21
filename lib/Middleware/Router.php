@@ -27,6 +27,13 @@ class Router extends RouteCollector implements StackedMiddlewareInterface
     protected $metadata = [];
 
     /**
+     * Accessible instance of the route parser
+     *
+     * @var RouteParser
+     */
+    protected $parser;
+
+    /**
      * Construct the router instance
      *
      * @param RouteParser   $parser
@@ -172,22 +179,9 @@ class Router extends RouteCollector implements StackedMiddlewareInterface
                 continue;
             }
 
-            $pattern = $this->processPatternPrefix($route['pattern'], $routeInfo['prefix']);
-
-            if (isset($route['redirect'])) {
-                // Need to pass off to a RedirectException when this route matches
-                // How do we tell the dispatcher that this uri matches as a redirect??
-                continue;
-            }
-
-            elseif (isset($route['view'])) {
-                $handler = $route['view'];
-                if (count($route['methods']) > 1) {
-                    foreach ($route['methods'] as $method) {
-                        $this->addRoute($method, $pattern, $handler);
-                    }
-                }
-            }
+            $route->setParser($this->parser);
+            $route->setPrefix($routeInfo['prefix']);
+            $route->addToRouter($this);
         }
     }
 
@@ -203,34 +197,5 @@ class Router extends RouteCollector implements StackedMiddlewareInterface
     protected function getPathParts($uriPath)
     {
         return array_filter(explode('/', $uriPath));
-    }
-
-    /**
-     * Process a route pattern to replace the prefix
-     *
-     * @param  string $pattern
-     *  a route pattern
-     * @param  string $prefix
-     *  a prefix to find and replace
-     *
-     * @return string
-     *  the processed route pattern
-     */
-    protected function processPatternPrefix($pattern, $prefix)
-    {
-        $output = $this->parser->parse($pattern);
-
-        foreach ($output as &$part) {
-            if (is_array($part)) {
-                if ($part[0] === 'prefix') {
-                    $part = $prefix;
-                    continue;
-                }
-
-                $part = '{' . $part[0] . ':' . $part[1] . '}';
-            }
-        }
-
-        return rtrim(implode($output), '/');
     }
 }

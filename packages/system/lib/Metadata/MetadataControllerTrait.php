@@ -255,7 +255,10 @@ trait MetadataControllerTrait
         $metadata->setDefaults();
 
         if ($metadata instanceof ReferencedMetadataInterface) {
-            $metadata->setGuid($element->getAttribute('guid'));
+            $guid = $element->getAttribute('guid');
+            $metadata->setGuid($guid);
+            $refs = $metadata->getReferenceIndex();
+            $refs[$guid] = $metadata;
         }
 
         return $metadata;

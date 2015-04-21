@@ -7,7 +7,7 @@ use Embark\CMS\Link;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Types\MenuItem;
-use Embark\CMS\Schemas\Controller as SchemaController;
+use Embark\CMS\Schemas\SchemaInterface;
 use HTMLDocument;
 
 class SectionView implements MetadataInterface
@@ -34,7 +34,7 @@ class SectionView implements MetadataInterface
 
     public function appendListView(HTMLDocument $page)
     {
-        $schema = SchemaController::read($this['schema']);
+        $schema = $this['schema']->resolveInstanceOf(SchemaInterface::class);
         $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
 
         $this['list']->appendListTo($page, $this, $schema, $pageLink);
@@ -42,7 +42,7 @@ class SectionView implements MetadataInterface
 
     public function appendPublishView(HTMLDocument $page, EntryInterface $entry)
     {
-        $schema = SchemaController::read($this['schema']);
+        $schema = $this['schema']->resolveInstanceOf(SchemaInterface::class);
         $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
 
         $this['form']->appendHeaderTo($page, $this, $schema, $entry, $pageLink);

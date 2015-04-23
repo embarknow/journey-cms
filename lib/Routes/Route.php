@@ -4,9 +4,13 @@ namespace Embark\Journey\Routes;
 
 use FastRoute\RouteParser;
 
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
+use Embark\Journey\Metadata\Types\MiddlewareList;
 use Embark\Journey\Routes\RouteMethodsList;
 use Embark\Journey\Routes\RouteRedirect;
 use Embark\Journey\Routes\View;
@@ -22,6 +26,9 @@ class Route implements MetadataInterface
     public function __construct()
     {
         $this->setSchema([
+            'middleware' => [
+                'type' => new MiddlewareList
+            ],
             'methods' => [
                 'required' => true,
                 'type' => new RouteMethodsList
@@ -69,7 +76,9 @@ class Route implements MetadataInterface
             // throw new RedirectException($this);
         }
 
-        var_dump('route works', $request);die;
+        // Do some magic to dequeue the route middleware
+
+        var_dump('route works', $request);
 
         return $response;
     }

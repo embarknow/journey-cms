@@ -82,10 +82,6 @@ class RouteCollector implements StackedMiddlewareInterface
      */
     public function __invoke(RequestInterface $request, ResponseInterface $response, $next)
     {
-        var_dump(
-            $request->getMethod(),
-            $request->getUri()->getPath()
-        );die;
         $dispatcher = new Dispatcher($this->getData());
         $routeInfo = $dispatcher->dispatch(
             $request->getMethod(),
@@ -95,12 +91,12 @@ class RouteCollector implements StackedMiddlewareInterface
         switch ($routeInfo[0]) {
             case DispatcherInterface::NOT_FOUND:
                 // Need to pass off to a NotFoundException
-                throw new NotFoundException();
+                throw new NotFoundException($request, $response);
                 break;
             case DispatcherInterface::METHOD_NOT_ALLOWED:
                 $allowedMethods = $routeInfo[1];
                 // Need to pass off to a NotAllowedException
-                throw new NotAllowedException($allowedMethods);
+                throw new NotAllowedException($request, $response, $allowedMethods);
                 break;
             case DispatcherInterface::FOUND:
                 $handler = $routeInfo[1];
@@ -169,34 +165,23 @@ class RouteCollector implements StackedMiddlewareInterface
     public function loadRoutes($requestUri)
     {
         $parts = $this->getPathParts($requestUri);
+        if (empty($parts)) {
+            $parts[] = '/';
+        }
 
         foreach ($this->metadata->findInstancesOf('Embark\Journey\Routes\RouteGroupItem') as $item) {
             if (is_string($item['routes'])) {
                 continue;
             }
 
-            // Make the prefix useable
-            $prefix = trim($item['prefix'], '/');
-            $prefix = (
-                empty($prefix)
-                ? '/'
-                : $prefix
-            );
-            $prefix = (
-                strpos($prefix, '/') === false
-                ? '/' . $prefix
-                : $prefix
-            );
-
             // Match the prefix
-            if (in_array($prefix, $parts)) {
+            if (in_array($item['prefix'], $parts)) {
                 $routes = $item['routes']->resolve();
                 $this->addRoutes($routes, $item['prefix']);
 
                 break;
             }
         }
-        die;
     }
 
     /**

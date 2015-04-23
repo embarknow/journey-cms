@@ -13,15 +13,19 @@ use FastRoute\DataGenerator\GroupCountBased as RouteDataGenerator;
 
 use Embark\Journey\ContainerAwareInterface;
 use Embark\Journey\ContainerAwareTrait;
+
 use Embark\Journey\Configuration;
+
 use Embark\Journey\Exceptions\ErrorHandler;
 use Embark\Journey\Exceptions\ExceptionHandler;
 use Embark\Journey\Exceptions\MetadataExceptionHandler;
-use Embark\Journey\Metadata\Configuration\Controller as ConfigurationController;
-use Embark\Journey\Middleware\Stack;
-use Embark\Journey\Middleware\StackedMiddlewareInterface;
-use Embark\Journey\Routes\RouteCollector as Router;
 
+use Embark\Journey\Metadata\Configuration\Controller as ConfigurationController;
+
+use Embark\Journey\Middleware\MiddlewareStackInterface;
+use Embark\Journey\Middleware\MiddlewareStackTrait;
+
+use Embark\Journey\Routes\RouteCollector as Router;
 use Embark\Journey\Routes\Controller as RoutesController;
 
 /**
@@ -31,9 +35,10 @@ use Embark\Journey\Routes\Controller as RoutesController;
 /**
  * Bootstrap the application instances. This class makes sure that the application is prepared correctly based on the current HTTP request. It is a container aware class meaning it has access to the entire container for modification during the bootstrap process.
  */
-class Application implements ContainerAwareInterface
+class Application implements ContainerAwareInterface, MiddlewareStackInterface
 {
     use ContainerAwareTrait;
+    use MiddlewareStackTrait;
 
     /**
      * Accepts a container instance
@@ -45,7 +50,6 @@ class Application implements ContainerAwareInterface
     {
         $this->container($container);
 
-        $this->setMiddlewareStack();
         $this->setServer();
         $this->setEnvironment();
         $this->setConfiguration();
@@ -55,30 +59,36 @@ class Application implements ContainerAwareInterface
     }
 
     /**
-     * Set the middleware stack for the application
+     * Invoke this as a server callable
+     *
+     * @param  RequestInterface  $request
+     *  The current request object
+     * @param  ResponseInterface $response
+     *  the current response object
+     * @param  callable          $errorHandler
+     *  an error handler to catch any exception errors
+     *
+     * @return ResponseInterface
+     *  the modified response object
      */
-    protected function setMiddlewareStack()
+    public function __invoke(RequestInterface $request, ResponseInterface $response, $errorHandler)
     {
-        $this->container['middleware'] = function () {
-            return new Stack;
-        };
-        var_dump('middleware stack created');
-    }
+        try {
+            var_dump('stack invoked');
+            $router = $this->container['router'];
+            $this->addMiddleware(function ($request, $response) {
+                return $response;
+            });
+            $this->addMiddleware($router);
 
-    public function addMiddlewares(array $middlewares = [])
-    {
-        var_dump('add middlewares');
-        $stack = $this->container['middleware'];
-
-        // $stack->addMiddleware($this);
-        $router = $this->container['router'];
-        $stack->addMiddleware($router);
-
-        foreach ($middlewares as $middleware) {
-            if (is_callable($middleware)) {
-                $stack->addMiddleware($middleware);
-            }
+            $response = $this->callMiddlewareStack($request, $response);
+        } catch (Exception $e) {
+            // The application can be forced to quit by throwing an Exception which is caught here
+            // $response = $errorHandler($request, $response, $e);
+            var_dump($e);
         }
+
+        return $response;
     }
 
     /**
@@ -86,11 +96,9 @@ class Application implements ContainerAwareInterface
      */
     protected function setServer()
     {
-        $this->container['server'] = function ($con) {
-            $middleware = $con['middleware'];
-
+        $this->container['server'] = function () {
             return Server::createServer(
-                $middleware,
+                $this,
                 $_SERVER,
                 $_GET,
                 $_POST,
@@ -137,7 +145,7 @@ class Application implements ContainerAwareInterface
      */
     protected function setRouter()
     {
-        $this->container['router'] = function () {
+        $this->container['router'] = function ($con) {
             $router = new Router(
                 new RoutesController,
                 new RouteParser,
@@ -145,7 +153,7 @@ class Application implements ContainerAwareInterface
             );
 
             $router->loadRoutes(
-                $this->container['server']->request->getUri()->getPath()
+                $con['server']->request->getUri()->getPath()
             );
 
             return $router;

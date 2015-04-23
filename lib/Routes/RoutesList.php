@@ -5,6 +5,7 @@ namespace Embark\Journey\Routes;
 use Embark\CMS\Metadata\ReferencedMetadataInterface;
 use Embark\CMS\Metadata\ReferencedMetadataTrait;
 
+use Embark\Journey\Metadata\Types\MiddlewareList;
 use Embark\Journey\Routes\Route;
 
 class RoutesList implements ReferencedMetadataInterface
@@ -14,6 +15,9 @@ class RoutesList implements ReferencedMetadataInterface
     public function __construct()
     {
         $this->setSchema([
+            'middleware' => [
+                'type' => new MiddlewareList
+            ],
             'route' => [
                 'type' => new Route,
                 'list' => true

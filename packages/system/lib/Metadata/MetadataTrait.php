@@ -212,7 +212,7 @@ trait MetadataTrait
                 continue;
             }
 
-            if ($schema['type'] instanceof MetadataInterface) {
+            if (isset($schema['type']) && $schema['type'] instanceof MetadataInterface) {
                 $schema['type']->setDefaults();
                 $this->metadata[$name] = $schema['type'];
             }

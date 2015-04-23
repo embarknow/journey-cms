@@ -19,5 +19,5 @@ interface StackedMiddlewareInterface
      * @param  callable          $next
      *  Next Middleware callable in the stack
      */
-    public function __invoke(RequestInterface $request, ResponseInterface $response, $next = null);
+    public function __invoke(RequestInterface $request, ResponseInterface $response, $next);
 }

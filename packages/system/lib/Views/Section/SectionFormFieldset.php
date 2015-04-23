@@ -5,7 +5,7 @@ namespace Embark\CMS\Views\Section;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Fields\FieldFormInterface;
-use Embark\CMS\Schemas\Controller;
+use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use DOMElement;
@@ -35,7 +35,7 @@ class SectionFormFieldset implements MetadataInterface
 
     public function appendFieldset(DOMElement $wrapper)
     {
-        $schema = Controller::read($this->view['schema']);
+        $schema = $this->view['schema']->resolveInstanceOf(SchemaInterface::class);
         $document = $wrapper->ownerDocument;
         $fieldset = $document->createElement('fieldset');
         $wrapper->appendChild($fieldset);

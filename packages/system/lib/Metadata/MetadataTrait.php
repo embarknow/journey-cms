@@ -112,7 +112,7 @@ trait MetadataTrait
 
         // No reference index provided, start a new one:
         if (false === ($references instanceof MetadataReferenceIndex)) {
-            $this->references = $references = new MetadataReferenceIndex();
+            $this->metadataReferences = $references = new MetadataReferenceIndex();
         }
 
         foreach ($xml->childNodes as $node) {
@@ -231,7 +231,7 @@ trait MetadataTrait
      */
     public function getReferenceIndex()
     {
-        return $this->references;
+        return $this->metadataReferences;
     }
 
     /**

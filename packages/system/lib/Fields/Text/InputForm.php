@@ -17,7 +17,7 @@ use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
 
-class TextInputForm implements FieldFormInterface
+class InputForm implements FieldFormInterface
 {
     use MetadataTrait;
 

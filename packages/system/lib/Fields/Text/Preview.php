@@ -10,7 +10,7 @@ use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use Widget;
 
-class TextPreview implements FieldPreviewCaptionInterface
+class Preview implements FieldPreviewCaptionInterface
 {
     use MetadataTrait;
 

@@ -10,7 +10,7 @@ use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use Widget;
 
-class TextValueColumn implements FieldColumnInterface
+class ValueColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 

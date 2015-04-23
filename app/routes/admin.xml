@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<object type="Embark\Journey\Metadata\Routes\RoutesList">
+<object type="Embark\Journey\Routes\RoutesList" guid="551568c91dee6">
+    <route>
+        <methods>
+            <item>GET</item>
+            <item>POST</item>
+        </methods>
+        <pattern>{prefix}/blueprints/schemas/{schema}</pattern>
+        <name>schema</name>
+        <view controller="Embark\Journey\Views\Controller" handle="schema"/>
+    </route>
+    <route>
+        <methods>
+            <item>GET</item>
+            <item>POST</item>
+        </methods>
+        <pattern>{prefix}/blueprints/schemas</pattern>
+        <name>schemas</name>
+        <view controller="Embark\Journey\Views\Controller" handle="schemas"/>
+    </route>
+    <route>
+        <methods>
+            <item>GET</item>
+        </methods>
+        <pattern>{prefix}/blueprints</pattern>
+        <name>blueprints</name>
+        <view controller="Embark\Journey\Views\Controller" handle="blueprints"/>
+    </route>
     <route>
         <methods>
             <item>GET</item>
@@ -10,31 +36,5 @@
             <url>{prefix}/login</url>
             <code>302</code>
         </redirect>
-    </route>
-    <route>
-        <methods>
-            <item>GET</item>
-        </methods>
-        <pattern>{prefix}/blueprints</pattern>
-        <name>blueprints</name>
-        <view>Embark\Journey\Views\Blueprints</view>
-    </route>
-    <route>
-        <methods>
-            <item>GET</item>
-            <item>POST</item>
-        </methods>
-        <pattern>{prefix}/blueprints/schemas</pattern>
-        <name>schemas</name>
-        <view>Embark\Journey\Views\BlueprintsSchemas</view>
-    </route>
-    <route>
-        <methods>
-            <item>GET</item>
-            <item>POST</item>
-        </methods>
-        <pattern>{prefix}/blueprints/schemas/{schema}</pattern>
-        <name>schema</name>
-        <view>Embark\Journey\Views\BlueprintsSchema</view>
     </route>
 </object>

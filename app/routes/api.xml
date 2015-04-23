@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<object type="Embark\Journey\Routes\RoutesList" guid="551568c91dfe6">
+<object type="Embark\Journey\Routes\RoutesList" guid="551568c91dfc6">
     <route>
         <methods>
             <item>GET</item>
         </methods>
         <pattern>{prefix}</pattern>
-        <name>home</name>
-        <view controller="Embark\Journey\Views\Controller" handle="frontend"/>
+        <name>api</name>
+        <view controller="Embark\Journey\Views\Controller" handle="api"/>
     </route>
 </object>

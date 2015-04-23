@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\Journey\Metadata\Routes;
+namespace Embark\Journey\Routes;
 
 use DirectoryIterator;
 use Embark\CMS\Metadata\MetadataControllerInterface;

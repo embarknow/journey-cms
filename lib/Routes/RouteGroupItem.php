@@ -1,28 +1,24 @@
 <?php
 
-namespace Embark\Journey\Metadata\Routes;
+namespace Embark\Journey\Routes;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
-use Embark\CMS\Metadata\Filters\Enum;
-
-class RouteRedirect implements MetadataInterface
+class RouteGroupItem implements MetadataInterface
 {
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
-            'url' => [
+            'prefix' => [
                 'required' => true,
                 'default' => '/'
             ],
-            'code' => [
+            'routes' => [
                 'required' => true,
-                'filter' => new Enum([
-                    301, 302, 303
-                ])
+                'default' => ''
             ],
         ]);
     }

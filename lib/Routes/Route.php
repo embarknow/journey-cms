@@ -1,28 +1,20 @@
 <?php
 
-namespace Embark\Journey\Metadata\Routes;
-
-use ReflectionClass;
+namespace Embark\Journey\Routes;
 
 use FastRoute\RouteParser;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
-use Embark\Journey\Metadata\Routes\RouteMethodsList;
-use Embark\Journey\Metadata\Routes\RouteRedirect;
-use Embark\Journey\Middleware\Router;
+use Embark\Journey\Routes\RouteMethodsList;
+use Embark\Journey\Routes\RouteRedirect;
+use Embark\Journey\Routes\View;
+use Embark\Journey\Routes\RouteCollector;
 
 class Route implements MetadataInterface
 {
     use MetadataTrait;
-
-    /**
-     * The url path prefix for this route
-     *
-     * @var string
-     */
-    protected $prefix;
 
     /**
      * Set the schema for this route
@@ -44,7 +36,7 @@ class Route implements MetadataInterface
             ],
             'view' => [
                 'required' => false,
-                'default' => ''
+                // 'type' => new View
             ],
             'redirect' => [
                 'required' => false,
@@ -54,41 +46,32 @@ class Route implements MetadataInterface
     }
 
     /**
-     * Invoke this route via a router
+     * Call this route to be processed
      *
-     * @return [type] [description]
+     * @param  RequestInterface  $request
+     *  the current HTTP request
+     * @param  ResponseInterface $response
+     *  the current HTTP response
+     * @param  array             $parameters
+     *  any parameters and their values from the request URL
+     *
+     * @return ResponseInterface
+     *  a modified HTTP response
+     *
+     * @throws Redirect
+     *  if the route is set to redirect
      */
-    public function __invoke()
+    public function __invoke(RequestInterface $request, ResponseInterface $response, array $parameters)
     {
         if (isset($this['redirect'])) {
             $this['redirect']['url'] = $this->processPatternPrefix($this['redirect']['url'], $this->prefix);
 
-            throw new RedirectException($this);
+            // throw new RedirectException($this);
         }
 
+        var_dump('route works', $request);die;
 
-    }
-
-    /**
-     * Set the url path prefix to use for this route
-     *
-     * @param string $prefix
-     *  the url path prefix
-     */
-    public function setPrefix($prefix)
-    {
-        $this->prefix = $prefix;
-    }
-
-    /**
-     * Sets an instance of the route parser
-     *
-     * @param RouteParser $parser
-     *  a route parser instnce
-     */
-    public function setParser(RouteParser $parser)
-    {
-        $this->routeParser = $parser;
+        return $response;
     }
 
     /**
@@ -97,9 +80,9 @@ class Route implements MetadataInterface
      * @param Router $router
      *  the router to add to
      */
-    public function addToRouter(Router $router)
+    public function addToRouter(RouteCollector $router, $prefix)
     {
-        $this['pattern'] = $this->processPatternPrefix($this['pattern'], $this->prefix);
+        $this['pattern'] = $this->processPatternPrefix($router, $this['pattern'], $prefix);
 
         foreach ($this['methods']->findAll() as $method) {
             $router->addRoute($method, $this['pattern'], $this);
@@ -117,9 +100,9 @@ class Route implements MetadataInterface
      * @return string
      *  the processed route pattern
      */
-    protected function processPatternPrefix($pattern, $prefix)
+    protected function processPatternPrefix($router, $pattern, $prefix)
     {
-        $output = $this->routeParser->parse($pattern);
+        $output = $router->getRouteParser()->parse($pattern);
 
         foreach ($output as &$part) {
             if (is_array($part)) {

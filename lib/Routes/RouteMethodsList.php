@@ -1,6 +1,6 @@
 <?php
 
-namespace Embark\Journey\Metadata\Routes;
+namespace Embark\Journey\Routes;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;

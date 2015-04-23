@@ -1,15 +1,15 @@
 <?php
 
-namespace Embark\Journey\Metadata\Routes;
+namespace Embark\Journey\Routes;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Integer;
 
-use Embark\Journey\Metadata\Routes\RouteGroupItem;
+use Embark\Journey\Routes\RouteGroupItem;
 
-class RouteGroupList implements MetadataInterface
+class RouteGroupsList implements MetadataInterface
 {
     use MetadataTrait;
 

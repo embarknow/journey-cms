@@ -4,7 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Pimple\Container;
 
-use Embark\Journey\Middleware\Application;
+use Embark\Journey\Application;
 
 define('DOCROOT', rtrim(dirname(__FILE__), '\\/public'));
 define('DOMAIN', rtrim(rtrim($_SERVER['HTTP_HOST'], '\\/') . dirname($_SERVER['PHP_SELF']), '\\/'));

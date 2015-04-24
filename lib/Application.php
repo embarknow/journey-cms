@@ -1,6 +1,8 @@
 <?php
 
-namespace Embark\Journey\Middleware;
+namespace Embark\Journey;
+
+use Exception;
 
 use Pimple\Container;
 use Phly\Http\Server;
@@ -59,7 +61,9 @@ class Application implements ContainerAwareInterface, MiddlewareStackInterface
     }
 
     /**
-     * Invoke this as a server callable
+     * Invoke this as a server callable.
+     * This runs the application when the server 'listens' to the request and response. A plain response object or a custom exception can be recieved as output.
+     * Exceptions are handled correctly to return a response object, which is then passed off to the server.
      *
      * @param  RequestInterface  $request
      *  The current request object

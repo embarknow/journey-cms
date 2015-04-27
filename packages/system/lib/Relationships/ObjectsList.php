@@ -1,19 +1,20 @@
 <?php
 
-namespace Embark\CMS\Schemas;
+namespace Embark\CMS\Relationships;
 
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
 
-class FieldsList implements MetadataInterface
+class ObjectsList implements MetadataInterface
 {
     use MetadataTrait;
 
     public function __construct()
     {
         $this->setSchema([
-            'item' => [
-                'type' => new FieldsListItem()
+            'object' => [
+                'list' => true,
+                'type' => new ObjectsListItem
             ]
         ]);
     }

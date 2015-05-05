@@ -50,7 +50,7 @@ class EntryException extends Exception
 {
 }
 
-class Entry implements EntryInterface
+class Entry
 {
     const STATUS_OK = 0;
     const STATUS_ERROR = 1;

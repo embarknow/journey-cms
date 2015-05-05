@@ -7,7 +7,8 @@
         "phly/http": "~1.0@dev",
         "pimple/pimple": "~3.0@dev",
         "monolog/monolog": "~1.13@dev",
-        "league/commonmark": "~0.7"
+        "league/commonmark": "~0.7",
+        "react/promise": "~2.2.0"
     },
     "require-dev": {
     },

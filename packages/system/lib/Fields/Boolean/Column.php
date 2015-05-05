@@ -1,38 +1,41 @@
 <?php
 
-namespace Embark\CMS\Fields\System;
+namespace Embark\CMS\Fields\Boolean;
 
-use DOMElement;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Link;
-use Embark\CMS\Schemas\SchemaInterface;
-use Embark\CMS\SystemDateTime;
+use DOMElement;
 use Widget;
 
-class CreationDateColumn implements FieldColumnInterface
+class Column implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
     public function appendBodyTo(DOMElement $wrapper, EntryInterface $entry, Link $link)
     {
+        $field = $this['field']->resolve();
+        $data = $field->readData($entry, $this);
         $document = $wrapper->ownerDocument;
-        $date = new SystemDateTime($entry->creation_date);
-        $date = $date->toUserDateTime();
         $body = $document->createElement('dd');
         $wrapper->appendChild($body);
 
         if ($this['editLink']) {
             $link = Widget::Anchor(
-                $date->format(__SYM_DATETIME_FORMAT__),
+                (string)$data->value,
                 $link . '/edit/' . $entry->entry_id
             );
             $body->appendChild($link);
+            $body = $link;
+        }
+
+        if (true === $data->value) {
+            $body->setValue('Yes');
         }
 
         else {
-            $body->setValue($date->format(__SYM_DATETIME_FORMAT__));
+            $body->setValue('No');
         }
     }
 }

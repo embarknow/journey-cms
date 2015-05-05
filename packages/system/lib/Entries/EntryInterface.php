@@ -2,6 +2,8 @@
 
 namespace Embark\CMS\Entries;
 
-interface EntryInterface
+use Embark\CMS\Schemas\SchemaInterface;
+
+interface EntryInterface extends SchemaInterface
 {
 }

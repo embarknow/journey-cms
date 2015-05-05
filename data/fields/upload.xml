@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<object type="Embark\CMS\Fields\Text\TextField">
+<object type="Embark\CMS\Fields\Text\Field">
   <name>File Upload</name>
 </object>

@@ -40,13 +40,14 @@ class SectionView implements MetadataInterface
         $this['list']->appendListTo($page, $this, $schema, $pageLink);
     }
 
-    public function appendPublishView(HTMLDocument $page, EntryInterface $entry)
+    public function appendPublishView(HTMLDocument $page, $entryId = null)
     {
         $schema = $this['schema']->resolveInstanceOf(SchemaInterface::class);
         $pageLink = (new Link)->withPath(ADMIN_URL . '/publish/' . $this['resource']['handle']);
+        $entry = $schema->withEntry($entryId);
 
-        $this['form']->appendHeaderTo($page, $this, $schema, $entry, $pageLink);
-        $this['form']->appendFormTo($page, $this, $schema, $entry, $pageLink);
-        $this['form']->appendFooterTo($page, $this, $schema, $entry, $pageLink);
+        $this['form']->appendHeaderTo($page, $this, $entry, $pageLink);
+        $this['form']->appendFormTo($page, $this, $entry, $pageLink);
+        $this['form']->appendFooterTo($page, $this, $entry, $pageLink);
     }
 }

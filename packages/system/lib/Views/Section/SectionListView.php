@@ -213,7 +213,7 @@ class SectionListView implements MetadataInterface
         $statement->bindColumn('entry_id', $entryId, PDO::PARAM_INT);
 
         while ($statement->fetch(PDO::FETCH_BOUND)) {
-            $entry = Entry::loadFromId($entryId);
+            $entry = $schema->withEntry($entryId);
             $article = $document->createElement('article');
             $table->appendChild($article);
 
@@ -225,7 +225,7 @@ class SectionListView implements MetadataInterface
                 if (isset($titleField)) {
                     $title = $document->createElement('h1');
                     $content->appendChild($title);
-                    $titleField->appendTitleTo($title, $schema, $entry, $pageLink);
+                    $titleField->appendTitleTo($title, $entry, $pageLink);
                 }
 
                 if (isset($figureField) || isset($captionField)) {
@@ -233,14 +233,14 @@ class SectionListView implements MetadataInterface
                     $content->appendChild($preview);
 
                     if (isset($figureField)) {
-                        $figureField->appendFigureTo($preview, $schema, $entry, $pageLink);
+                        $figureField->appendFigureTo($preview, $entry, $pageLink);
                     }
 
                     if (isset($captionField)) {
                         $caption = $document->createElement('figcaption');
                         $preview->appendChild($caption);
 
-                        $captionField->appendCaptionTo($caption, $schema, $entry, $pageLink);
+                        $captionField->appendCaptionTo($caption, $entry, $pageLink);
                     }
                 }
             }
@@ -254,8 +254,8 @@ class SectionListView implements MetadataInterface
                     $list = $document->createElement('dl');
                     $content->appendChild($list);
 
-                    $column->appendHeaderTo($list, $schema, $entry, $sortLink);
-                    $column->appendBodyTo($list, $schema, $entry, $pageLink);
+                    $column->appendHeaderTo($list, $entry, $sortLink);
+                    $column->appendBodyTo($list, $entry, $pageLink);
                 }
 
                 if (isset($details)) {
@@ -277,8 +277,8 @@ class SectionListView implements MetadataInterface
                     $list = $document->createElement('dl');
                     $content->appendChild($list);
 
-                    $column->appendHeaderTo($list, $schema, $entry, $sortLink);
-                    $column->appendBodyTo($list, $schema, $entry, $pageLink);
+                    $column->appendHeaderTo($list, $entry, $sortLink);
+                    $column->appendBodyTo($list, $entry, $pageLink);
                 }
 
                 if (isset($columns)) {

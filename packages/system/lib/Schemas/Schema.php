@@ -2,11 +2,13 @@
 
 namespace Embark\CMS\Schemas;
 
+use Embark\CMS\Entries\Entry;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Metadata\ReferencedMetadataTrait;
 use Embark\CMS\Metadata\Filters\Guid;
+use Embark\CMS\SystemDateTime;
+use DateTime;
 use General;
-use Entry;
 use Symphony;
 
 class Schema implements SchemaInterface
@@ -43,7 +45,7 @@ class Schema implements SchemaInterface
             }
         }
 
-        catch (Exception $e) {
+        catch (Exception $error) {
             return 0;
         }
 
@@ -114,5 +116,38 @@ class Schema implements SchemaInterface
         }
 
         return false;
+    }
+
+    public function withEntry($entryId = null)
+    {
+        if (isset($entryId)) {
+            $statement = Symphony::Database()->prepare("
+                select * from `entries` where
+                    entry_id = :entryId
+                limit 1
+            ");
+
+            $statement->execute([
+                ':entryId' =>           $entryId
+            ]);
+
+            $data = $statement->fetch();
+        }
+
+        else {
+            $date = new SystemDateTime();
+            $data = (object)[
+                'entry_id' =>           null,
+                'schema_id' =>          $this->getGuid(),
+                'user_id' =>            Symphony::User()->user_id,
+                'creation_date' =>      $date->format(DateTime::W3C),
+                'modification_date' =>  $date->format(DateTime::W3C)
+            ];
+        }
+
+        $entry = new Entry($data);
+        $entry->fromMetadata($this);
+
+        return $entry;
     }
 }

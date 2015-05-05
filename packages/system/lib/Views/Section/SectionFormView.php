@@ -4,7 +4,7 @@ namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Fields\FieldDataInterface;
+use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldPreviewInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
@@ -35,18 +35,18 @@ class SectionFormView implements MetadataInterface
         ]);
     }
 
-    public function findAllForms()
+    public function findAllFields()
     {
         foreach ($this->findAll() as $item) {
             if ($item instanceof SectionFormRow) {
-                foreach ($item->findAllForms() as $field) {
+                foreach ($item->findAllFields() as $field) {
                     yield $field;
                 }
             }
         }
     }
 
-    public function appendHeaderTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendHeaderTo(HTMLDocument $page, SectionView $view, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $title = __('Create new');
@@ -57,13 +57,8 @@ class SectionFormView implements MetadataInterface
 
             if (isset($view['title']['field'])) {
                 $preview = $view['title']->resolveInstanceOf(FieldPreviewInterface::class);
-                $field = $preview['field']->resolveInstanceOf(FieldInterface::class);
-                $data = $field->readData($schema, $entry, $field);
-
-                if (isset($data->value)) {
-                    $title = $data->value;
-                    $link = $url . '/edit/' . $entry->entry_id;
-                }
+                $title = $preview->getTitle($entry);
+                $link = $url . '/edit/' . $entry->entry_id;
             }
         }
 
@@ -83,7 +78,7 @@ class SectionFormView implements MetadataInterface
         }
     }
 
-    public function appendFooterTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendFooterTo(HTMLDocument $page, SectionView $view, EntryInterface $entry)
     {
         $editing = isset($entry->entry_id);
 
@@ -124,13 +119,14 @@ class SectionFormView implements MetadataInterface
         );
     }
 
-    public function appendFormTo(HTMLDocument $page, SectionView $view, SchemaInterface $schema, EntryInterface $entry)
+    public function appendFormTo(HTMLDocument $page, SectionView $view, EntryInterface $entry)
     {
         $url = ADMIN_URL . '/publish/' . $view['resource']['handle'];
         $saving = isset($_POST['fields']);
         $deleting = isset($_POST['action']['delete']);
         $editing = isset($entry->entry_id);
         $headersAppended = [];
+        $finally = [];
         $success = true;
 
         if ($deleting) {
@@ -138,8 +134,8 @@ class SectionFormView implements MetadataInterface
 
             try {
                 // Delete all field data:
-                foreach ($schema->findAllFields() as $field) {
-                    $field['data']->delete($schema, $entry, $field);
+                foreach ($entry->findAllFields() as $field) {
+                    $field['data']->delete($entry, $field);
                 }
 
                 // Delete the entry record:
@@ -182,35 +178,31 @@ class SectionFormView implements MetadataInterface
 
             // Prepare a new entry:
             if (false === $editing) {
-                $entry->schema_id = $schema->getGuid();
-                $entry->user_id = Symphony::User()->user_id;
                 $entry->entry_id = Entry::generateID($entry->schema_id, $entry->user_id);
             }
         }
 
         // Validate fields:
-        foreach ($this->findAllForms() as $form) {
-            $field = $form['field']->resolveInstanceOf(FieldInterface::class);
-            $handle = $field['handle'];
+        foreach ($this->findAllFields() as $processor) {
+            $field = $processor['field']->resolveInstanceOf(FieldInterface::class);
+            $form = $processor['form']->resolveInstanceOf(FieldFormInterface::class);
 
             // Add headers to the page:
             $form->appendPublishHeaders($page, $entry, $field, $headersAppended);
 
             // Load the data:
-            $data = $field->readData($schema, $entry, $form);
+            $data = $processor->read($entry, $field, $form);
+            $form->setData($entry, $field, $data);
 
             // Validate the field data:
             if ($saving) {
-                $post = (
-                    isset($_POST['fields'][$handle])
-                        ? $_POST['fields'][$handle]
-                        : null
-                );
-                $data = $field->prepareData($schema, $entry, $form, $post, $data);
-
                 try {
-                    $field->validateData($schema, $entry, $form, $data);
-                    $field->writeData($schema, $entry, $form, $data);
+                    $processor->validate($entry, $field, $form, $data);
+                    $processor->write($entry, $field, $form, $data);
+
+                    $finally[] = function() use ($processor, $entry, $field, $form, $data) {
+                        $processor->finalize($entry, $field, $form, $data);
+                    };
                 }
 
                 catch (\Exception $error) {
@@ -218,8 +210,6 @@ class SectionFormView implements MetadataInterface
                     $success = false;
                 }
             }
-
-            $form->setData($entry, $field, $data);
         }
 
         if ($saving) {
@@ -242,6 +232,11 @@ class SectionFormView implements MetadataInterface
 
                 // Keep these changes:
                 Symphony::Database()->commit();
+
+                // Finalize fields:
+                foreach ($finally as $final) {
+                    $final();
+                }
 
                 // Go to the success page:
                 redirect($url . '/edit/' . $entry->entry_id . (

@@ -9,5 +9,7 @@ use DOMElement;
 
 interface FieldPreviewCaptionInterface extends FieldPreviewInterface
 {
-    public function appendCaptionTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link);
+    public function appendCaptionTo(DOMElement $wrapper, EntryInterface $entry, Link $link);
+
+    public function getCaption(EntryInterface $entry);
 }

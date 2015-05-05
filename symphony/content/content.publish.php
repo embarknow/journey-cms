@@ -27,11 +27,11 @@ class ContentPublish extends AdministrationPage
 
     public function __viewNew($section)
     {
-        $section->appendPublishView($this, new Entry());
+        $section->appendPublishView($this);
     }
 
     public function __viewEdit($section)
     {
-        $section->appendPublishView($this, Entry::loadFromId($this->_context['entry_id']));
+        $section->appendPublishView($this, $this->_context['entry_id']);
     }
 }

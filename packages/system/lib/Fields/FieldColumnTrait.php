@@ -49,7 +49,7 @@ trait FieldColumnTrait
         $sorting->appendQuery($query, $schema, $field);
     }
 
-    public function appendHeaderTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
+    public function appendHeaderTo(DOMElement $wrapper, EntryInterface $entry, Link $link)
     {
         $document = $wrapper->ownerDocument;
         $header = $document->createElement('dt');

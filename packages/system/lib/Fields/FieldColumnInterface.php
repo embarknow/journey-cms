@@ -13,7 +13,7 @@ interface FieldColumnInterface extends MetadataInterface
 {
     public function appendSortingQuery(SchemaSelectQuery $query, SchemaInterface $schema, $direction = null);
 
-    public function appendHeaderTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link);
+    public function appendHeaderTo(DOMElement $wrapper, EntryInterface $entry, Link $link);
 
-    public function appendBodyTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link);
+    public function appendBodyTo(DOMElement $wrapper, EntryInterface $entry, Link $link);
 }

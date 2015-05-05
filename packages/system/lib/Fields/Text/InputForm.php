@@ -9,10 +9,11 @@ use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Fields\FieldFormInterface;
 use Embark\CMS\Fields\FieldRequiredException;
 use Embark\CMS\Metadata\MetadataInterface;
-use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\MetadataTrait;
+use Embark\CMS\Metadata\MetadataReferenceInterface;
 use Embark\CMS\Metadata\Filters\Boolean;
 use Embark\CMS\Metadata\Filters\Integer;
+use Embark\CMS\Schemas\SchemaInterface;
 use HTMLDocument;
 use SymphonyDOMElement;
 use Widget;
@@ -21,6 +22,7 @@ class InputForm implements FieldFormInterface
 {
     use MetadataTrait;
 
+    protected $form;
     protected $label;
     protected $input;
 
@@ -47,26 +49,36 @@ class InputForm implements FieldFormInterface
         }
     }
 
-    protected function appendInput(DOMElement $wrapper, $handle)
+    protected function appendForm(DOMElement $wrapper, FieldInterface $field)
     {
+        $document = $wrapper->ownerDocument;
+        $this->form = $document->createElement('div');
+        $this->form->addClass('field field-text form-input');
+        $wrapper->appendChild($this->form);
+    }
+
+    protected function appendLabel(DOMElement $wrapper, FieldInterface $field)
+    {
+        $document = $wrapper->ownerDocument;
+        $this->label = $document->createElement('label');
+        $this->label->setValue($this['name']);
+        $wrapper->appendChild($this->label);
+    }
+
+    protected function appendInput(DOMElement $wrapper, FieldInterface $field)
+    {
+        $handle = $field['handle'];
         $this->input = Widget::Input("fields[{$handle}]");
         $wrapper->appendChild($this->input);
     }
 
     public function appendPublishForm(DOMElement $wrapper, FieldInterface $field)
     {
-        $handle = $field['handle'];
         $document = $wrapper->ownerDocument;
 
-        $div = $document->createElement('div');
-        $div->addClass('field field-textbox');
-        $wrapper->appendChild($div);
-
-        $this->label = $document->createElement('label');
-        $this->label->setValue($this['name']);
-        $div->appendChild($this->label);
-
-        $this->appendInput($this->label, $handle);
+        $this->appendForm($wrapper, $field);
+        $this->appendLabel($this->form, $field);
+        $this->appendInput($this->label, $field);
 
         // Show maximum text length label:
         if ($this['max-length'] > 0) {
@@ -89,6 +101,7 @@ class InputForm implements FieldFormInterface
     {
         if (isset($data->value)) {
             $this->input->setAttribute('value', $data->value);
+            $this->data = $data;
         }
     }
 

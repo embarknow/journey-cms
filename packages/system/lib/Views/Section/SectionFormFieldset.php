@@ -3,8 +3,8 @@
 namespace Embark\CMS\Views\Section;
 
 use Embark\CMS\Fields\FieldInterface;
-use Embark\CMS\Fields\FieldDataInterface;
 use Embark\CMS\Fields\FieldFormInterface;
+use Embark\CMS\Fields\FieldProcessorInterface;
 use Embark\CMS\Schemas\SchemaInterface;
 use Embark\CMS\Metadata\MetadataInterface;
 use Embark\CMS\Metadata\MetadataTrait;
@@ -26,9 +26,9 @@ class SectionFormFieldset implements MetadataInterface
         ]);
     }
 
-    public function findAllForms()
+    public function findAllFields()
     {
-        foreach ($this->findInstancesOf(FieldFormInterface::class) as $item) {
+        foreach ($this->findInstancesOf(FieldProcessorInterface::class) as $item) {
             yield $item;
         }
     }
@@ -43,9 +43,10 @@ class SectionFormFieldset implements MetadataInterface
         $legend->setValue($this['name']);
         $fieldset->appendChild($legend);
 
-        foreach ($this->findInstancesOf(FieldFormInterface::class) as $item) {
-            $field = $item['field']->resolveInstanceOf(FieldInterface::class);
-            $item->appendPublishForm($fieldset, $field);
+        foreach ($this->findInstancesOf(FieldProcessorInterface::class) as $processor) {
+            $field = $processor['field']->resolveInstanceOf(FieldInterface::class);
+            $form = $processor['form']->resolveInstanceOf(FieldFormInterface::class);
+            $form->appendPublishForm($fieldset, $field);
         }
     }
 }

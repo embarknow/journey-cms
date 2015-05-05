@@ -7,14 +7,13 @@ use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldColumnInterface;
 use Embark\CMS\Fields\FieldColumnTrait;
 use Embark\CMS\Link;
-use Embark\CMS\Schemas\SchemaInterface;
 use Widget;
 
 class IdColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
-    public function appendBodyTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
+    public function appendBodyTo(DOMElement $wrapper, EntryInterface $entry, Link $link)
     {
         $document = $wrapper->ownerDocument;
         $body = $document->createElement('dd');

@@ -5,6 +5,7 @@ namespace Embark\CMS\Fields;
 use Embark\CMS\Entries\EntryInterface;
 use Embark\CMS\Fields\FieldInterface;
 use Embark\CMS\Metadata\MetadataInterface;
+use Embark\CMS\Schemas\SchemaInterface;
 use DOMElement;
 use HTMLDocument;
 use Exception;
@@ -15,10 +16,10 @@ interface FieldFormInterface extends MetadataInterface
     /**
      * Append stylesheets and scripts to the current page.
      *
-     * @param   HTMLDocument    $page
-     * @param   EntryInterface  $entry
-     * @param   FieldInterface  $field
-     * @param   array           $headersAppended
+     * @param   HTMLDocument        $page
+     * @param   EntryInterface      $entry
+     * @param   FieldInterface      $field
+     * @param   array               $headersAppended
      *  A list of classes that have already appended their
      *  headers to the page. Add your own checks to prevent
      *  adding the same headers to a page multiple times.
@@ -36,6 +37,7 @@ interface FieldFormInterface extends MetadataInterface
     /**
      * Update the field interface to include the provided field data.
      *
+     * @param   SchemaInterface     $schema
      * @param   EntryInterface      $entry
      * @param   FieldInterface      $field
      * @param   mixed               $data
@@ -45,6 +47,7 @@ interface FieldFormInterface extends MetadataInterface
     /**
      * Update the field interface to show an error message.
      *
+     * @param   SchemaInterface     $schema
      * @param   EntryInterface      $entry
      * @param   FieldInterface      $field
      * @param   Exception           $error

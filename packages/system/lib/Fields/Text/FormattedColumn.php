@@ -14,15 +14,19 @@ class FormattedColumn implements FieldColumnInterface
 {
     use FieldColumnTrait;
 
-    public function appendBodyTo(DOMElement $wrapper, SchemaInterface $schema, EntryInterface $entry, Link $link)
+    public function appendBodyTo(DOMElement $wrapper, EntryInterface $entry, Link $link)
     {
         $field = $this['field']->resolve();
-        $data = $field->readData($schema, $entry, $this);
+        $data = $field->readData($entry, $this);
         $document = $wrapper->ownerDocument;
         $body = $document->createElement('dd');
         $wrapper->appendChild($body);
 
-        if ($this['editLink']) {
+        if ('' === (string)$data->formatted) {
+            $body->appendChild($document->createEntityReference('nbsp'));
+        }
+
+        else if ($this['editLink']) {
             $link = $document->createElement('a');
             $link->setAttribute('href', $link . '/edit/' . $entry->entry_id);
 

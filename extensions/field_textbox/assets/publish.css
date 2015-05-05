@@ -1,15 +1,15 @@
-.field-textbox .size-small {
+.form-textarea .size-small {
 	height: 11.7em;
 }
-.field-textbox .size-medium {
+.form-textarea .size-medium {
 	height: 21.3em;
 }
-.field-textbox .size-large {
+.form-textarea .size-large {
 	height: 30.9em;
 }
-.field-textbox .size-huge {
+.form-textarea .size-huge {
 	height: 40.4em;
 }
-.field-textbox i.invalid {
+.form-textarea i.invalid {
 	color: #d42;
 }

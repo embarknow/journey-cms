@@ -17,6 +17,26 @@ use Embark\CMS\ClosureFilterIterator;
 trait MetadataControllerTrait
 {
     /**
+     * Set the directory to use for locating metadata
+     * @param string $directory
+     *  the directory path
+     */
+    public static function setDirectory($directory)
+    {
+        static::$directory = $directory;
+    }
+
+    /**
+     * Set the file extension to use for locating metadata
+     * @param string $extension
+     *  the file extension
+     */
+    public static function setFileExtension($extension)
+    {
+        static::$extension = $extension;
+    }
+
+    /**
      * Locate an object.
      *
      * @param   string              $handleOrFile
@@ -26,9 +46,9 @@ trait MetadataControllerTrait
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$extension
      *  to locate the file in a directory
      *
      * @return  string|false
@@ -37,11 +57,11 @@ trait MetadataControllerTrait
     public static function locate($handleOrFile)
     {
         // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            return DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (false === strpos($handleOrFile, static::$extension)) {
+            $handleOrFile = DOCROOT . static::$directory . '/' . basename($handleOrFile) . static::$extension;
         }
 
-        else if (is_file($handleOrFile)) {
+        if (is_file($handleOrFile)) {
            return $handleOrFile;
         }
 
@@ -61,9 +81,9 @@ trait MetadataControllerTrait
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return int|false
@@ -74,8 +94,8 @@ trait MetadataControllerTrait
         $file = $handleOrFile;
 
         // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (false === strpos($handleOrFile, static::$extension)) {
+            $file = DOCROOT . static::$directory . '/' . basename($handleOrFile) . static::$extension;
         }
 
         $document = static::toXML($object);
@@ -120,9 +140,9 @@ trait MetadataControllerTrait
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return int|boolean
@@ -131,8 +151,8 @@ trait MetadataControllerTrait
     public static function update(MetadataInterface $object, $handleOrFile = null)
     {
         // Does not have a file extension, assume it is a handle
-        if (isset($handleOrFile) && false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (isset($handleOrFile) && false === strpos($handleOrFile, static::$extension)) {
+            $file = DOCROOT . static::$directory . '/' . basename($handleOrFile) . static::$extension;
         }
 
         // The handle is a file and it exists:
@@ -200,9 +220,9 @@ trait MetadataControllerTrait
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return array
@@ -210,10 +230,10 @@ trait MetadataControllerTrait
      */
     public static function findAll()
     {
-        $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::DIR), function ($item) {
+        $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::$directory), function ($item) {
             return (
                 false === $item->isDir()
-                && false !== strpos($item->getFilename(), static::FILE_EXTENSION)
+                && false !== strpos($item->getFilename(), static::$extension)
             );
         });
 

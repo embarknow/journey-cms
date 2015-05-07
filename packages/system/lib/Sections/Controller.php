@@ -9,6 +9,6 @@ class Controller
 {
     use MetadataControllerTrait;
 
-    const DIR = '/blueprints/sections';
-    const FILE_EXTENSION = '.xml';
+    protected static $directory = '/blueprints/sections';
+    protected static $extension = '.xml';
 }

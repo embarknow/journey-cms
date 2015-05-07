@@ -14,6 +14,10 @@ class RelationshipsList implements MetadataInterface
     public function __construct()
     {
         $this->setSchema([
+            'handle' => [
+                'required' => true,
+                'default' => 'relationship'
+            ],
             'relationship-type' => [
                 'list' => true,
                 'type' => new RelationshipType

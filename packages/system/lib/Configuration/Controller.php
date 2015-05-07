@@ -12,8 +12,8 @@ class Controller implements MetadataControllerInterface
 {
     use MetadataControllerTrait;
 
-    const DIR = '/app/config';
-    const FILE_EXTENSION = '.xml';
+    protected static $directory = '/app/config';
+    protected static $extension = '.xml';
 
     /**
      * Environment name variable
@@ -46,9 +46,9 @@ class Controller implements MetadataControllerInterface
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return  string|false
@@ -57,11 +57,11 @@ class Controller implements MetadataControllerInterface
     public static function locate($handleOrFile)
     {
         // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            return DOCROOT . static::DIR . '/' . static::$environment . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (false === strpos($handleOrFile, static::$extension)) {
+            $handleOrFile = DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension;
         }
 
-        else if (is_file($handleOrFile)) {
+        if (is_file($handleOrFile)) {
            return $handleOrFile;
         }
 
@@ -81,9 +81,9 @@ class Controller implements MetadataControllerInterface
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return int|false
@@ -94,8 +94,8 @@ class Controller implements MetadataControllerInterface
         $file = $handleOrFile;
 
         // Does not have a file extension, assume it is a handle
-        if (false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . static::$environment . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (false === strpos($handleOrFile, static::$extension)) {
+            $file = DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension;
         }
 
         $document = static::toXML($object);
@@ -115,9 +115,9 @@ class Controller implements MetadataControllerInterface
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return int|boolean
@@ -126,8 +126,8 @@ class Controller implements MetadataControllerInterface
     public static function update(MetadataInterface $object, $handleOrFile = null)
     {
         // Does not have a file extension, assume it is a handle
-        if (isset($handleOrFile) && false === strpos($handleOrFile, static::FILE_EXTENSION)) {
-            $file = DOCROOT . static::DIR . '/' . static::$environment . '/' . basename($handleOrFile) . static::FILE_EXTENSION;
+        if (isset($handleOrFile) && false === strpos($handleOrFile, static::$extension)) {
+            $file = DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension;
         }
 
         // The handle is a file and it exists:
@@ -167,9 +167,9 @@ class Controller implements MetadataControllerInterface
      *
      * @uses  DOCROOT
      *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
+     * @uses static::$extension
      *  to define the file extension
-     * @uses static::DIR
+     * @uses static::$directory
      *  to locate the file in a directory
      *
      * @return array
@@ -177,10 +177,10 @@ class Controller implements MetadataControllerInterface
      */
     public static function findAll()
     {
-        $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::DIR . '/' . static::$environment), function ($item) {
+        $iterator = new ClosureFilterIterator(new DirectoryIterator(DOCROOT . static::$directory . '/' . static::$environment), function ($item) {
             return (
                 false === $item->isDir()
-                && false !== strpos($item->getFilename(), static::FILE_EXTENSION)
+                && false !== strpos($item->getFilename(), static::$extension)
             );
         });
 

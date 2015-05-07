@@ -9,6 +9,6 @@ class Controller implements MetadataControllerInterface
 {
     use MetadataControllerTrait;
 
-    const DIR = '/data/formatters';
-    const FILE_EXTENSION = '.xml';
+    protected static $directory = '/data/formatters';
+    protected static $extension = '.xml';
 }

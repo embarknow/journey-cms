@@ -17,8 +17,8 @@ class Controller implements MetadataControllerInterface, SyncableControllerInter
         MetadataControllerTrait::delete as deleteFile;
     }
 
-    const DIR = '/blueprints/relationships';
-    const FILE_EXTENSION = '.xml';
+    protected static $directory = '/blueprints/relationships';
+    protected static $extension = '.xml';
 
     protected $syncController;
 

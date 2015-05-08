@@ -18,13 +18,6 @@ interface MetadataControllerInterface
      *  the default location, if a file name is provided that
      *  will be used instead.
      *
-     * @uses  DOCROOT
-     *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
-     *  to define the file extension
-     * @uses static::DIR
-     *  to locate the file in a directory
-     *
      * @return  string|false
      *  The file name of the object or false on failure.
      */
@@ -38,13 +31,6 @@ interface MetadataControllerInterface
      *  If a handle is provided the object will be saved to
      *  the default location, if a file name is provided that
      *  will be used instead.
-     *
-     * @uses  DOCROOT
-     *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
-     *  to define the file extension
-     * @uses static::DIR
-     *  to locate the file in a directory
      *
      * @return int|false
      *  Number of bytes written or false if an error occurred
@@ -73,13 +59,6 @@ interface MetadataControllerInterface
      *  the default location, if a file name is provided that
      *  will be used instead.
      *
-     * @uses  DOCROOT
-     *  to locate the file from the document root
-     * @uses static::FILE_EXTENSION
-     *  to define the file extension
-     * @uses static::DIR
-     *  to locate the file in a directory
-     *
      * @return int|boolean
      *  Number of bytes written, true if the file was deleted, or false if an error occured
      */
@@ -89,9 +68,6 @@ interface MetadataControllerInterface
      * Delete an object.
      *
      * @param   MetadataInterface   $object
-     *
-     * @uses  DOCROOT
-     *  to locate the file from the document root
      *
      * @return boolean
      *  True on success or False on failure, from unlink

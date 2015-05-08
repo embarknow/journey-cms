@@ -17,6 +17,12 @@
             "Embark\\CMS\\": "packages/system/lib/",
             "Embark\\CMS\\Actors\\Condition\\": "packages/condition-actors/lib/",
             "Embark\\CMS\\Actors\\Section\\": "packages/section-actors/lib/"
-        }
+        },
+        "classmap": ["symphony/content", "symphony/lib", "symphony/templates", "install"],
+        "files": [
+            "symphony/lib/include.utilities.php",
+            "symphony/defines.php",
+            "symphony/lib/include.validators.php"
+        ]
     }
 }

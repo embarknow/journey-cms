@@ -13,7 +13,7 @@ class FieldsList implements MetadataInterface
     {
         $this->setSchema([
             'item' => [
-                'type' =>       new FieldsListItem()
+                'type' => new FieldsListItem()
             ]
         ]);
     }

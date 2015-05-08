@@ -58,7 +58,7 @@ class Controller implements MetadataControllerInterface
     {
         // Does not have a file extension, assume it is a handle
         if (false === strpos($handleOrFile, static::$extension)) {
-            $handleOrFile = DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension;
+            $handleOrFile = realpath(DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension);
         }
 
         if (is_file($handleOrFile)) {
@@ -95,6 +95,10 @@ class Controller implements MetadataControllerInterface
 
         // Does not have a file extension, assume it is a handle
         if (false === strpos($handleOrFile, static::$extension)) {
+            if (!file_exists(DOCROOT . static::$directory . '/' . static::$environment)) {
+                mkdir(DOCROOT . static::$directory . '/' . static::$environment, 0755, true);
+            }
+
             $file = DOCROOT . static::$directory . '/' . static::$environment . '/' . basename($handleOrFile) . static::$extension;
         }
 

@@ -2,9 +2,11 @@
 
 namespace Embark\CMS\Database;
 
-use Exception;
-use Profiler;
+use Profiler; // A Symphony class
 use PDO;
+
+use Embark\CMS\Database\Exception;
+use Embark\CMS\Metadata\MetadataInterface;
 
 class Connection
 {
@@ -17,15 +19,15 @@ class Connection
     protected $lastQuery;
     protected $string;
 
-    public function __construct($conf)
+    public function __construct(MetadataInterface $conf)
     {
         $this->conf = $conf;
         $this->queryCaching = true;
         $this->string = sprintf(
             'mysql:host=%s;port=%s;dbname=%s',
-            $conf->host,
-            $conf->port,
-            $conf->database
+            $conf['host'],
+            $conf['port'],
+            $conf['database']
         );
     }
 
@@ -52,7 +54,7 @@ class Connection
         }
 
         // Establish new connection:
-        $this->connection = new PDO($this->string, $this->conf->user, $this->conf->password, [
+        $this->connection = new PDO($this->string, $this->conf['user'], $this->conf['password'], [
             PDO::ATTR_ERRMODE =>                    PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE =>         PDO::FETCH_OBJ,
             PDO::ATTR_PERSISTENT =>                 false,

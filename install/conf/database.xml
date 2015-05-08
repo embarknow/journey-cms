@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<configuration>
+<object type="Embark\CMS\Configuration\Database">
     <host>localhost</host>
     <port>3306</port>
     <user></user>
     <password></password>
     <database>symphony</database>
-</configuration>
+</object>

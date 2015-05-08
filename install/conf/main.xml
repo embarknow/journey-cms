@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<object type="Embark\CMS\Configuration\Main">
   <name>Symphony</name>
   <lang>en</lang>
   <admin>
@@ -24,4 +24,4 @@
     <file-write-mode>0775</file-write-mode>
     <directory-write-mode>0775</directory-write-mode>
   </system>
-</configuration>
+</object>

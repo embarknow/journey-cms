@@ -1,0 +1,286 @@
+<?php
+
+use Symphony;
+use Cryptography;
+use General;
+use MessageStack;
+
+use Embark\CMS\Datasource\Exception as DatabaseException;
+use Embark\CMS\Database\ResultIterator;
+use Embark\CMS\SystemDateTime;
+
+class User
+{
+    private $_fields;
+
+    public function __construct()
+    {
+        $this->_fields = array();
+    }
+
+    public static function load($id)
+    {
+        $user = new self();
+
+        $result = Symphony::Database()->query("SELECT * FROM `users` WHERE `user_id` = '%s' LIMIT 1", array($id));
+
+        if (!$result->valid()) {
+            return false;
+        }
+
+        $row = $result->current();
+
+        foreach ($row as $key => $value) {
+            $user->$key = $value;
+        }
+
+        return $user;
+    }
+
+    public static function loadUserFromUsername($username)
+    {
+        $result = Symphony::Database()->query("
+                SELECT
+                    u.*
+                FROM
+                    `users` AS u
+                WHERE
+                    u.username = '%s'
+                LIMIT
+                    1
+            ",
+            array($username)
+        );
+
+        if ($result->valid() === false) {
+            return null;
+        }
+
+        $row = $result->current();
+        $user = new self();
+
+        foreach ($row as $key => $value) {
+            $user->$key = $value;
+        }
+
+        return $user;
+    }
+
+    public static function loadFromCredentials($username, $password, $isHash = false)
+    {
+        if (strlen(trim($username)) <= 0 || strlen(trim($password)) <= 0) {
+            return false;
+        }
+
+        $user = User::loadUserFromUsername($username);
+
+        if ($user instanceof User && Cryptography::compare($password, $user->password, $isHash)) {
+            return $user;
+        }
+
+        return false;
+    }
+
+    public static function loadFromAuthToken($token)
+    {
+        if (strlen(trim($token)) == 0) {
+            return false;
+        }
+
+        $token = Symphony::Database()->escape($token);
+
+        if (strlen($token) == 6) {
+            $result = Symphony::Database()->query("
+                    select
+                        u.user_id,
+                        u.username,
+                        u.password
+                    from
+                        `users` as u
+                    join
+                        `forgotpass` as f
+                        using (user_id)
+                    where
+                        u.user_id = f.user_id
+                        AND f.expiry > '%s'
+                        AND f.token = '%s'
+                    limit 1
+                ",
+                [
+                    (new SystemDateTime)->format(DateTime::W3C),
+                    $token
+                ]
+            );
+        } else {
+            $result = Symphony::Database()->query("
+                    SELECT
+                        user_id, username, password
+                    FROM
+                        `users`
+                    WHERE
+                        SUBSTR(MD5(CONCAT(`username`, `password`)), 1, 8) = '%s'
+                    AND
+                        auth_token_active = 'yes'
+                    LIMIT 1
+                ",
+                array($token)
+            );
+        }
+
+        if ($result->valid()) {
+            $row = $result->current();
+
+            return User::load($row->user_id);
+        }
+
+        return false;
+    }
+
+    public function verifyToken($token)
+    {
+        if ($this->auth_token_active == 'no') {
+            return false;
+        }
+
+        $t = General::substrmin(md5($this->username . $this->password), 8);
+
+        if ($t == $token) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function createAuthToken()
+    {
+        return General::substrmin(md5($this->username . $this->password), 8);
+    }
+
+    public function isTokenActive()
+    {
+        return ($this->auth_token_active == 'no' ? false : true);
+    }
+
+    public function getFullName()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function __get($name)
+    {
+        if (!isset($this->_fields[$name]) || strlen(trim($this->_fields[$name])) == 0) {
+            return NULL;
+        }
+        return $this->_fields[$name];
+    }
+
+    public function __set($name, $value)
+    {
+        $this->_fields[trim($name)] = $value;
+    }
+
+    public function __isset($name)
+    {
+        return isset($this->_fields[$name]);
+    }
+
+    public function validate(MessageStack $errors)
+    {
+        if (is_null($this->first_name)) {
+            $errors->append('first_name', __('First name is required'));
+        }
+
+        if (is_null($this->last_name)) {
+            $errors->append('last_name', __('Last name is required'));
+        }
+
+        if (is_null($this->email)) {
+            $errors->append('email', __('E-mail address is required'));
+        } elseif (!General::validateString($this->email, '/^[^@]+@[^\.@]+\.[^@]+$/i')) {
+            $errors->append('email', __('E-mail address entered is invalid'));
+        }
+
+        if (is_null($this->username)) {
+            $errors->append('username', __('Username is required'));
+        } elseif ($this->user_id) {
+            $result = Symphony::Database()->query("SELECT `username` FROM `users` WHERE `user_id` = %d", array($this->user_id));
+            $current_username = $result->current()->username;
+
+            if ($current_username != $this->username && Symphony::Database()->query("SELECT `user_id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid()) {
+                $errors->append('username', __('Username is already taken'));
+            }
+        } elseif (Symphony::Database()->query("SELECT `user_id` FROM `users` WHERE `username` = '%s'", array($this->username))->valid()) {
+            $errors->append('username', __('Username is already taken'));
+        }
+
+        if (is_null($this->password)) {
+            $errors->append('password', __('Password is required'));
+        }
+
+        return ($errors->length() == 0);
+    }
+
+    public function fields()
+    {
+        return $this->_fields;
+    }
+
+    public function login()
+    {
+        Symphony::Cookie()->set('username', $this->username);
+        Symphony::Cookie()->set('pass', $this->password);
+
+        Symphony::Database()->update(
+            'users',
+            ['last_seen' => (new SystemDateTime)->format('Y-m-d H:i:s')],
+            [$this->user_id],
+            "`user_id` = '%d'"
+        );
+
+        Symphony::Database()->delete(
+            'forgotpass',
+            [$this->user_id],
+            "`user_id` = %d"
+        );
+
+        return true;
+    }
+
+    public function logout()
+    {
+        Symphony::Cookie()->expire();
+    }
+
+    public static function save(User $user)
+    {
+        $fields = $user->fields();
+        unset($fields['id']);
+
+        try {
+            if (isset($user->user_id) && !is_null($user->user_id)) {
+                Symphony::Database()->update('users', $fields, array($user->user_id), "`user_id` = %d");
+            } else {
+                $user->user_id = Symphony::Database()->insert('users', $fields);
+            }
+        } catch (DatabaseException $e) {
+            return false;
+        }
+
+        return $user->user_id;
+    }
+
+    public static function delete($id)
+    {
+        return Symphony::Database()->delete('users', array($id), "`user_id` = %d");
+    }
+
+    public static function deactivateAuthToken($id)
+    {
+        return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'no' WHERE `user_id` = '%d' LIMIT 1", array($id));
+    }
+
+    public static function activateAuthToken($id)
+    {
+        return Symphony::Database()->update("UPDATE `users` SET `auth_token_active` = 'yes' WHERE `user_id` = '%d' LIMIT 1", array($id));
+    }
+}

@@ -1,35 +1,36 @@
 <?php
 
-    require_once LIB . '/class.event.php';
+use Event;
 
-    Final Class Event%1$s extends Event {
+final class Event%1$s extends Event
+{
+    public function __construct()
+    {
+        $this->_about = (object) array(
+            'name'          => %2$s,
+            'author'        => (object) array(
+                'name'      => %3$s,
+                'website'   => %4$s,
+                'email'     => %5$s
+            ),
+            'version'       => %6$s,
+            'release-date'  => %7$s
+        );
 
-        public function __construct(){
-
-            $this->_about = (object)array(
-                'name'          => %2$s,
-                'author'        => (object)array(
-                    'name'      => %3$s,
-                    'website'   => %4$s,
-                    'email'     => %5$s
-                ),
-                'version'       => %6$s,
-                'release-date'  => %7$s
-            );
-
-            $this->_parameters = (object)array(
-                'root-element' => %8$s,
-                'source' => %9$s,
-                'filters' => %10$s,
-                'overrides' => %11$s,
-                'defaults' => %12$s,
-                'output-id-on-save' => %13$s
-            );
-        }
-
-        public function allowEditorToParse() {
-            return true;
-        }
+        $this->_parameters = (object) array(
+            'root-element' => %8$s,
+            'source' => %9$s,
+            'filters' => %10$s,
+            'overrides' => %11$s,
+            'defaults' => %12$s,
+            'output-id-on-save' => %13$s
+        );
     }
 
-    return 'Event%1$s';
+    public function allowEditorToParse()
+    {
+        return true;
+    }
+}
+
+return 'Event%1$s';
